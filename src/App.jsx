@@ -247,6 +247,7 @@ function Tagebuch({ plantId }) {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
@@ -286,6 +287,15 @@ function Tagebuch({ plantId }) {
   const handleDelete = async (entryId) => {
     await supabase.from("tagebuch").delete().eq("id", entryId);
     setEntries(prev => prev.filter(e => e.id !== entryId));
+  };
+
+  const handleUpdate = async (entryId, note, date) => {
+    const { data } = await supabase.from("tagebuch").update({
+      notiz: note || null,
+      created_at: new Date(date).toISOString(),
+    }).eq("id", entryId).select().single();
+    if (data) setEntries(prev => prev.map(e => e.id === entryId ? dbToEntry(data) : e));
+    setEditingEntry(null);
   };
 
   const formatEntryDate = (iso) => {
@@ -339,20 +349,37 @@ function Tagebuch({ plantId }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {visible.map(entry => (
             <div key={entry.id} style={{ background: BG, borderRadius: "8px", border: `1px solid ${BG_DARK}`, overflow: "hidden" }}>
-              {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: "0" }} />}
+              {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block" }} />}
               <div style={{ padding: "10px 12px" }}>
-                {entry.note && <p style={{ margin: "0 0 8px 0", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6" }}>{entry.note}</p>}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
-                  <div style={{ position: "relative" }}>
-                    <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>
-                    <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, bottom: "28px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "120px", zIndex: 20, overflow: "hidden" }}>
-                      <button onClick={() => { handleDelete(entry.id); }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span>🗑</span> Löschen
-                      </button>
+                {editingEntry === entry.id ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <textarea defaultValue={entry.note} id={"edit-note-"+entry.id} rows={3} style={{ width: "100%", background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 10px", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                    <input type="date" defaultValue={entry.date.slice(0,10)} id={"edit-date-"+entry.id} style={{ background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px 10px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none" }} />
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={() => setEditingEntry(null)} style={{ flex: 1, background: BG_DARK, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Abbrechen</button>
+                      <button onClick={() => handleUpdate(entry.id, document.getElementById("edit-note-"+entry.id).value, document.getElementById("edit-date-"+entry.id).value)} style={{ flex: 2, background: BTN, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>Speichern</button>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <>
+                    {entry.note && <p style={{ margin: "0 0 8px 0", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6" }}>{entry.note}</p>}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
+                      <div style={{ position: "relative" }}>
+                        <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>
+                        <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, bottom: "28px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 20, overflow: "hidden" }}>
+                          <button onClick={() => { setEditingEntry(entry.id); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span>✎</span> Bearbeiten
+                          </button>
+                          <div style={{ height: "1px", background: BG_DARK }} />
+                          <button onClick={() => handleDelete(entry.id)} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span>🗑</span> Löschen
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))}
