@@ -32,14 +32,14 @@ const SUPABASE_KEY = "sb_publishable_xinZMWPSxd7oxz_j5a8HOQ_vElqWJDT";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── Discord ───────────────────────────────────────────────────────────────────
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1477630066694553621/lsU2Dn5oXx6AiOq4GmtuIJSv_J8ZDPqLf0zP7tgWw9rL0uf6j3Gab7YKzbEt9o3cnU6R";
+const DISCORD_WEBHOOK = import.meta.env.VITE_DISCORD_WEBHOOK;
 
 async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
   const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
   const d = new Date();
   const datum = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
 
-  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\n📷 Neues Foto hinzugefügt`;
+  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\n[Foto] Neues Foto hinzugefuegt`;
 
   const payload = {
     embeds: [{
