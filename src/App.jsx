@@ -985,6 +985,13 @@ function TodoPage() {
     setTodos(prev => prev.filter(t => t.id !== id));
   };
 
+  const deleteAllErledigt = async () => {
+    const ids = todos.filter(t => t.erledigt).map(t => t.id);
+    if (ids.length === 0) return;
+    await supabase.from("todos").delete().in("id", ids);
+    setTodos(prev => prev.filter(t => !t.erledigt));
+  };
+
   const filtered = todos.filter(t => {
     const matchSearch = t.titel.toLowerCase().includes(search.toLowerCase());
     const matchKat = gruppeFilter === "Alle" || t.kategorie === gruppeFilter;
@@ -994,12 +1001,7 @@ function TodoPage() {
   const offen = filtered.filter(t => !t.erledigt);
   const erledigt = filtered.filter(t => t.erledigt);
 
-  const katFarbe = (k) => {
-    if (k === "Bestellungen") return "#7a9e7e";
-    if (k === "Label") return "#b07d4a";
-    if (k === "Organisation") return "#6b7fa3";
-    return ACCENT;
-  };
+  const katFarbe = () => "#5c6c56";
 
   return (
     <div>
@@ -1035,7 +1037,7 @@ function TodoPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{todo.titel}</div>
                 <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontSize: "11px", background: katFarbe(todo.kategorie), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{todo.kategorie}</span>
+                  <span style={{ fontSize: "11px", background: katFarbe(), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{todo.kategorie}</span>
                   {todo.datum && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📅 {new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
                 </div>
               </div>
@@ -1045,7 +1047,10 @@ function TodoPage() {
 
           {erledigt.length > 0 && (
             <div style={{ marginTop: "16px" }}>
-              <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "8px" }}>Erledigt ({erledigt.length})</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "1.5px", textTransform: "uppercase" }}>Erledigt ({erledigt.length})</div>
+                <button onClick={deleteAllErledigt} style={{ background: "none", border: `1px solid ${GLASS_BORDER}`, borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, display: "flex", alignItems: "center", gap: "4px" }}>🗑 Alle löschen</button>
+              </div>
               {erledigt.map(todo => (
                 <div key={todo.id} style={{ background: "rgba(255,255,255,0.25)", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: "14px", marginBottom: "6px", opacity: 0.65 }}>
                   <div onClick={() => handleToggle(todo)} style={{ width: "20px", height: "20px", borderRadius: "50%", background: ACCENT, border: `2px solid ${ACCENT}`, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1054,11 +1059,10 @@ function TodoPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "14px", color: TEXT_LIGHT, fontFamily: FONT, textDecoration: "line-through" }}>{todo.titel}</div>
                     <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
-                      <span style={{ fontSize: "11px", background: katFarbe(todo.kategorie), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT, opacity: 0.7 }}>{todo.kategorie}</span>
+                      <span style={{ fontSize: "11px", background: katFarbe(), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT, opacity: 0.7 }}>{todo.kategorie}</span>
                       {todo.datum && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📅 {new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0, opacity: 0.5 }}>🗑</button>
                 </div>
               ))}
             </div>
