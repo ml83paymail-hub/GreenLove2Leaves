@@ -31,6 +31,41 @@ const SUPABASE_URL = "https://booronkmwfvdbpyopjsl.supabase.co";
 const SUPABASE_KEY = "sb_publishable_xinZMWPSxd7oxz_j5a8HOQ_vElqWJDT";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── Discord ───────────────────────────────────────────────────────────────────
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1477630066694553621/lsU2Dn5oXx6AiOq4GmtuIJSv_J8ZDPqLf0zP7tgWw9rL0uf6j3Gab7YKzbEt9o3cnU6R";
+
+async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
+  const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const d = new Date();
+  const datum = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
+
+  const beschreibung = notiz
+    ? "**" + pflanzenname + "**
+​
+" + notiz
+    : "**" + pflanzenname + "**
+​
+📷 Neues Foto hinzugefügt";
+
+  const payload = {
+    embeds: [{
+      description: beschreibung,
+      color: 6057046,
+      footer: { text: "Tagebuch | " + datum }
+    }]
+  };
+
+  try {
+    await fetch(DISCORD_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("Discord Fehler:", err);
+  }
+}
+
 // ── Design ───────────────────────────────────────────────────────────────────
 const BG = "#EBEBE6";
 const BG_DARK = "#d4d4ce";
@@ -240,7 +275,7 @@ function PlantCard({ plant, onClick }) {
 }
 
 // ── Tagebuch ─────────────────────────────────────────────────────────────────
-function Tagebuch({ plantId }) {
+function Tagebuch({ plantId, plantName }) {
   const [entries, setEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -282,6 +317,8 @@ function Tagebuch({ plantId }) {
       if (!error && data) setEntries(prev => [...prev, dbToEntry(data)]);
       setNewNote(""); setPhotoFile(null); setPhotoPreview(null); setShowForm(false);
       setEntryDate(new Date().toISOString().slice(0, 10));
+      // Discord Benachrichtigung
+      sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url);
     } finally { setSaving(false); }
   };
 
@@ -518,7 +555,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                 <button onClick={onClose} style={{ flex: 1, background: BG, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "9px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Schließen</button>
                 <button onClick={() => setEditMode(true)} style={{ flex: 1, background: ACCENT, border: "none", borderRadius: "6px", padding: "9px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>✎ Bearbeiten</button>
               </div>
-              <Tagebuch plantId={plant.id} />
+              <Tagebuch plantId={plant.id} plantName={plant.name} />
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
