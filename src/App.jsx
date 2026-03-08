@@ -771,6 +771,16 @@ function PflanzenPage() {
 
   const toggleGroup = (label) => setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
 
+  // Default new groups to collapsed
+  useEffect(() => {
+    if (groupBy === "none") return;
+    setCollapsedGroups(prev => {
+      const next = { ...prev };
+      grouped.forEach(({ label }) => { if (label && !(label in next)) next[label] = true; });
+      return next;
+    });
+  }, [groupBy, plants]);
+
   return (
     <div style={{ position: "relative" }}>
       {showGiessplan && <GiessplanWidget plants={plants} activeTag={giessFilter} onTagClick={tag => { setGiessFilter(tag); if (!tag) setShowGiessplan(false); }} onClose={() => setShowGiessplan(false)} />}
@@ -811,10 +821,10 @@ function PflanzenPage() {
             <div key={label || "all"}>
               {label && (
                 <button onClick={() => toggleGroup(label)} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "14px", padding: 0, width: "100%", textAlign: "left" }}>
-                  <span style={{ fontSize: "11px", fontWeight: "600", color: ACCENT, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>{label}</span>
+                  <span style={{ fontSize: "13px", fontWeight: "600", color: ACCENT, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>{label}</span>
                   <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>({gPlants.length})</span>
                   <div style={{ flex: 1, height: "1px", background: BG_DARK }} />
-                  <span style={{ fontSize: "11px", color: TEXT_LIGHT }}>{collapsedGroups[label] ? "▶" : "▼"}</span>
+                  <span style={{ fontSize: "13px", color: TEXT_LIGHT }}>{collapsedGroups[label] ? "▶" : "▼"}</span>
                 </button>
               )}
               {!collapsedGroups[label] && (
