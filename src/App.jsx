@@ -968,8 +968,7 @@ function TodoPage() {
     if (!form.titel.trim()) return;
     setSaving(true);
     const row = { titel: form.titel.trim(), kategorie: form.kategorie, datum: form.datum || null, erledigt: false };
-    const { data, error } = await supabase.from("todos").insert(row).select().single();
-    if (error) { alert("Fehler: " + JSON.stringify(error)); setSaving(false); return; }
+    const { data } = await supabase.from("todos").insert(row).select().single();
     if (data) setTodos(prev => [data, ...prev]);
     setForm({ titel: "", kategorie: "Label", datum: "" });
     setShowAdd(false);
