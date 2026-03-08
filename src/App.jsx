@@ -1017,6 +1017,7 @@ export default function App() {
     setActivePage(id);
     setMobileOpen(false);
     localStorage.setItem("activePage", id);
+    localStorage.setItem("activeMenu", activeMenu);
   };
 
   const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : pages[activePage]?.title;
