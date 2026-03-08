@@ -1038,7 +1038,7 @@ function TodoPage() {
                 <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{todo.titel}</div>
                 <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
                   <span style={{ fontSize: "11px", background: katFarbe(), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{todo.kategorie}</span>
-                  {todo.datum && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📅 {new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
+                  {todo.datum && <span style={{ fontSize: "12px", color: TEXT_DARK, fontFamily: FONT }}>{new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
                 </div>
               </div>
               <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0, opacity: 0.5 }}>🗑</button>
@@ -1060,7 +1060,7 @@ function TodoPage() {
                     <div style={{ fontSize: "14px", color: TEXT_LIGHT, fontFamily: FONT, textDecoration: "line-through" }}>{todo.titel}</div>
                     <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
                       <span style={{ fontSize: "11px", background: katFarbe(), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT, opacity: 0.7 }}>{todo.kategorie}</span>
-                      {todo.datum && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📅 {new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
+                      {todo.datum && <span style={{ fontSize: "12px", color: TEXT_DARK, fontFamily: FONT }}>{new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
                     </div>
                   </div>
                 </div>
