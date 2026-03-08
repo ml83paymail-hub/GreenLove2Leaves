@@ -327,6 +327,8 @@ function Tagebuch({ plantId, plantName }) {
   const [entries, setEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [discordOn, setDiscordOn] = useState(() => localStorage.getItem("discordOn") !== "false");
+  const toggleDiscord = () => setDiscordOn(v => { localStorage.setItem("discordOn", !v); return !v; });
   const [newNote, setNewNote] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -366,7 +368,7 @@ function Tagebuch({ plantId, plantName }) {
       setNewNote(""); setPhotoFile(null); setPhotoPreview(null); setShowForm(false);
       setEntryDate(new Date().toISOString().slice(0, 10));
       // Discord Benachrichtigung
-      sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url);
+      if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url);
     } finally { setSaving(false); }
   };
 
@@ -393,7 +395,13 @@ function Tagebuch({ plantId, plantName }) {
     <div style={{ marginTop: "22px" }}>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-        <div style={{ fontSize: "13px", color: "#222", letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "700" }}>Tagebuch</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ fontSize: "13px", color: "#222", letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "700" }}>Tagebuch</div>
+          <div onClick={toggleDiscord} title={discordOn ? "Discord: An" : "Discord: Aus"} style={{ display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", background: discordOn ? "#5c6c56" : "#ccc", borderRadius: "20px", padding: "2px 8px 2px 4px", transition: "background 0.2s" }}>
+            <div style={{ width: "14px", height: "14px", borderRadius: "50%", background: "white", marginLeft: discordOn ? "12px" : "0", transition: "margin 0.2s" }} />
+            <span style={{ fontSize: "9px", color: "white", fontFamily: FONT, letterSpacing: "0.5px" }}>{discordOn ? "DC AN" : "DC AUS"}</span>
+          </div>
+        </div>
         <button onClick={() => setShowForm(v => !v)} style={{
           background: showForm ? BG_DARK : ACCENT, border: "none",
           borderRadius: "6px", padding: "5px 12px", cursor: "pointer",
