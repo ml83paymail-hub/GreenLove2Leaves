@@ -83,11 +83,11 @@ function shortBeiUnsSeit(datum) {
   let years = now.getFullYear() - start.getFullYear();
   let months = now.getMonth() - start.getMonth();
   let days = now.getDate() - start.getDate();
-  if (days < 0) months--;
+  if (days < 0) { months--; days += 30; }
   if (months < 0) { years--; months += 12; }
-  if (years > 0) return `${years}J ${months}M`;
-  if (months > 0) return `${months}M`;
-  return `${Math.max(1, Math.round((now - start) / 86400000))}T`;
+  if (years > 0) return `${years}J ${months}M ${days}T`;
+  if (months > 0) return `${months}M ${days}T`;
+  return `${Math.max(1, days)}T`;
 }
 
 // ── Share Helper ─────────────────────────────────────────────────────────────
