@@ -180,7 +180,7 @@ function plantToDb(p) {
     standort: p.standort || null,
     erhalten_von: p.erhaltenVon || null,
     auf_im: p.aufIm || null,
-    tc: p.tc || false,
+    tc: p.tc === true,
     foto_url: p.foto || null,
   };
 }
@@ -627,9 +627,11 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                   {["Instagram","Store","Webseite","eBay","Kleinanzeigen","Facebook","WA - Anthurien Verkauf","WA - Rare Plant (TC)","WA - VerkaufsGruppen","WA - Auktionen","WA - Hoyaddicted","WA - Hoya Verkauf"].map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0" }}>
-                <input type="checkbox" id="tc-edit" checked={!!form.tc} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} />
-                <label htmlFor="tc-edit" style={{ ...labelStyle, margin: 0, cursor: "pointer" }}>TC</label>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0", cursor: "pointer" }} onClick={() => set("tc", !form.tc)}>
+                <div style={{ width: "18px", height: "18px", border: "2px solid #5c6c56", borderRadius: "3px", background: form.tc ? "#5c6c56" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {form.tc && <span style={{ color: "white", fontSize: "13px", lineHeight: 1 }}>✓</span>}
+                </div>
+                <span style={{ ...labelStyle, margin: 0 }}>TC</span>
               </div>
               <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
                 <button onClick={() => setEditMode(false)} style={{ flex: 1, background: BG, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "10px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Abbrechen</button>
@@ -721,7 +723,12 @@ function AddPlantModal({ onClose, onSave }) {
             </select>
           </div>
           <div><label style={labelStyle}>Erhalten von</label><input style={inputStyle} placeholder="z.B. Instagram" value={form.erhaltenVon} onChange={e => set("erhaltenVon", e.target.value)} /></div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0" }}><input type="checkbox" id="tc-add" checked={!!form.tc} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} /><label htmlFor="tc-add" style={{ ...labelStyle, margin: 0, cursor: "pointer" }}>TC</label></div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0", cursor: "pointer" }} onClick={() => set("tc", !form.tc)}>
+            <div style={{ width: "18px", height: "18px", border: "2px solid #5c6c56", borderRadius: "3px", background: form.tc ? "#5c6c56" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              {form.tc && <span style={{ color: "white", fontSize: "13px", lineHeight: 1 }}>✓</span>}
+            </div>
+            <span style={{ ...labelStyle, margin: 0 }}>TC</span>
+          </div>
           <div><label style={labelStyle}>Auf / Im</label>
             <select style={{...inputStyle, appearance: "none", WebkitAppearance: "none", cursor: "pointer"}} value={form.aufIm} onChange={e => set("aufIm", e.target.value)}>
               <option value="">– Bitte wählen –</option>
