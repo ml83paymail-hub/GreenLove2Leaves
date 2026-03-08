@@ -753,7 +753,20 @@ function PflanzenPage() {
     if (groupBy === "none") return [{ label: null, plants: filtered }];
     const map = {};
     filtered.forEach(p => { const key = p[groupBy] || "Keine Angabe"; if (!map[key]) map[key] = []; map[key].push(p); });
-    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([label, plants]) => ({ label, plants }));
+    // Sort by predefined order matching dropdown options
+    const orderMap = {
+      typ: ["Alocasia","Anthurium","Hoya","Dischidia","Begonie","Fleischis","Philodendron","Monstera","Scindapsus","Weitere Pflanzen","Keine Angabe"],
+      standort: ["Wohnzimmer","Schlafzimmer","Küche","Bad","Flur","Keine Angabe"],
+      aufIm: ["Instagram","Store","Webseite","eBay","Kleinanzeigen","Facebook","WA - Anthurien Verkauf","WA - Rare Plant (TC)","WA - VerkaufsGruppen","WA - Auktionen","WA - Hoyaddicted","WA - Hoya Verkauf","Keine Angabe"],
+    };
+    const order = orderMap[groupBy] || [];
+    return Object.entries(map).sort(([a], [b]) => {
+      const ai = order.indexOf(a), bi = order.indexOf(b);
+      if (ai === -1 && bi === -1) return a.localeCompare(b);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    }).map(([label, plants]) => ({ label, plants }));
   })();
 
   const toggleGroup = (label) => setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
