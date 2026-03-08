@@ -826,7 +826,7 @@ function PflanzenPage() {
   const grouped = (() => {
     if (groupBy === "none") return [{ label: null, plants: filtered }];
     const map = {};
-    filtered.forEach(p => { const key = p[groupBy] || "Keine Angabe"; if (!map[key]) map[key] = []; map[key].push(p); });
+    filtered.forEach(p => { const key = p[groupBy] || "Keine Angabe"; if (!map[key]) map[key] = []; map[key].push(p); }); Object.keys(map).forEach(k => map[k].sort((a, b) => a.name.localeCompare(b.name, "de")));
     // Sort by predefined order matching dropdown options
     const orderMap = {
       typ: ["Alocasia","Anthurium","Hoya","Dischidia","Begonie","Fleischis","Philodendron","Monstera","Scindapsus","Weitere Pflanzen","Keine Angabe"],
