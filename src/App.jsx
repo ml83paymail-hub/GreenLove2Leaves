@@ -66,6 +66,25 @@ async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
   }
 }
 
+// ── Share Helper ─────────────────────────────────────────────────────────────
+async function shareImage(url, name) {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const file = new File([blob], `${name}.jpg`, { type: "image/jpeg" });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: name });
+      return;
+    }
+  } catch(e) {}
+  try {
+    if (navigator.share) { await navigator.share({ url, title: name }); return; }
+  } catch(e) {}
+  const a = document.createElement("a");
+  a.href = url; a.download = `${name}.jpg`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
 // ── Design ───────────────────────────────────────────────────────────────────
 const BG = "#EBEBE6";
 const BG_DARK = "#d4d4ce";
@@ -513,15 +532,13 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
             </label>
           )}
 
-          {/* Share + Download buttons */}
+          {/* Tap to share */}
           {plant.foto && !editMode && (
-            <div style={{ position: "absolute", bottom: "12px", left: "12px", display: "flex", gap: "6px" }}>
-              <button onClick={handleShare} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "6px", padding: "5px 10px", cursor: "pointer", fontSize: "11px", color: TEXT_MID, fontFamily: FONT }}>
-                ↗ Teilen
-              </button>
-              <button onClick={handleDownload} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "6px", padding: "5px 10px", cursor: "pointer", fontSize: "11px", color: TEXT_MID, fontFamily: FONT }}>
-                ↓ Speichern
-              </button>
+            <div onClick={() => shareImage(plant.foto, plant.name)}
+              style={{ position: "absolute", inset: 0, cursor: "pointer", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: "12px" }}>
+              <span style={{ background: "rgba(0,0,0,0.35)", color: "#fff", fontSize: "11px", fontFamily: FONT, padding: "4px 10px", borderRadius: "20px", backdropFilter: "blur(4px)" }}>
+                Teilen
+              </span>
             </div>
           )}
 
@@ -955,7 +972,7 @@ function FotoalbumPage() {
       {lightbox && (
         <div onClick={() => setLightbox(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: "500px", width: "100%", background: WHITE, borderRadius: "12px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
-            <img src={lightbox.foto_url} alt="" style={{ width: "100%", height: "auto", display: "block" }} />
+            <img src={lightbox.foto_url} alt="" onClick={() => shareImage(lightbox.foto_url, lightbox.pflanzen?.name || "Pflanze")} style={{ width: "100%", height: "auto", display: "block", cursor: "pointer" }} title="Tippen zum Teilen" />
             <div style={{ padding: "14px 16px" }}>
               <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "4px" }}>{lightbox.pflanzen?.name}</div>
               {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
