@@ -306,12 +306,16 @@ function PlantCard({ plant, onClick }) {
         <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, marginBottom: "2px", fontFamily: FONT }}>{plant.name}</div>
         <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontStyle: "italic", marginBottom: "10px", fontFamily: FONT }}>{plant.vollstaendigerName || "–"}</div>
         <div style={{ height: "1px", background: BG_DARK, marginBottom: "10px" }} />
-        {[["Standort", plant.standort]].map(([l, v]) => (
-          <div key={l} style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "3px" }}>
-            <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>{l}</span>
-            <span style={{ fontSize: "10px", color: TEXT_MID, fontFamily: FONT, textAlign: "right" }}>{v || "–"}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "3px" }}>
+          <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>Standort</span>
+          <span style={{ fontSize: "10px", color: TEXT_MID, fontFamily: FONT, textAlign: "right" }}>{plant.standort || "–"}</span>
+        </div>
+        {plant.datum && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginTop: "3px" }}>
+            <PieIcon />
+            <span style={{ fontSize: "10px", color: TEXT_MID, fontFamily: FONT }}>{shortBeiUnsSeit(plant.datum)}</span>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
