@@ -1,6 +1,31 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+// ── Toast Notifications ──────────────────────────────────────────────────────
+function ToastContainer({ toasts, onRemove }) {
+  return (
+    <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9999, display: "flex", flexDirection: "column", gap: "10px", pointerEvents: "none" }}>
+      {toasts.map(t => (
+        <div key={t.id} style={{
+          background: "#5c6c56", color: "white", borderRadius: "10px",
+          padding: "12px 18px", fontSize: "13px", fontFamily: "system-ui, sans-serif",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.2)", maxWidth: "280px",
+          animation: "slideIn 0.3s ease", pointerEvents: "auto",
+          display: "flex", alignItems: "flex-start", gap: "10px",
+        }}>
+          <span style={{ fontSize: "18px", flexShrink: 0 }}>🌿</span>
+          <div>
+            <div style={{ fontWeight: "600", marginBottom: "2px" }}>{t.title}</div>
+            <div style={{ fontSize: "11px", opacity: 0.85 }}>{t.msg}</div>
+          </div>
+          <button onClick={() => onRemove(t.id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: "14px", marginLeft: "auto", flexShrink: 0 }}>✕</button>
+        </div>
+      ))}
+      <style>{`@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
+    </div>
+  );
+}
+
 // ── Supabase ──────────────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://booronkmwfvdbpyopjsl.supabase.co";
 const SUPABASE_KEY = "sb_publishable_xinZMWPSxd7oxz_j5a8HOQ_vElqWJDT";
@@ -222,7 +247,7 @@ function Tagebuch({ plantId }) {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 16));
+  const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
     supabase.from("tagebuch").select("*").eq("pflanze_id", plantId).order("created_at", { ascending: true })
@@ -254,7 +279,7 @@ function Tagebuch({ plantId }) {
       }).select().single();
       if (!error && data) setEntries(prev => [...prev, dbToEntry(data)]);
       setNewNote(""); setPhotoFile(null); setPhotoPreview(null); setShowForm(false);
-      setEntryDate(new Date().toISOString().slice(0, 16));
+      setEntryDate(new Date().toISOString().slice(0, 10));
     } finally { setSaving(false); }
   };
 
@@ -265,8 +290,7 @@ function Tagebuch({ plantId }) {
 
   const formatEntryDate = (iso) => {
     const d = new Date(iso);
-    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) +
-      " · " + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
   };
 
   return (
@@ -287,7 +311,7 @@ function Tagebuch({ plantId }) {
           {/* Date picker */}
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <label style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT }}>Datum & Uhrzeit</label>
-            <input type="datetime-local" value={entryDate} onChange={e => setEntryDate(e.target.value)}
+            <input type="date" value={entryDate} onChange={e => setEntryDate(e.target.value)}
               style={{ background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px 10px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none" }} />
           </div>
 
@@ -777,6 +801,27 @@ export default function App() {
   const [activeMenu, setActiveMenu] = useState("pflanzen");
   const [activePage, setActivePage] = useState("unsere-pflanzen");
   const [collapsed, setCollapsed] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (title, msg) => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, title, msg }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
+  };
+  const removeToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
+
+  useEffect(() => {
+    // Realtime: notify when partner adds/updates plants
+    const channel = supabase.channel("realtime-updates")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pflanzen" }, payload => {
+        addToast("Neue Pflanze 🌱", `${payload.new.name} wurde hinzugefügt`);
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "tagebuch" }, payload => {
+        addToast("Neuer Tagebucheintrag 📖", "Ein Eintrag wurde hinzugefügt");
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, []);
 
   const currentMenu = menu.find(m => m.id === activeMenu);
   const handleMenuClick = id => { const m = menu.find(x => x.id === id); if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); } };
@@ -784,6 +829,7 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden" }}>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <aside style={{ width: collapsed ? "52px" : "216px", minWidth: collapsed ? "52px" : "216px", background: "#5c6c56", display: "flex", flexDirection: "column", transition: "width 0.25s ease, min-width 0.25s ease", overflow: "hidden", boxShadow: "2px 0 16px rgba(0,0,0,0.15)", zIndex: 10 }}>
         <div style={{ height: "54px", display: "flex", alignItems: "center", padding: "0 16px", borderBottom: "1px solid #4a5a44", flexShrink: 0, cursor: "pointer" }} onClick={() => setCollapsed(c => !c)}>
           {!collapsed && <span style={{ color: "#ffffff", fontSize: "15px", letterSpacing: "1px", whiteSpace: "nowrap", fontFamily: FONT }}>GreenLove2Leaves</span>}
