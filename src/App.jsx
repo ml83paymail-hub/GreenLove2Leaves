@@ -183,9 +183,11 @@ function PlantCard({ plant, onClick }) {
       onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = GLASS_SHADOW; }}
     >
       <div style={{
-        height: "160px",
-        background: plant.foto ? `url(${plant.foto}) center/cover` : BTN,
+        height: "220px",
+        background: plant.foto ? `url(${plant.foto}) center/cover no-repeat` : BTN,
         display: "flex", alignItems: "center", justifyContent: "center", position: "relative",
+        aspectRatio: "3/4",
+        height: "auto",
       }}>
         {!plant.foto && <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.75 }}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>}
         {plant.typ && (
@@ -286,7 +288,7 @@ function Tagebuch({ plantId }) {
             </label>
             {photoPreview && (
               <div style={{ marginTop: "8px", position: "relative", display: "inline-block" }}>
-                <img src={photoPreview} alt="Vorschau" style={{ width: "100%", maxHeight: "160px", objectFit: "cover", borderRadius: "6px", border: `1px solid ${BG_DARK}` }} />
+                <img src={photoPreview} alt="Vorschau" style={{ width: "100%", maxHeight: "280px", objectFit: "cover", borderRadius: "6px", border: `1px solid ${BG_DARK}` }} />
                 <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); }} style={{ position: "absolute", top: "6px", right: "6px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", fontSize: "11px", color: WHITE }}>✕</button>
               </div>
             )}
@@ -304,7 +306,7 @@ function Tagebuch({ plantId }) {
           {!showAll && hidden > 0 && <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>▲ {hidden} ältere Einträge anzeigen</button>}
           {visible.map(entry => (
             <div key={entry.id} style={{ background: BG, borderRadius: "8px", border: `1px solid ${BG_DARK}`, overflow: "hidden" }}>
-              {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", maxHeight: "180px", objectFit: "cover", display: "block" }} />}
+              {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", maxHeight: "320px", objectFit: "cover", display: "block" }} />}
               <div style={{ padding: "10px 12px" }}>
                 {entry.note && <p style={{ margin: "0 0 6px 0", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6" }}>{entry.note}</p>}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -365,7 +367,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
         onClick={e => e.stopPropagation()}>
 
         {/* Photo area */}
-        <div style={{ height: "190px", background: form.foto ? `url(${form.foto}) center/cover` : BTN, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
+        <div style={{ height: "280px", background: form.foto ? `url(${form.foto}) center/cover` : BTN, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
           {!form.foto && <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.75 }}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>}
           {uploading && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "13px", fontFamily: FONT }}>Lädt hoch …</div>}
           <button onClick={onClose} style={{ position: "absolute", top: "12px", left: "12px", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "13px", color: TEXT_MID }}>✕</button>
@@ -506,7 +508,7 @@ function AddPlantModal({ onClose, onSave }) {
           {/* Foto Upload */}
           <div>
             <label style={labelStyle}>Foto</label>
-            <label style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "120px", background: fotoPreview ? `url(${fotoPreview}) center/cover` : BG, border: `1px dashed ${BG_DARK}`, borderRadius: "8px", cursor: "pointer" }}>
+            <label style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "240px", background: fotoPreview ? `url(${fotoPreview}) center/cover` : BG, border: `1px dashed ${BG_DARK}`, borderRadius: "8px", cursor: "pointer" }}>
               {!fotoPreview && <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>📷 Foto auswählen</span>}
               <input type="file" accept="image/*" onChange={handleFoto} style={{ display: "none" }} />
             </label>
