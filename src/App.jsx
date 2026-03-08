@@ -1323,17 +1323,10 @@ export default function App() {
         })}
       </nav>
       {(!collapsed || mobile) && (
-        <div>
-          <div style={{ padding: "10px 14px", borderTop: "1px solid #4a5a44" }}>
-            <button onClick={openQuickAdd} style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", padding: "9px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", color: "#fff", fontFamily: FONT, fontSize: "13px", fontWeight: "600" }}>
-              <span style={{ fontSize: "18px", lineHeight: 1 }}>+</span> Hinzufügen
-            </button>
-          </div>
           <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isOnline ? "#EBEBE6" : "#e05555", flexShrink: 0 }} />
             <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>{isOnline ? "Online" : "Offline"}</span>
           </div>
-        </div>
       )}
     </aside>
   );
@@ -1383,7 +1376,7 @@ export default function App() {
         </div>
       </div>
       {/* Mobile floating + button */}
-      <button className="gl-quickadd-fab" onClick={openQuickAdd} style={{ display: "none", position: "fixed", bottom: "24px", right: "24px", zIndex: 500, width: "52px", height: "52px", borderRadius: "50%", background: ACCENT, border: "none", color: "#fff", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(0,0,0,0.25)", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>+</button>
+      <button onClick={openQuickAdd} style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, width: "56px", height: "56px", borderRadius: "50%", background: ACCENT, border: "none", color: "#fff", fontSize: "30px", cursor: "pointer", boxShadow: "0 4px 24px rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>+</button>
 
       {/* QuickAdd Modal */}
       {quickAdd && (
