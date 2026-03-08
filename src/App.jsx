@@ -532,13 +532,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
             </label>
           )}
 
-          {/* Tap to share */}
-          {plant.foto && !editMode && (
-            <div onClick={() => shareImage(plant.foto, plant.name)}
-              style={{ position: "absolute", bottom: "12px", left: "50%", transform: "translateX(-50%)", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", background: "rgba(0,0,0,0.45)", color: "#fff", fontSize: "12px", fontFamily: FONT, padding: "6px 14px", borderRadius: "20px", backdropFilter: "blur(4px)", whiteSpace: "nowrap" }}>
-              <span style={{ fontSize: "14px" }}>⬆</span> Teilen
-            </div>
-          )}
+
 
           {/* 3-dot menu */}
           <div style={{ position: "absolute", top: "12px", right: "12px" }}>
@@ -975,9 +969,7 @@ function FotoalbumPage() {
               <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "4px" }}>{lightbox.pflanzen?.name}</div>
               {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
               <div style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{new Date(lightbox.created_at).toLocaleDateString("de-DE")}</div>
-              <button onClick={() => shareImage(lightbox.foto_url, lightbox.pflanzen?.name || "Pflanze")} style={{ marginTop: "10px", width: "100%", background: BTN, border: "none", borderRadius: "8px", padding: "10px", cursor: "pointer", fontSize: "13px", color: "#fff", fontFamily: FONT, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                <span>⬆</span> Teilen / Speichern
-              </button>
+
             </div>
             <button onClick={() => setLightbox(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "#fff", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
@@ -989,8 +981,8 @@ function FotoalbumPage() {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [activeMenu, setActiveMenu] = useState("pflanzen");
-  const [activePage, setActivePage] = useState("unsere-pflanzen");
+  const [activeMenu, setActiveMenu] = useState(() => localStorage.getItem("activeMenu") || "pflanzen");
+  const [activePage, setActivePage] = useState(() => localStorage.getItem("activePage") || "unsere-pflanzen");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -1018,12 +1010,13 @@ export default function App() {
 
   const handleMenuClick = (id) => {
     const m = menu.find(x => x.id === id);
-    if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); }
+    if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); localStorage.setItem("activeMenu", id); localStorage.setItem("activePage", m.sub[0].id); }
   };
 
   const handlePageClick = (id) => {
     setActivePage(id);
     setMobileOpen(false);
+    localStorage.setItem("activePage", id);
   };
 
   const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : pages[activePage]?.title;
