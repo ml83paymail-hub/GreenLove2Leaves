@@ -957,7 +957,7 @@ function TodoPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("todos").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("todos").select("*").order("datum", { ascending: true, nullsFirst: false });
     if (data) setTodos(data);
     setLoading(false);
   };
