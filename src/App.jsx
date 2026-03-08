@@ -952,7 +952,7 @@ function TodoPage() {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [gruppeFilter, setGruppeFilter] = useState("Alle");
-  const [form, setForm] = useState({ titel: "", kategorie: "Label", datum: "" });
+  const [form, setForm] = useState({ titel: "", kategorie: "Label", datum: new Date().toISOString().split('T')[0] });
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -970,7 +970,7 @@ function TodoPage() {
     const row = { titel: form.titel.trim(), kategorie: form.kategorie, datum: form.datum || null, erledigt: false };
     const { data } = await supabase.from("todos").insert(row).select().single();
     if (data) setTodos(prev => [data, ...prev]);
-    setForm({ titel: "", kategorie: "Label", datum: "" });
+    setForm({ titel: "", kategorie: "Label", datum: new Date().toISOString().split('T')[0] });
     setShowAdd(false);
     setSaving(false);
   };
