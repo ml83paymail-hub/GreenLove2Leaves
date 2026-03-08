@@ -1323,14 +1323,16 @@ export default function App() {
         })}
       </nav>
       {(!collapsed || mobile) && (
+        <div>
           <div style={{ padding: "10px 14px", borderTop: "1px solid #4a5a44" }}>
             <button onClick={openQuickAdd} style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", padding: "9px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", color: "#fff", fontFamily: FONT, fontSize: "13px", fontWeight: "600" }}>
               <span style={{ fontSize: "18px", lineHeight: 1 }}>+</span> Hinzufügen
             </button>
           </div>
-        <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isOnline ? "#EBEBE6" : "#e05555", flexShrink: 0 }} />
-          <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>{isOnline ? "Online" : "Offline"}</span>
+          <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isOnline ? "#EBEBE6" : "#e05555", flexShrink: 0 }} />
+            <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>{isOnline ? "Online" : "Offline"}</span>
+          </div>
         </div>
       )}
     </aside>
