@@ -393,7 +393,7 @@ function Tagebuch({ plantId, plantName }) {
     <div style={{ marginTop: "22px" }}>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-        <div style={{ fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>Tagebuch</div>
+        <div style={{ fontSize: "13px", color: "#222", letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "700" }}>Tagebuch</div>
         <button onClick={() => setShowForm(v => !v)} style={{
           background: showForm ? BG_DARK : ACCENT, border: "none",
           borderRadius: "6px", padding: "5px 12px", cursor: "pointer",
@@ -450,7 +450,7 @@ function Tagebuch({ plantId, plantName }) {
                   <>
                     {entry.note && <p style={{ margin: "0 0 8px 0", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6" }}>{entry.note}</p>}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
+                      <span style={{ fontSize: "12px", color: "#222", fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
                       <div style={{ position: "relative" }}>
                         <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>
                         <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, bottom: "28px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 20, overflow: "hidden" }}>
@@ -1101,7 +1101,7 @@ export default function App() {
           const isActive = activeMenu === item.id;
           return (
             <div key={item.id}>
-              <button onClick={() => handleMenuClick(item.id)} style={{ width: "100%", background: isActive ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: isActive ? `3px solid ${BG}` : "3px solid transparent", color: isActive ? "#ffffff" : "rgba(255,255,255,0.7)", padding: (!collapsed || mobile) ? "13px 14px" : "13px 0", textAlign: (!collapsed || mobile) ? "left" : "center", cursor: "pointer", fontSize: "15px", letterSpacing: "0.6px", display: "flex", alignItems: "center", gap: (!collapsed || mobile) ? "9px" : 0, justifyContent: (!collapsed || mobile) ? "flex-start" : "center", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
+              <button onClick={() => handleMenuClick(item.id)} style={{ width: "100%", background: isActive ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: isActive ? `3px solid ${BG}` : "3px solid transparent", color: isActive ? "#ffffff" : "rgba(255,255,255,0.7)", padding: (!collapsed || mobile) ? "13px 14px" : "13px 0", textAlign: (!collapsed || mobile) ? "left" : "center", cursor: "pointer", fontSize: "16px", letterSpacing: "0.6px", display: "flex", alignItems: "center", gap: (!collapsed || mobile) ? "9px" : 0, justifyContent: (!collapsed || mobile) ? "flex-start" : "center", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
                 <span>{item.emoji}</span>
                 {(!collapsed || mobile) && <span>{item.label}</span>}
               </button>
@@ -1110,7 +1110,7 @@ export default function App() {
                   {item.sub.map(sub => {
                     const isSub = activePage === sub.id;
                     return (
-                      <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: "3px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "15px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
+                      <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: "3px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "16px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
                         <span style={{ opacity: 0.6, fontSize: "11px" }}>{sub.emoji}</span>{sub.label}
                       </button>
                     );
