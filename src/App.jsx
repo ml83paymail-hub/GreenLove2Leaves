@@ -147,6 +147,7 @@ async function uploadPhoto(file, folder = "pflanzen") {
 
 // ── Menu ──────────────────────────────────────────────────────────────────────
 const menu = [
+  { id: "updates", label: "Updates", emoji: "»", sub: [{ id: "fotoalbum", label: "Fotoalbum", emoji: "»" }] },
   { id: "content", label: "Content", emoji: "»", sub: [{ id: "social-media", label: "Social Media", emoji: "»" }] },
   { id: "pflanzen", label: "Pflanzen", emoji: "»", sub: [
     { id: "unsere-pflanzen", label: "Unsere Pflanzen", emoji: "»" },
