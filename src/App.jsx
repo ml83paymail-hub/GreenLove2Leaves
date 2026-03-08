@@ -683,7 +683,7 @@ function AddPlantModal({ onClose, onSave }) {
       const { data, error } = await supabase.from("pflanzen").insert(dbRow).select().single();
       if (!error && data) {
         onSave(dbToPlant(data));
-        await supabase.from("todos").insert({ titel: "Label erstellen für: " + data.name, kategorie: "Label", erledigt: false, pflanze_id: data.id });
+        await supabase.from("todos").insert({ titel: data.name + ", bitte ein Label erstellen!", kategorie: "Label", datum: new Date().toISOString().split("T")[0], erledigt: false, pflanze_id: data.id });
       }
       onClose();
     } finally { setSaving(false); }
