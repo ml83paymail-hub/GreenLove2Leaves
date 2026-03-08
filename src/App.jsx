@@ -165,7 +165,7 @@ function dbToPlant(row) {
     standort: row.standort || "",
     erhaltenVon: row.erhalten_von || "",
     aufIm: row.auf_im || "",
-    tc: row.tc === true,
+    tc: row.TC === true || row.tc === true,
     foto: row.foto_url || "",
   };
 }
@@ -180,7 +180,7 @@ function plantToDb(p) {
     standort: p.standort || null,
     erhalten_von: p.erhaltenVon || null,
     auf_im: p.aufIm || null,
-    tc: p.tc === true,
+    "TC": p.tc === true,
     foto_url: p.foto || null,
   };
 }
