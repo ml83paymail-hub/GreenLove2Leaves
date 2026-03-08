@@ -227,7 +227,7 @@ function PlantCard({ plant, onClick }) {
         <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, marginBottom: "2px", fontFamily: FONT }}>{plant.name}</div>
         <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontStyle: "italic", marginBottom: "10px", fontFamily: FONT }}>{plant.vollstaendigerName || "–"}</div>
         <div style={{ height: "1px", background: BG_DARK, marginBottom: "10px" }} />
-        {[["Standort", plant.standort], ["Bei uns seit", calcBeiUnsSeit(plant.datum)], ["Auf / Im", plant.aufIm]].map(([l, v]) => (
+        {[["Standort", plant.standort], ["Bei uns seit", calcBeiUnsSeit(plant.datum)]].map(([l, v]) => (
           <div key={l} style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "3px" }}>
             <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>{l}</span>
             <span style={{ fontSize: "10px", color: TEXT_MID, fontFamily: FONT, textAlign: "right" }}>{v || "–"}</span>
@@ -805,7 +805,7 @@ function PflanzenPage() {
                 </button>
               )}
               {!collapsedGroups[label] && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
+                <div className="plant-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px" }}>
                   {gPlants.map(p => <PlantCard key={p.id} plant={p} onClick={setSelected} />)}
                 </div>
               )}
@@ -936,6 +936,7 @@ export default function App() {
           .gl-desktop-sidebar { display: none !important; }
           .gl-hamburger { display: flex !important; }
           .gl-main { padding: 16px 14px !important; }
+          .plant-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
         }
       `}</style>
 
