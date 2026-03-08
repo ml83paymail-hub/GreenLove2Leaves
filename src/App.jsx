@@ -165,6 +165,7 @@ function dbToPlant(row) {
     standort: row.standort || "",
     erhaltenVon: row.erhalten_von || "",
     aufIm: row.auf_im || "",
+    tc: row.tc || false,
     foto: row.foto_url || "",
   };
 }
@@ -179,6 +180,7 @@ function plantToDb(p) {
     standort: p.standort || null,
     erhalten_von: p.erhaltenVon || null,
     auf_im: p.aufIm || null,
+    tc: p.tc || false,
     foto_url: p.foto || null,
   };
 }
@@ -580,7 +582,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
               <div style={{ fontSize: "17px", fontWeight: "700", color: TEXT_DARK, marginBottom: "2px", fontFamily: FONT }}>{plant.name}</div>
               <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontStyle: "italic", marginBottom: "16px", fontFamily: FONT }}>{plant.vollstaendigerName || "–"}</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 20px" }}>
-                {[["Typ", plant.typ],["Standort", plant.standort],["Datum", formatDate(plant.datum)],["Wochentag", getWochentag(plant.datum)],["Bei uns seit", calcBeiUnsSeit(plant.datum)],["Erhalten von", plant.erhaltenVon],["Auf / Im", plant.aufIm]].map(([label, value]) => (
+                {[["Typ", plant.typ],["Standort", plant.standort],["Datum", formatDate(plant.datum)],["Wochentag", getWochentag(plant.datum)],["Bei uns seit", calcBeiUnsSeit(plant.datum)],["Erhalten von", plant.erhaltenVon],["Auf / Im", plant.aufIm],["TC Pflanze", plant.tc ? "✓ Ja" : "Nein"]].map(([label, value]) => (
                   <div key={label}>
                     <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "3px", fontFamily: FONT }}>{label}</div>
                     <div style={{ fontSize: "12px", color: TEXT_DARK, fontFamily: FONT }}>{value || "–"}</div>
@@ -619,6 +621,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                 </select>
               </div>
               <div><label style={labelStyle}>Erhalten von</label><input style={inputStyle} value={form.erhaltenVon} onChange={e => set("erhaltenVon", e.target.value)} /></div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0" }}><input type="checkbox" id="tc-edit" checked={form.tc || false} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} /><label htmlFor="tc-edit" style={{ ...labelStyle, margin: 0, cursor: "pointer" }}>TC Pflanze (Tissue Culture)</label></div>
               <div><label style={labelStyle}>Auf / Im</label>
                 <select style={{...inputStyle, appearance: "none", WebkitAppearance: "none", cursor: "pointer"}} value={form.aufIm} onChange={e => set("aufIm", e.target.value)}>
                   <option value="">– Bitte wählen –</option>
@@ -639,7 +642,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
 
 // ── Add Plant Modal ───────────────────────────────────────────────────────────
 function AddPlantModal({ onClose, onSave }) {
-  const [form, setForm] = useState({ name: "", foto: "", typ: "", datum: "", vollstaendigerName: "", standort: "", erhaltenVon: "", aufIm: "" });
+  const [form, setForm] = useState({ name: "", foto: "", typ: "", datum: "", vollstaendigerName: "", standort: "", erhaltenVon: "", aufIm: "", tc: false });
   const [fotoFile, setFotoFile] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -715,6 +718,7 @@ function AddPlantModal({ onClose, onSave }) {
             </select>
           </div>
           <div><label style={labelStyle}>Erhalten von</label><input style={inputStyle} placeholder="z.B. Instagram" value={form.erhaltenVon} onChange={e => set("erhaltenVon", e.target.value)} /></div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0" }}><input type="checkbox" id="tc-add" checked={form.tc || false} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} /><label htmlFor="tc-add" style={{ ...labelStyle, margin: 0, cursor: "pointer" }}>TC Pflanze (Tissue Culture)</label></div>
           <div><label style={labelStyle}>Auf / Im</label>
             <select style={{...inputStyle, appearance: "none", WebkitAppearance: "none", cursor: "pointer"}} value={form.aufIm} onChange={e => set("aufIm", e.target.value)}>
               <option value="">– Bitte wählen –</option>
