@@ -822,7 +822,7 @@ function PflanzenPage() {
               {label && (
                 <button onClick={() => toggleGroup(label)} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "14px", padding: 0, width: "100%", textAlign: "left" }}>
                   <span style={{ fontSize: "13px", fontWeight: "600", color: ACCENT, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>{label}</span>
-                  <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>({gPlants.length})</span>
+                  <span style={{ fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT }}>({gPlants.length})</span>
                   <div style={{ flex: 1, height: "1px", background: BG_DARK }} />
                   <span style={{ fontSize: "13px", color: TEXT_LIGHT }}>{collapsedGroups[label] ? "▶" : "▼"}</span>
                 </button>
