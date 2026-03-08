@@ -83,7 +83,7 @@ function shortBeiUnsSeit(datum) {
   let years = now.getFullYear() - start.getFullYear();
   let months = now.getMonth() - start.getMonth();
   let days = now.getDate() - start.getDate();
-  if (days < 0) { months--; days += 30; }
+  if (days < 0) { months--; days += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
   if (months < 0) { years--; months += 12; }
   if (years > 0) return `${years}J ${months}M ${days}T`;
   if (months > 0) return `${months}M ${days}T`;
