@@ -337,7 +337,6 @@ function Tagebuch({ plantId }) {
         <div style={{ padding: "20px", textAlign: "center", color: TEXT_LIGHT, fontSize: "12px", fontFamily: FONT, background: BG, borderRadius: "8px" }}>Noch keine Einträge vorhanden.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {!showAll && hidden > 0 && <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>▼ {hidden} weitere Einträge anzeigen</button>}
           {visible.map(entry => (
             <div key={entry.id} style={{ background: BG, borderRadius: "8px", border: `1px solid ${BG_DARK}`, overflow: "hidden" }}>
               {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: "0" }} />}
@@ -357,7 +356,16 @@ function Tagebuch({ plantId }) {
               </div>
             </div>
           ))}
-          {showAll && hidden > 0 && <button onClick={() => setShowAll(false)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>▲ Weniger anzeigen</button>}
+          {!showAll && hidden > 0 && (
+            <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
+              ▼ {hidden} weitere Einträge anzeigen
+            </button>
+          )}
+          {showAll && (
+            <button onClick={() => setShowAll(false)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
+              ▲ Weniger anzeigen
+            </button>
+          )}
         </div>
       )}
     </div>
