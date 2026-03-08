@@ -982,14 +982,22 @@ function FotoalbumPage() {
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [activeMenu, setActiveMenu] = useState(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (hash) { const m = menu.find(x => x.sub.some(s => s.id === hash)); if (m) return m.id; }
-    return localStorage.getItem("activeMenu") || "pflanzen";
+    try {
+      const hash = window.location.hash.replace("#", "");
+      if (hash) { const m = menu.find(x => x.sub.some(s => s.id === hash)); if (m) return m.id; }
+      const stored = sessionStorage.getItem("activeMenu");
+      if (stored) return stored;
+    } catch(e) {}
+    return "pflanzen";
   });
   const [activePage, setActivePage] = useState(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (hash && menu.some(m => m.sub.some(s => s.id === hash))) return hash;
-    return localStorage.getItem("activePage") || "unsere-pflanzen";
+    try {
+      const hash = window.location.hash.replace("#", "");
+      if (hash && menu.some(m => m.sub.some(s => s.id === hash))) return hash;
+      const stored = sessionStorage.getItem("activePage");
+      if (stored) return stored;
+    } catch(e) {}
+    return "unsere-pflanzen";
   });
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -1018,15 +1026,15 @@ export default function App() {
 
   const handleMenuClick = (id) => {
     const m = menu.find(x => x.id === id);
-    if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); localStorage.setItem("activeMenu", id); localStorage.setItem("activePage", m.sub[0].id); window.location.hash = m.sub[0].id; }
+    if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); sessionStorage.setItem("activeMenu", id); sessionStorage.setItem("activePage", m.sub[0].id); history.replaceState(null, "", "#" + m.sub[0].id); }
   };
 
   const handlePageClick = (id) => {
     setActivePage(id);
     setMobileOpen(false);
-    localStorage.setItem("activePage", id);
-    localStorage.setItem("activeMenu", activeMenu);
-    window.location.hash = id;
+    sessionStorage.setItem("activePage", id);
+    sessionStorage.setItem("activeMenu", activeMenu);
+    history.replaceState(null, "", "#" + id);
   };
 
   const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : pages[activePage]?.title;
