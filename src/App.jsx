@@ -681,7 +681,10 @@ function AddPlantModal({ onClose, onSave }) {
       if (fotoFile) foto_url = await uploadPhoto(fotoFile);
       const dbRow = { ...plantToDb({ ...form }), foto_url };
       const { data, error } = await supabase.from("pflanzen").insert(dbRow).select().single();
-      if (!error && data) onSave(dbToPlant(data));
+      if (!error && data) {
+        onSave(dbToPlant(data));
+        await supabase.from("todos").insert({ titel: "Label erstellen für: " + data.name, kategorie: "Label", erledigt: false, pflanze_id: data.id });
+      }
       onClose();
     } finally { setSaving(false); }
   };
@@ -939,6 +942,164 @@ function PflanzenPage() {
   );
 }
 
+
+// ── Todo Page ─────────────────────────────────────────────────────────────────
+const TODO_KATEGORIEN = ["Bestellungen", "Label", "Organisation"];
+
+function TodoPage() {
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [gruppeFilter, setGruppeFilter] = useState("Alle");
+  const [form, setForm] = useState({ titel: "", kategorie: "Label", datum: "" });
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("todos").select("*").order("created_at", { ascending: false });
+    if (data) setTodos(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleAdd = async () => {
+    if (!form.titel.trim()) return;
+    setSaving(true);
+    const row = { titel: form.titel.trim(), kategorie: form.kategorie, datum: form.datum || null, erledigt: false };
+    const { data } = await supabase.from("todos").insert(row).select().single();
+    if (data) setTodos(prev => [data, ...prev]);
+    setForm({ titel: "", kategorie: "Label", datum: "" });
+    setShowAdd(false);
+    setSaving(false);
+  };
+
+  const handleToggle = async (todo) => {
+    const { data } = await supabase.from("todos").update({ erledigt: !todo.erledigt }).eq("id", todo.id).select().single();
+    if (data) setTodos(prev => prev.map(t => t.id === todo.id ? data : t));
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("todos").delete().eq("id", id);
+    setTodos(prev => prev.filter(t => t.id !== id));
+  };
+
+  const filtered = todos.filter(t => {
+    const matchSearch = t.titel.toLowerCase().includes(search.toLowerCase());
+    const matchKat = gruppeFilter === "Alle" || t.kategorie === gruppeFilter;
+    return matchSearch && matchKat;
+  });
+
+  const offen = filtered.filter(t => !t.erledigt);
+  const erledigt = filtered.filter(t => t.erledigt);
+
+  const katFarbe = (k) => {
+    if (k === "Bestellungen") return "#7a9e7e";
+    if (k === "Label") return "#b07d4a";
+    if (k === "Organisation") return "#6b7fa3";
+    return ACCENT;
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>To Do Liste</h1>
+          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} offene Aufgabe{offen.length !== 1 ? "n" : ""}</p>
+        </div>
+        <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Aufgabe hinzufügen</button>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
+
+      {/* Suche + Filter */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "22px", flexWrap: "wrap" }}>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen ..." style={{ flex: 1, minWidth: "180px", padding: "9px 14px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none" }} />
+        {["Alle", ...TODO_KATEGORIEN].map(k => (
+          <button key={k} onClick={() => setGruppeFilter(k)} style={{ padding: "9px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: gruppeFilter === k ? "700" : "400", background: gruppeFilter === k ? ACCENT : GLASS, color: gruppeFilter === k ? "#fff" : TEXT_MID }}>
+            {k}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Aufgaben werden geladen …</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {offen.length === 0 && erledigt.length === 0 && (
+            <div style={{ textAlign: "center", padding: "52px", color: TEXT_LIGHT, fontFamily: FONT, fontSize: "13px" }}>Keine Aufgaben gefunden 🌿</div>
+          )}
+          {offen.map(todo => (
+            <div key={todo.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <div onClick={() => handleToggle(todo)} style={{ width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${ACCENT}`, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{todo.titel}</div>
+                <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: "11px", background: katFarbe(todo.kategorie), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{todo.kategorie}</span>
+                  {todo.datum && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📅 {new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
+                </div>
+              </div>
+              <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0, opacity: 0.5 }}>🗑</button>
+            </div>
+          ))}
+
+          {erledigt.length > 0 && (
+            <div style={{ marginTop: "16px" }}>
+              <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "8px" }}>Erledigt ({erledigt.length})</div>
+              {erledigt.map(todo => (
+                <div key={todo.id} style={{ background: "rgba(255,255,255,0.25)", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: "14px", marginBottom: "6px", opacity: 0.65 }}>
+                  <div onClick={() => handleToggle(todo)} style={{ width: "20px", height: "20px", borderRadius: "50%", background: ACCENT, border: `2px solid ${ACCENT}`, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "14px", color: TEXT_LIGHT, fontFamily: FONT, textDecoration: "line-through" }}>{todo.titel}</div>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
+                      <span style={{ fontSize: "11px", background: katFarbe(todo.kategorie), color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT, opacity: 0.7 }}>{todo.kategorie}</span>
+                      {todo.datum && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📅 {new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
+                    </div>
+                  </div>
+                  <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0, opacity: 0.5 }}>🗑</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Add Modal */}
+      {showAdd && (
+        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Aufgabe hinzufügen</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div>
+                <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, display: "block", marginBottom: "5px" }}>Aufgabe *</label>
+                <input value={form.titel} onChange={e => setForm(f => ({ ...f, titel: e.target.value }))} placeholder="Was muss erledigt werden?" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, display: "block", marginBottom: "5px" }}>Kategorie</label>
+                <select value={form.kategorie} onChange={e => setForm(f => ({ ...f, kategorie: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+                  {TODO_KATEGORIEN.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, display: "block", marginBottom: "5px" }}>Datum (optional)</label>
+                <input type="date" value={form.datum} onChange={e => setForm(f => ({ ...f, datum: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowAdd(false)} style={{ padding: "10px 20px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAdd} disabled={saving || !form.titel.trim()} style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.titel.trim() ? 0.6 : 1 }}>
+                {saving ? "Speichern..." : "Hinzufügen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Generic Page ──────────────────────────────────────────────────────────────
 function GenericPage({ page }) {
   return (
@@ -956,6 +1117,7 @@ function GenericPage({ page }) {
     </div>
   );
 }
+
 
 // ── Fotoalbum Page ────────────────────────────────────────────────────────────
 function FotoalbumPage() {
@@ -1199,7 +1361,7 @@ export default function App() {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
