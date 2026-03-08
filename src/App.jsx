@@ -255,7 +255,7 @@ function Tagebuch({ plantId }) {
   }, [plantId]);
 
   const allEntries = entries;
-  const visible = showAll ? allEntries : allEntries.slice(-5);
+  const visible = showAll ? allEntries : allEntries.slice(0, 5);
   const hidden = allEntries.length - 5;
 
   const handlePhoto = (e) => {
@@ -337,20 +337,27 @@ function Tagebuch({ plantId }) {
         <div style={{ padding: "20px", textAlign: "center", color: TEXT_LIGHT, fontSize: "12px", fontFamily: FONT, background: BG, borderRadius: "8px" }}>Noch keine Einträge vorhanden.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {!showAll && hidden > 0 && <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>▲ {hidden} ältere Einträge anzeigen</button>}
+          {!showAll && hidden > 0 && <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>▼ {hidden} weitere Einträge anzeigen</button>}
           {visible.map(entry => (
             <div key={entry.id} style={{ background: BG, borderRadius: "8px", border: `1px solid ${BG_DARK}`, overflow: "hidden" }}>
               {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: "0" }} />}
               <div style={{ padding: "10px 12px" }}>
-                {entry.note && <p style={{ margin: "0 0 6px 0", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6" }}>{entry.note}</p>}
+                {entry.note && <p style={{ margin: "0 0 8px 0", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6" }}>{entry.note}</p>}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
-                  <button onClick={() => handleDelete(entry.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px" }}>✕</button>
+                  <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
+                  <div style={{ position: "relative" }}>
+                    <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>
+                    <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, bottom: "28px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "120px", zIndex: 20, overflow: "hidden" }}>
+                      <button onClick={() => { handleDelete(entry.id); }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span>🗑</span> Löschen
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
-          {showAll && hidden > 0 && <button onClick={() => setShowAll(false)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>▼ Ältere Einträge einklappen</button>}
+          {showAll && hidden > 0 && <button onClick={() => setShowAll(false)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>▲ Weniger anzeigen</button>}
         </div>
       )}
     </div>
