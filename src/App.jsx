@@ -165,7 +165,7 @@ function dbToPlant(row) {
     standort: row.standort || "",
     erhaltenVon: row.erhalten_von || "",
     aufIm: row.auf_im || "",
-    tc: row.tc || false,
+    tc: row.tc === true,
     foto: row.foto_url || "",
   };
 }
@@ -628,7 +628,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                 </select>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0" }}>
-                <input type="checkbox" id="tc-edit" checked={form.tc || false} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} />
+                <input type="checkbox" id="tc-edit" checked={!!form.tc} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} />
                 <label htmlFor="tc-edit" style={{ ...labelStyle, margin: 0, cursor: "pointer" }}>TC</label>
               </div>
               <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
@@ -721,7 +721,7 @@ function AddPlantModal({ onClose, onSave }) {
             </select>
           </div>
           <div><label style={labelStyle}>Erhalten von</label><input style={inputStyle} placeholder="z.B. Instagram" value={form.erhaltenVon} onChange={e => set("erhaltenVon", e.target.value)} /></div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0" }}><input type="checkbox" id="tc-add" checked={form.tc || false} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} /><label htmlFor="tc-add" style={{ ...labelStyle, margin: 0, cursor: "pointer" }}>TC</label></div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 0" }}><input type="checkbox" id="tc-add" checked={!!form.tc} onChange={e => set("tc", e.target.checked)} style={{ width: "18px", height: "18px", accentColor: "#5c6c56", cursor: "pointer" }} /><label htmlFor="tc-add" style={{ ...labelStyle, margin: 0, cursor: "pointer" }}>TC</label></div>
           <div><label style={labelStyle}>Auf / Im</label>
             <select style={{...inputStyle, appearance: "none", WebkitAppearance: "none", cursor: "pointer"}} value={form.aufIm} onChange={e => set("aufIm", e.target.value)}>
               <option value="">– Bitte wählen –</option>
