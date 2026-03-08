@@ -1232,6 +1232,8 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [quickAdd, setQuickAdd] = useState(false);
+  const openQuickAdd = () => setQuickAdd(true);
+  const closeQuickAdd = () => setQuickAdd(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
@@ -1321,13 +1323,11 @@ export default function App() {
         })}
       </nav>
       {(!collapsed || mobile) && (
-        {(!collapsed || mobile) && (
           <div style={{ padding: "10px 14px", borderTop: "1px solid #4a5a44" }}>
-            <button onClick={() => setQuickAdd(true)} style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", padding: "9px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", color: "#fff", fontFamily: FONT, fontSize: "13px", fontWeight: "600" }}>
+            <button onClick={openQuickAdd} style={{ width: "100%", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", padding: "9px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", color: "#fff", fontFamily: FONT, fontSize: "13px", fontWeight: "600" }}>
               <span style={{ fontSize: "18px", lineHeight: 1 }}>+</span> Hinzufügen
             </button>
           </div>
-        )}
         <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isOnline ? "#EBEBE6" : "#e05555", flexShrink: 0 }} />
           <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>{isOnline ? "Online" : "Offline"}</span>
@@ -1381,11 +1381,11 @@ export default function App() {
         </div>
       </div>
       {/* Mobile floating + button */}
-      <button className="gl-quickadd-fab" onClick={() => setQuickAdd(true)} style={{ display: "none", position: "fixed", bottom: "24px", right: "24px", zIndex: 500, width: "52px", height: "52px", borderRadius: "50%", background: ACCENT, border: "none", color: "#fff", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(0,0,0,0.25)", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>+</button>
+      <button className="gl-quickadd-fab" onClick={openQuickAdd} style={{ display: "none", position: "fixed", bottom: "24px", right: "24px", zIndex: 500, width: "52px", height: "52px", borderRadius: "50%", background: ACCENT, border: "none", color: "#fff", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(0,0,0,0.25)", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>+</button>
 
       {/* QuickAdd Modal */}
       {quickAdd && (
-        <div onClick={() => setQuickAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 600, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "20px" }}>
+        <div onClick={closeQuickAdd} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 600, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "22px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", marginBottom: "20px" }}>
             <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Schnell hinzufügen</h3>
             <button onClick={() => { setQuickAdd(false); setActivePage("todo"); sessionStorage.setItem("activePage", "todo"); history.replaceState(null, "", "#todo"); setTimeout(() => { const btn = document.querySelector("[data-quickadd-todo]"); if (btn) btn.click(); }, 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
