@@ -1043,7 +1043,7 @@ function TodoPage() {
                   {todo.datum && <span style={{ fontSize: "12px", color: TEXT_DARK, fontFamily: FONT }}>{new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
                 </div>
               </div>
-              <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0, opacity: 0.5 }}>🗑</button>
+              <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_DARK, flexShrink: 0, fontWeight: "600", lineHeight: 1 }}>✕</button>
             </div>
           ))}
 
