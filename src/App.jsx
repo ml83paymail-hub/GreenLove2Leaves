@@ -60,6 +60,36 @@ async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
   }
 }
 
+// ── Pie Chart ────────────────────────────────────────────────────────────────
+function PieIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" style={{ flexShrink: 0 }} fill="#333">
+      {/* Candle */}
+      <rect x="6" y="1" width="2" height="3" rx="0.5" />
+      {/* Flame */}
+      <ellipse cx="7" cy="1" rx="1" ry="1.2" />
+      {/* Top layer of cake */}
+      <rect x="2" y="5" width="10" height="3" rx="1" />
+      {/* Bottom layer of cake */}
+      <rect x="1" y="8.5" width="12" height="4" rx="1" />
+    </svg>
+  );
+}
+
+function shortBeiUnsSeit(datum) {
+  if (!datum) return "";
+  const start = new Date(datum);
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  let days = now.getDate() - start.getDate();
+  if (days < 0) months--;
+  if (months < 0) { years--; months += 12; }
+  if (years > 0) return `${years}J ${months}M`;
+  if (months > 0) return `${months}M`;
+  return `${Math.max(1, Math.round((now - start) / 86400000))}T`;
+}
+
 // ── Share Helper ─────────────────────────────────────────────────────────────
 async function shareImage(url, name) {
   try {
@@ -276,7 +306,7 @@ function PlantCard({ plant, onClick }) {
         <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, marginBottom: "2px", fontFamily: FONT }}>{plant.name}</div>
         <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontStyle: "italic", marginBottom: "10px", fontFamily: FONT }}>{plant.vollstaendigerName || "–"}</div>
         <div style={{ height: "1px", background: BG_DARK, marginBottom: "10px" }} />
-        {[["Standort", plant.standort], ["Bei uns seit", calcBeiUnsSeit(plant.datum)]].map(([l, v]) => (
+        {[["Standort", plant.standort]].map(([l, v]) => (
           <div key={l} style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "3px" }}>
             <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>{l}</span>
             <span style={{ fontSize: "10px", color: TEXT_MID, fontFamily: FONT, textAlign: "right" }}>{v || "–"}</span>
