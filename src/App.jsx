@@ -1051,7 +1051,7 @@ function TodoPage() {
             <div style={{ marginTop: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "1.5px", textTransform: "uppercase" }}>Erledigt ({erledigt.length})</div>
-                <button onClick={deleteAllErledigt} style={{ background: "#5c6c56", border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, display: "flex", alignItems: "center", gap: "4px" }}>✕ Alle löschen</button>
+                <button onClick={deleteAllErledigt} style={{ background: "#5c6c56", border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, display: "flex", alignItems: "center", gap: "4px" }}>Erledigte löschen</button>
               </div>
               {erledigt.map(todo => (
                 <div key={todo.id} style={{ background: "rgba(255,255,255,0.25)", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: "14px", marginBottom: "6px", opacity: 0.65 }}>
