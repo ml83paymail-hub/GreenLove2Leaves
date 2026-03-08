@@ -933,8 +933,8 @@ function PflanzenPage() {
         </div>
         {photos.length > LIMIT && (
           <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button onClick={() => setShowAll(!showAll)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
-              {showAll ? "▲ Weniger anzeigen" : "▼ " + (photos.length - LIMIT) + " weitere Fotos anzeigen"}
+            <button onClick={toggleShowAll} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
+              {showAll ? "Weniger anzeigen" : (photos.length - LIMIT) + " weitere Fotos anzeigen"}
             </button>
           </div>
         )}
@@ -986,6 +986,8 @@ function FotoalbumPage() {
     load();
   }, []);
 
+  const toggleShowAll = () => setShowAll(!showAll);
+
   return (
     <div>
       <div style={{ marginBottom: "22px" }}>
@@ -1018,8 +1020,8 @@ function FotoalbumPage() {
         </div>
         {photos.length > LIMIT && (
           <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button onClick={() => setShowAll(!showAll)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
-              {showAll ? "▲ Weniger anzeigen" : "▼ " + (photos.length - LIMIT) + " weitere Fotos anzeigen"}
+            <button onClick={toggleShowAll} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
+              {showAll ? "Weniger anzeigen" : (photos.length - LIMIT) + " weitere Fotos anzeigen"}
             </button>
           </div>
         )}
