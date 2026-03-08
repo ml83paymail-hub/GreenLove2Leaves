@@ -923,7 +923,7 @@ export default function App() {
           const isActive = activeMenu === item.id;
           return (
             <div key={item.id}>
-              <button onClick={() => handleMenuClick(item.id)} style={{ width: "100%", background: isActive ? "#4a5a44" : "none", border: "none", borderLeft: isActive ? `3px solid ${ACCENT_LIGHT}` : "3px solid transparent", color: isActive ? "#ffffff" : "rgba(255,255,255,0.7)", padding: (!collapsed || mobile) ? "13px 14px" : "13px 0", textAlign: (!collapsed || mobile) ? "left" : "center", cursor: "pointer", fontSize: "15px", letterSpacing: "0.6px", display: "flex", alignItems: "center", gap: (!collapsed || mobile) ? "9px" : 0, justifyContent: (!collapsed || mobile) ? "flex-start" : "center", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
+              <button onClick={() => handleMenuClick(item.id)} style={{ width: "100%", background: isActive ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: isActive ? `3px solid ${BG}` : "3px solid transparent", color: isActive ? "#ffffff" : "rgba(255,255,255,0.7)", padding: (!collapsed || mobile) ? "13px 14px" : "13px 0", textAlign: (!collapsed || mobile) ? "left" : "center", cursor: "pointer", fontSize: "15px", letterSpacing: "0.6px", display: "flex", alignItems: "center", gap: (!collapsed || mobile) ? "9px" : 0, justifyContent: (!collapsed || mobile) ? "flex-start" : "center", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
                 <span>{item.emoji}</span>
                 {(!collapsed || mobile) && <span>{item.label}</span>}
               </button>
@@ -932,7 +932,7 @@ export default function App() {
                   {item.sub.map(sub => {
                     const isSub = activePage === sub.id;
                     return (
-                      <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(235,235,230,0.18)" : "none", border: "none", borderLeft: isSub ? `2px solid ${BG}` : "2px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "15px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
+                      <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(235,235,230,0.18)" : "none", border: "none", borderLeft: "3px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "15px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
                         <span style={{ opacity: 0.6, fontSize: "11px" }}>{sub.emoji}</span>{sub.label}
                       </button>
                     );
