@@ -843,6 +843,7 @@ export default function App() {
   const [activeMenu, setActiveMenu] = useState("pflanzen");
   const [activePage, setActivePage] = useState("unsere-pflanzen");
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
   const addToast = (title, msg) => {
@@ -853,7 +854,6 @@ export default function App() {
   const removeToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
 
   useEffect(() => {
-    // Realtime: notify when partner adds/updates plants
     const channel = supabase.channel("realtime-updates")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "pflanzen" }, payload => {
         addToast("Neue Pflanze 🌱", `${payload.new.name} wurde hinzugefügt`);
@@ -866,60 +866,110 @@ export default function App() {
   }, []);
 
   const currentMenu = menu.find(m => m.id === activeMenu);
-  const handleMenuClick = id => { const m = menu.find(x => x.id === id); if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); } };
+
+  const handleMenuClick = (id) => {
+    const m = menu.find(x => x.id === id);
+    if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); }
+  };
+
+  const handlePageClick = (id) => {
+    setActivePage(id);
+    setMobileOpen(false);
+  };
+
   const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : pages[activePage]?.title;
 
-  return (
-    <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden" }}>
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
-      <aside style={{ width: collapsed ? "52px" : "216px", minWidth: collapsed ? "52px" : "216px", background: "#5c6c56", display: "flex", flexDirection: "column", transition: "width 0.25s ease, min-width 0.25s ease", overflow: "hidden", boxShadow: "2px 0 16px rgba(0,0,0,0.15)", zIndex: 10 }}>
-        <div style={{ height: "54px", display: "flex", alignItems: "center", padding: "0 16px", borderBottom: "1px solid #4a5a44", flexShrink: 0, cursor: "pointer" }} onClick={() => setCollapsed(c => !c)}>
-          {!collapsed && <span style={{ color: "#ffffff", fontSize: "15px", letterSpacing: "1px", whiteSpace: "nowrap", fontFamily: FONT }}>GreenLove2Leaves</span>}
-          {collapsed && <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "16px" }}>»</span>}
-        </div>
-        <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px 0" }}>
-          {menu.map(item => {
-            const isActive = activeMenu === item.id;
-            return (
-              <div key={item.id}>
-                <button onClick={() => handleMenuClick(item.id)} title={collapsed ? item.label : ""} style={{ width: "100%", background: isActive ? "#4a5a44" : "none", border: "none", borderLeft: isActive ? `3px solid ${ACCENT_LIGHT}` : "3px solid transparent", color: isActive ? "#ffffff" : "rgba(255,255,255,0.7)", padding: collapsed ? "13px 0" : "11px 14px", textAlign: collapsed ? "center" : "left", cursor: "pointer", fontSize: collapsed ? "15px" : "12px", letterSpacing: "0.6px", display: "flex", alignItems: "center", gap: collapsed ? 0 : "9px", justifyContent: collapsed ? "center" : "flex-start", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
-                  <span>{item.emoji}</span>
-                  {!collapsed && <span>{item.label}</span>}
-                </button>
-                {isActive && !collapsed && (
-                  <div style={{ background: "#4e5e48" }}>
-                    {item.sub.map(sub => {
-                      const isSub = activePage === sub.id;
-                      return (
-                        <button key={sub.id} onClick={() => setActivePage(sub.id)} style={{ width: "100%", background: isSub ? "rgba(122,158,82,0.13)" : "none", border: "none", borderLeft: isSub ? `2px solid ${ACCENT}` : "2px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "8px 14px 8px 34px", textAlign: "left", cursor: "pointer", fontSize: "11.5px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
-                          <span style={{ opacity: 0.6, fontSize: "11px" }}>{sub.emoji}</span>{sub.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
-        {!collapsed && (
-          <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: ACCENT_LIGHT, flexShrink: 0 }} />
-            <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>Pflanzen</span>
-          </div>
-        )}
-      </aside>
-
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <header style={{ height: "54px", background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, display: "flex", alignItems: "center", padding: "0 36px", gap: "8px", flexShrink: 0 }}>
-          <span style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "0.8px", fontFamily: FONT }}>{currentMenu?.emoji}  {currentMenu?.label}</span>
-          <span style={{ color: BG_DARK }}>›</span>
-          <span style={{ fontSize: "11px", color: TEXT_MID, letterSpacing: "0.4px", fontFamily: FONT }}>{pageTitle}</span>
-        </header>
-        <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-          {activePage === "unsere-pflanzen" ? <PflanzenPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
-        </main>
+  const Sidebar = ({ mobile }) => (
+    <aside style={{
+      width: mobile ? "280px" : collapsed ? "52px" : "216px",
+      minWidth: mobile ? "280px" : collapsed ? "52px" : "216px",
+      background: "#5c6c56", display: "flex", flexDirection: "column",
+      transition: mobile ? "none" : "width 0.25s ease, min-width 0.25s ease",
+      overflow: "hidden", height: "100%",
+      boxShadow: mobile ? "4px 0 24px rgba(0,0,0,0.25)" : "2px 0 16px rgba(0,0,0,0.15)",
+      zIndex: 10,
+    }}>
+      <div style={{ height: "54px", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", borderBottom: "1px solid #4a5a44", flexShrink: 0, cursor: mobile ? "default" : "pointer" }}
+        onClick={mobile ? undefined : () => setCollapsed(c => !c)}>
+        {(!collapsed || mobile) && <span style={{ color: "#ffffff", fontSize: "15px", letterSpacing: "1px", whiteSpace: "nowrap", fontFamily: FONT }}>GreenLove2Leaves</span>}
+        {collapsed && !mobile && <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "16px" }}>»</span>}
+        {mobile && <button onClick={() => setMobileOpen(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.8)", fontSize: "20px", cursor: "pointer", padding: "4px 8px" }}>✕</button>}
       </div>
-    </div>
+      <nav style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "6px 0" }}>
+        {menu.map(item => {
+          const isActive = activeMenu === item.id;
+          return (
+            <div key={item.id}>
+              <button onClick={() => handleMenuClick(item.id)} style={{ width: "100%", background: isActive ? "#4a5a44" : "none", border: "none", borderLeft: isActive ? `3px solid ${ACCENT_LIGHT}` : "3px solid transparent", color: isActive ? "#ffffff" : "rgba(255,255,255,0.7)", padding: (!collapsed || mobile) ? "13px 14px" : "13px 0", textAlign: (!collapsed || mobile) ? "left" : "center", cursor: "pointer", fontSize: "13px", letterSpacing: "0.6px", display: "flex", alignItems: "center", gap: (!collapsed || mobile) ? "9px" : 0, justifyContent: (!collapsed || mobile) ? "flex-start" : "center", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
+                <span>{item.emoji}</span>
+                {(!collapsed || mobile) && <span>{item.label}</span>}
+              </button>
+              {isActive && (!collapsed || mobile) && (
+                <div style={{ background: "#4e5e48" }}>
+                  {item.sub.map(sub => {
+                    const isSub = activePage === sub.id;
+                    return (
+                      <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(122,158,82,0.13)" : "none", border: "none", borderLeft: isSub ? `2px solid ${ACCENT}` : "2px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "13px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
+                        <span style={{ opacity: 0.6, fontSize: "11px" }}>{sub.emoji}</span>{sub.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+      {(!collapsed || mobile) && (
+        <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: ACCENT_LIGHT, flexShrink: 0 }} />
+          <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>Pflanzen</span>
+        </div>
+      )}
+    </aside>
+  );
+
+  return (
+    <>
+      <style>{`
+        @media (max-width: 767px) {
+          .gl-desktop-sidebar { display: none !important; }
+          .gl-hamburger { display: flex !important; }
+          .gl-main { padding: 16px 14px !important; }
+        }
+      `}</style>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex" }}>
+          <div onClick={() => setMobileOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)" }} />
+          <div style={{ position: "relative", zIndex: 201, height: "100%" }}>
+            <Sidebar mobile={true} />
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden" }}>
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+        {/* Desktop sidebar */}
+        <div className="gl-desktop-sidebar" style={{ display: "flex", height: "100%" }}>
+          <Sidebar mobile={false} />
+        </div>
+
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
+          <header style={{ height: "54px", background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, display: "flex", alignItems: "center", padding: "0 16px", gap: "10px", flexShrink: 0 }}>
+            {/* Hamburger – mobile only */}
+            <button className="gl-hamburger" onClick={() => setMobileOpen(true)} style={{ display: "none", background: "none", border: "none", cursor: "pointer", fontSize: "22px", color: BTN, padding: "2px 6px", alignItems: "center" }}>☰</button>
+            <span style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "0.8px", fontFamily: FONT, whiteSpace: "nowrap" }}>{currentMenu?.emoji} {currentMenu?.label}</span>
+            <span style={{ color: BG_DARK }}>›</span>
+            <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
+          </header>
+          <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+          </main>
+        </div>
+      </div>
+    </>
   );
 }
