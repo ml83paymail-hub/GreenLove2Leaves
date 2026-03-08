@@ -981,17 +981,16 @@ function FotoalbumPage() {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const getInitialPage = () => {
+  const [activeMenu, setActiveMenu] = useState(() => {
     const hash = window.location.hash.replace("#", "");
-    if (hash) {
-      const foundMenu = menu.find(m => m.sub.some(s => s.id === hash));
-      if (foundMenu) return { menu: foundMenu.id, page: hash };
-    }
-    return { menu: localStorage.getItem("activeMenu") || "pflanzen", page: localStorage.getItem("activePage") || "unsere-pflanzen" };
-  };
-  const initial = getInitialPage();
-  const [activeMenu, setActiveMenu] = useState(initial.menu);
-  const [activePage, setActivePage] = useState(initial.page);
+    if (hash) { const m = menu.find(x => x.sub.some(s => s.id === hash)); if (m) return m.id; }
+    return localStorage.getItem("activeMenu") || "pflanzen";
+  });
+  const [activePage, setActivePage] = useState(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash && menu.some(m => m.sub.some(s => s.id === hash))) return hash;
+    return localStorage.getItem("activePage") || "unsere-pflanzen";
+  });
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
