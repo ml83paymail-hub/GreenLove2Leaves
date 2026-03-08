@@ -957,8 +957,7 @@ function TodoPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("todos").select("*").order("created_at", { ascending: false });
-    if (error) alert("Ladefehler: " + JSON.stringify(error));
+    const { data } = await supabase.from("todos").select("*").order("created_at", { ascending: false });
     if (data) setTodos(data);
     setLoading(false);
   };
