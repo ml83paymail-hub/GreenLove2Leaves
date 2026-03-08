@@ -933,8 +933,8 @@ function PflanzenPage() {
         </div>
         {photos.length > LIMIT && (
           <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button onClick={() => setShowAll(v => !v)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
-              {showAll ? `▲ Weniger anzeigen` : `▼ ${photos.length - LIMIT} weitere Fotos anzeigen`}
+            <button onClick={() => setShowAll(!showAll)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
+              {showAll ? "▲ Weniger anzeigen" : "▼ " + (photos.length - LIMIT) + " weitere Fotos anzeigen"}
             </button>
           </div>
         )}
@@ -1018,8 +1018,8 @@ function FotoalbumPage() {
         </div>
         {photos.length > LIMIT && (
           <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button onClick={() => setShowAll(v => !v)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
-              {showAll ? `▲ Weniger anzeigen` : `▼ ${photos.length - LIMIT} weitere Fotos anzeigen`}
+            <button onClick={() => setShowAll(!showAll)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
+              {showAll ? "▲ Weniger anzeigen" : "▼ " + (photos.length - LIMIT) + " weitere Fotos anzeigen"}
             </button>
           </div>
         )}
