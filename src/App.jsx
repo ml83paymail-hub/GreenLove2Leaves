@@ -250,7 +250,7 @@ function Tagebuch({ plantId }) {
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
-    supabase.from("tagebuch").select("*").eq("pflanze_id", plantId).order("created_at", { ascending: true })
+    supabase.from("tagebuch").select("*").eq("pflanze_id", plantId).order("created_at", { ascending: false })
       .then(({ data }) => { if (data) setEntries(data.map(dbToEntry)); });
   }, [plantId]);
 
