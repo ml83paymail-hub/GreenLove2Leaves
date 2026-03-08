@@ -1004,27 +1004,29 @@ function FotoalbumPage() {
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Tagebuch-Fotos vorhanden.</p>
         </div>
       ) : (
-        <div className="foto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-          {(showAll ? photos : photos.slice(0, LIMIT)).map(photo => (
-            <div key={photo.id} onClick={() => setLightbox(photo)}
-              style={{ cursor: "pointer", borderRadius: "8px", overflow: "hidden", background: BTN, aspectRatio: "3/4", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
-              <img src={photo.foto_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
-                onMouseEnter={e => e.target.style.transform = "scale(1.03)"}
-                onMouseLeave={e => e.target.style.transform = "scale(1)"} />
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.6))", padding: "20px 8px 8px" }}>
-                <div style={{ fontSize: "11px", color: "#fff", fontFamily: FONT, fontWeight: "600", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{photo.pflanzen?.name || ""}</div>
-                <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.7)", fontFamily: FONT }}>{new Date(photo.created_at).toLocaleDateString("de-DE")}</div>
+        <div>
+          <div className="foto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
+            {(showAll ? photos : photos.slice(0, LIMIT)).map(photo => (
+              <div key={photo.id} onClick={() => setLightbox(photo)}
+                style={{ cursor: "pointer", borderRadius: "8px", overflow: "hidden", background: BTN, aspectRatio: "3/4", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                <img src={photo.foto_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
+                  onMouseEnter={e => e.target.style.transform = "scale(1.03)"}
+                  onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.6))", padding: "20px 8px 8px" }}>
+                  <div style={{ fontSize: "11px", color: "#fff", fontFamily: FONT, fontWeight: "600", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{photo.pflanzen?.name || ""}</div>
+                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.7)", fontFamily: FONT }}>{new Date(photo.created_at).toLocaleDateString("de-DE")}</div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        { photos.length > LIMIT ? (
-          <div style={{ textAlign: "center", marginTop: "24px" }}>
-            <button onClick={toggleShowAll} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
-              { showAll ? "Weniger anzeigen" : (photos.length - LIMIT) + " weitere Fotos anzeigen" }
-            </button>
+            ))}
           </div>
-        ) : null }
+          {photos.length > LIMIT && (
+            <div style={{ textAlign: "center", marginTop: "24px" }}>
+              <button onClick={toggleShowAll} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}>
+                {showAll ? "Weniger anzeigen" : (photos.length - LIMIT) + " weitere Fotos anzeigen"}
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Lightbox */}
