@@ -535,10 +535,8 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
           {/* Tap to share */}
           {plant.foto && !editMode && (
             <div onClick={() => shareImage(plant.foto, plant.name)}
-              style={{ position: "absolute", inset: 0, cursor: "pointer", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: "12px" }}>
-              <span style={{ background: "rgba(0,0,0,0.35)", color: "#fff", fontSize: "11px", fontFamily: FONT, padding: "4px 10px", borderRadius: "20px", backdropFilter: "blur(4px)" }}>
-                Teilen
-              </span>
+              style={{ position: "absolute", bottom: "12px", left: "50%", transform: "translateX(-50%)", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", background: "rgba(0,0,0,0.45)", color: "#fff", fontSize: "12px", fontFamily: FONT, padding: "6px 14px", borderRadius: "20px", backdropFilter: "blur(4px)", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "14px" }}>⬆</span> Teilen
             </div>
           )}
 
@@ -972,11 +970,14 @@ function FotoalbumPage() {
       {lightbox && (
         <div onClick={() => setLightbox(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: "500px", width: "100%", background: WHITE, borderRadius: "12px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
-            <img src={lightbox.foto_url} alt="" onClick={() => shareImage(lightbox.foto_url, lightbox.pflanzen?.name || "Pflanze")} style={{ width: "100%", height: "auto", display: "block", cursor: "pointer" }} title="Tippen zum Teilen" />
+            <img src={lightbox.foto_url} alt="" style={{ width: "100%", height: "auto", display: "block" }} />
             <div style={{ padding: "14px 16px" }}>
               <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "4px" }}>{lightbox.pflanzen?.name}</div>
               {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
               <div style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{new Date(lightbox.created_at).toLocaleDateString("de-DE")}</div>
+              <button onClick={() => shareImage(lightbox.foto_url, lightbox.pflanzen?.name || "Pflanze")} style={{ marginTop: "10px", width: "100%", background: BTN, border: "none", borderRadius: "8px", padding: "10px", cursor: "pointer", fontSize: "13px", color: "#fff", fontFamily: FONT, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                <span>⬆</span> Teilen / Speichern
+              </button>
             </div>
             <button onClick={() => setLightbox(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "#fff", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
