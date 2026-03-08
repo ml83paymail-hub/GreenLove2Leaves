@@ -944,7 +944,7 @@ function PflanzenPage() {
 
 
 // ── Todo Page ─────────────────────────────────────────────────────────────────
-const TODO_KATEGORIEN = ["Bestellungen", "Label", "Organisation"];
+const TODO_KATEGORIEN = ["Bestellungen", "Label", "Organisation", "Ableger"];
 
 function TodoPage() {
   const [todos, setTodos] = useState([]);
