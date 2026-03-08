@@ -861,6 +861,76 @@ function GenericPage({ page }) {
   );
 }
 
+// ── Fotoalbum Page ────────────────────────────────────────────────────────────
+function FotoalbumPage() {
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [lightbox, setLightbox] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("tagebuch")
+        .select("id, foto_url, created_at, notiz, pflanze_id, pflanzen(name)")
+        .not("foto_url", "is", null)
+        .order("created_at", { ascending: false });
+      if (data) setPhotos(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Fotoalbum</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{photos.length} Foto{photos.length !== 1 ? "s" : ""} aus dem Tagebuch</p>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Fotos werden geladen …</div>
+      ) : photos.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📷</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Tagebuch-Fotos vorhanden.</p>
+        </div>
+      ) : (
+        <div className="foto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
+          {photos.map(photo => (
+            <div key={photo.id} onClick={() => setLightbox(photo)}
+              style={{ cursor: "pointer", borderRadius: "8px", overflow: "hidden", background: BTN, aspectRatio: "3/4", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+              <img src={photo.foto_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
+                onMouseEnter={e => e.target.style.transform = "scale(1.03)"}
+                onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.6))", padding: "20px 8px 8px" }}>
+                <div style={{ fontSize: "11px", color: "#fff", fontFamily: FONT, fontWeight: "600", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{photo.pflanzen?.name || ""}</div>
+                <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.7)", fontFamily: FONT }}>{new Date(photo.created_at).toLocaleDateString("de-DE")}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={() => setLightbox(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ maxWidth: "500px", width: "100%", background: WHITE, borderRadius: "12px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+            <img src={lightbox.foto_url} alt="" style={{ width: "100%", height: "auto", display: "block" }} />
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "4px" }}>{lightbox.pflanzen?.name}</div>
+              {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
+              <div style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{new Date(lightbox.created_at).toLocaleDateString("de-DE")}</div>
+            </div>
+            <button onClick={() => setLightbox(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "#fff", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [activeMenu, setActiveMenu] = useState("pflanzen");
@@ -960,6 +1030,7 @@ export default function App() {
           .gl-hamburger { display: flex !important; }
           .gl-main { padding: 16px 14px !important; }
           .plant-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+          .foto-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
         }
       `}</style>
 
@@ -990,7 +1061,7 @@ export default function App() {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
