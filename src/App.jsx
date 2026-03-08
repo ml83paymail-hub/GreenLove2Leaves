@@ -981,8 +981,17 @@ function FotoalbumPage() {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [activeMenu, setActiveMenu] = useState(() => localStorage.getItem("activeMenu") || "pflanzen");
-  const [activePage, setActivePage] = useState(() => localStorage.getItem("activePage") || "unsere-pflanzen");
+  const getInitialPage = () => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      const foundMenu = menu.find(m => m.sub.some(s => s.id === hash));
+      if (foundMenu) return { menu: foundMenu.id, page: hash };
+    }
+    return { menu: localStorage.getItem("activeMenu") || "pflanzen", page: localStorage.getItem("activePage") || "unsere-pflanzen" };
+  };
+  const initial = getInitialPage();
+  const [activeMenu, setActiveMenu] = useState(initial.menu);
+  const [activePage, setActivePage] = useState(initial.page);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -1010,7 +1019,7 @@ export default function App() {
 
   const handleMenuClick = (id) => {
     const m = menu.find(x => x.id === id);
-    if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); localStorage.setItem("activeMenu", id); localStorage.setItem("activePage", m.sub[0].id); }
+    if (m) { setActiveMenu(id); setActivePage(m.sub[0].id); localStorage.setItem("activeMenu", id); localStorage.setItem("activePage", m.sub[0].id); window.location.hash = m.sub[0].id; }
   };
 
   const handlePageClick = (id) => {
@@ -1018,6 +1027,7 @@ export default function App() {
     setMobileOpen(false);
     localStorage.setItem("activePage", id);
     localStorage.setItem("activeMenu", activeMenu);
+    window.location.hash = id;
   };
 
   const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : pages[activePage]?.title;
