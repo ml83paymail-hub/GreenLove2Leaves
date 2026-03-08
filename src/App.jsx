@@ -1049,6 +1049,7 @@ export default function App() {
     return "unsere-pflanzen";
   });
   const [collapsed, setCollapsed] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
@@ -1058,6 +1059,14 @@ export default function App() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
   };
   const removeToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => { window.removeEventListener("online", handleOnline); window.removeEventListener("offline", handleOffline); };
+  }, []);
 
   useEffect(() => {
     const channel = supabase.channel("realtime-updates")
@@ -1131,8 +1140,8 @@ export default function App() {
       </nav>
       {(!collapsed || mobile) && (
         <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: ACCENT_LIGHT, flexShrink: 0 }} />
-          <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>Pflanzen</span>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isOnline ? "#EBEBE6" : "#e05555", flexShrink: 0 }} />
+          <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>{isOnline ? "Online" : "Offline"}</span>
         </div>
       )}
     </aside>
