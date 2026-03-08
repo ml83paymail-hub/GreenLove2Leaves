@@ -489,7 +489,7 @@ function Tagebuch({ plantId, plantName }) {
 function PlantModal({ plant, onClose, onDelete, onSave }) {
   const [editMode, setEditMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [form, setForm] = useState({ ...plant });
+  const [form, setForm] = useState({ ...plant, tc: plant.tc === true });
   const [uploading, setUploading] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
