@@ -1384,7 +1384,7 @@ export default function App() {
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "22px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", marginBottom: "20px" }}>
             <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Schnell hinzufügen</h3>
             <button onClick={() => { setQuickAdd(false); setActivePage("todo"); sessionStorage.setItem("activePage", "todo"); history.replaceState(null, "", "#todo"); setTimeout(() => { const btn = document.querySelector("[data-quickadd-todo]"); if (btn) btn.click(); }, 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "20px" }}>✅</span>
+              <span style={{ fontSize: "16px", fontWeight: "600" }}>»</span>
               <div>
                 <div style={{ fontWeight: "600" }}>To Do Aufgabe</div>
                 <div style={{ fontSize: "11px", color: TEXT_LIGHT, marginTop: "2px" }}>Neue Aufgabe in der To Do Liste</div>
