@@ -304,7 +304,6 @@ function PlantCard({ plant, onClick }) {
       </div>
       <div style={{ padding: "14px 16px", background: "rgba(255,255,255,0.3)" }}>
         <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, marginBottom: "2px", fontFamily: FONT }}>{plant.name}</div>
-        <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontStyle: "italic", marginBottom: "10px", fontFamily: FONT }}>{plant.vollstaendigerName || "–"}</div>
         <div style={{ height: "1px", background: BG_DARK, marginBottom: "10px" }} />
         <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", marginBottom: "3px" }}>
           <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT }}>Standort</span>
