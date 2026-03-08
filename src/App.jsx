@@ -39,7 +39,7 @@ async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
   const d = new Date();
   const datum = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
 
-  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\n[Foto] Neues Foto hinzugefuegt`;
+  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\nEin neues Foto wurde hinzugefügt`;
 
   const payload = {
     embeds: [{
