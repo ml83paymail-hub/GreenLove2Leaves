@@ -300,7 +300,7 @@ async function uploadPhoto(file, folder = "pflanzen") {
 
 // ── Menu ──────────────────────────────────────────────────────────────────────
 const menu = [
-  { id: "updates", label: "Updates", emoji: "»", sub: [{ id: "fotoalbum", label: "Fotoalbum", emoji: "»" }, { id: "postfach", label: "Postfach", emoji: "»" }] },
+  { id: "updates", label: "Updates", emoji: "»", sub: [{ id: "fotoalbum", label: "Fotoalbum", emoji: "»" }] },
   { id: "content", label: "Content", emoji: "»", sub: [{ id: "social-media", label: "Social Media", emoji: "»" }] },
   { id: "pflanzen", label: "Pflanzen", emoji: "»", sub: [
     { id: "unsere-pflanzen", label: "Unsere Pflanzen", emoji: "»" },
@@ -329,6 +329,7 @@ const menu = [
     { id: "wiki", label: "Pflanzen Wiki", emoji: "»" },
   ]},
   { id: "system", label: "System", emoji: "»", sub: [
+    { id: "postfach", label: "Postfach", emoji: "»" },
     { id: "gastzugang", label: "Gastzugang", emoji: "»" },
   ]},
 ];
