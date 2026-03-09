@@ -2267,8 +2267,8 @@ function AppInner({ onLogout }) {
 
   const Sidebar = ({ mobile }) => (
     <aside style={{
-      width: mobile ? "280px" : collapsed ? "52px" : "216px",
-      minWidth: mobile ? "280px" : collapsed ? "52px" : "216px",
+      width: mobile ? "280px" : collapsed ? "52px" : "240px",
+      minWidth: mobile ? "280px" : collapsed ? "52px" : "240px",
       background: "#5c6c56", display: "flex", flexDirection: "column",
       transition: mobile ? "none" : "width 0.25s ease, min-width 0.25s ease",
       overflow: "hidden", height: "100%",
