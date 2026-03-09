@@ -1211,7 +1211,7 @@ function FotoalbumPage() {
 }
 
 // ── Postfach ──────────────────────────────────────────────────────────────────
-const POSTFACH_WEBHOOK = "https://discord.com/api/webhooks/1473445983189864538/bG9uouHTFFBGm1HiuQRslDP6IB_WgdA8tIACuqWLmvHCGFSgbbR-LaOCoXKlA7hhydAu";
+const POSTFACH_WEBHOOK = import.meta.env.VITE_POSTFACH_WEBHOOK;
 
 async function sendPostfachDiscord(text) {
   const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
