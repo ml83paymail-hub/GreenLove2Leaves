@@ -402,6 +402,8 @@ function PlantCard({ plant, onClick }) {
 
 // ── Tagebuch ─────────────────────────────────────────────────────────────────
 function Tagebuch({ plantId, plantName }) {
+  const role = useRole();
+  const canEdit = role !== "readonly" && role !== "guest";
   const [entries, setEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showAll, setShowAll] = useState(false);
@@ -480,11 +482,11 @@ function Tagebuch({ plantId, plantName }) {
             <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "white", transition: "opacity 0.2s", opacity: discordOn ? 1 : 0.5 }} />
           </div>
         </div>
-        <button onClick={() => setShowForm(v => !v)} style={{
+        {canEdit && <button onClick={() => setShowForm(v => !v)} style={{
           background: showForm ? BG_DARK : ACCENT, border: "none",
           borderRadius: "6px", padding: "5px 12px", cursor: "pointer",
           fontSize: "11px", color: showForm ? TEXT_MID : WHITE, fontFamily: FONT,
-        }}>{showForm ? "Abbrechen" : "+ Eintrag"}</button>
+        }}>{showForm ? "Abbrechen" : "+ Eintrag"}</button>}
       </div>
 
       {showForm && (
@@ -538,7 +540,7 @@ function Tagebuch({ plantId, plantName }) {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: "12px", color: "#222", fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
                       <div style={{ position: "relative" }}>
-                        <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>
+                        {canEdit && <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>}
                         <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, top: "100%", marginTop: "4px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 100, overflow: "hidden" }}>
                           <button onClick={() => { setEditingEntry(entry.id); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>✎</span> Bearbeiten
@@ -573,6 +575,8 @@ function Tagebuch({ plantId, plantName }) {
 
 // ── Plant Modal ───────────────────────────────────────────────────────────────
 function PlantModal({ plant, onClose, onDelete, onSave }) {
+  const role = useRole();
+  const canEdit = role !== "readonly" && role !== "guest";
   const [editMode, setEditMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [form, setForm] = useState({ ...plant, tc: plant.tc === true });
@@ -650,7 +654,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
 
 
           {/* 3-dot menu */}
-          <div style={{ position: "absolute", top: "12px", right: "12px" }}>
+          {canEdit && <div style={{ position: "absolute", top: "12px", right: "12px" }}>
             <button onClick={e => { e.stopPropagation(); setMenuOpen(o => !o); }} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "16px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>⋯</button>
             {menuOpen && (
               <div style={{ position: "absolute", top: "36px", right: 0, background: WHITE, borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 10 }}>
@@ -659,7 +663,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                 </button>
               </div>
             )}
-          </div>
+          </div>}
         </div>
 
         <div style={{ padding: "22px" }}>
@@ -677,7 +681,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
               </div>
               <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
                 <button onClick={onClose} style={{ flex: 1, background: BG, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "9px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Schließen</button>
-                <button onClick={() => setEditMode(true)} style={{ flex: 1, background: ACCENT, border: "none", borderRadius: "6px", padding: "9px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>✎ Bearbeiten</button>
+                {canEdit && <button onClick={() => setEditMode(true)} style={{ flex: 1, background: ACCENT, border: "none", borderRadius: "6px", padding: "9px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>✎ Bearbeiten</button>}
               </div>
               <Tagebuch plantId={plant.id} plantName={plant.name} />
             </>
@@ -1739,8 +1743,7 @@ function AppInner({ onLogout }) {
           <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isOnline ? "#EBEBE6" : "#e05555", flexShrink: 0 }} />
             <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT, flex: 1 }}>{isOnline ? "Online" : "Offline"}</span>
-            {role === "guest" && <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT }}>Gast</span>}
-            <button onClick={onLogout} title="Ausloggen" style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "13px", padding: "0", lineHeight: 1 }}>⏻</button>
+
           </div>
       )}
     </aside>
