@@ -343,6 +343,7 @@ const pages = {
   notizbuch: { title: "Notizbuch", desc: "Persönliche Notizen rund um deine Pflanzen.", empty: "Noch keine Notizen vorhanden." },
   todo: { title: "To Do Liste", desc: "Alle anstehenden Aufgaben.", empty: "Keine offenen Aufgaben!" },
   "sale-termine": { title: "Sale Termine", desc: "Bevorstehende Verkaufs- und Tauschtermine.", empty: "Keine Termine eingetragen." },
+  "sale-termine": { title: "Sale Termine", desc: "Übersicht aller Sale-Termine.", empty: "Noch keine Sale-Termine eingetragen." },
   akklimatisierung: { title: "Akklimatisierung", desc: "Neue Pflanzen in der Eingewöhnungsphase.", empty: "Keine Pflanzen in der Akklimatisierung." },
   bestellungen: { title: "Bestellungen & Käufe", desc: "Übersicht aller Käufe und Bestellungen.", empty: "Noch keine Bestellungen erfasst." },
   anzeigen: { title: "Aktuelle Anzeigen", desc: "Deine aktiven Verkaufs- und Tauschangebote.", empty: "Keine aktiven Anzeigen." },
@@ -1157,62 +1158,6 @@ function TodoPage() {
         </div>
       )}
 
-      {/* Jahresabschluss Confirmation */}
-      {showAbschluss && (
-        <div onClick={() => setShowAbschluss(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
-            <div style={{ fontSize: "32px", textAlign: "center", marginBottom: "16px" }}>📦</div>
-            <h2 style={{ margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textAlign: "center" }}>Jahr abschließen?</h2>
-            <p style={{ margin: "0 0 24px 0", fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT, textAlign: "center", lineHeight: "1.6" }}>Alle {eintraege.length} Einträge werden ins Archiv verschoben. Die Pflanzenkasse startet danach neu und leer.</p>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setShowAbschluss(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
-              <button onClick={handleAbschluss} disabled={abschlussLoading} style={{ flex: 2, padding: "11px", borderRadius: "8px", border: "none", background: "#b94040", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>
-                {abschlussLoading ? "Wird archiviert …" : "Ja, abschließen"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editEntry && (
-        <div onClick={() => setEditEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
-            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Eintrag bearbeiten</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
-              <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: `1px solid ${BG_DARK}` }}>
-                {[["ausgabe", "Ausgabe"], ["einnahme", "Einnahme"]].map(([val, label]) => (
-                  <button key={val} onClick={() => set("typ", val)} style={{ flex: 1, padding: "10px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: form.typ === val ? "700" : "400", background: form.typ === val ? (val === "einnahme" ? "#4a7c59" : "#b94040") : "#fff", color: form.typ === val ? "#fff" : TEXT_MID, transition: "all 0.15s" }}>{label}</button>
-                ))}
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
-                <input value={form.name} onChange={e => set("name", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Beschreibung *</label>
-                <input value={form.beschreibung} onChange={e => set("beschreibung", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Betrag (€) *</label>
-                <input type="number" step="0.01" value={form.betrag} onChange={e => set("betrag", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Kategorie</label>
-                <select value={form.kategorie} onChange={e => set("kategorie", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
-                  {KASSE_KATEGORIEN.map(k => <option key={k} value={k}>{k}</option>)}
-                </select>
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-                <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
-              <button onClick={() => setEditEntry(null)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
-              <button onClick={handleEdit} disabled={saving || !form.name.trim() || !form.beschreibung.trim() || !form.betrag} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() || !form.beschreibung.trim() || !form.betrag ? 0.6 : 1 }}>
-                {saving ? "Speichert …" : "Speichern"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Add Modal */}
       {showAdd && (
         <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
@@ -1673,62 +1618,6 @@ function PflanzenkassePage() {
           </div>
         );
       })()}
-
-      {/* Jahresabschluss Confirmation */}
-      {showAbschluss && (
-        <div onClick={() => setShowAbschluss(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
-            <div style={{ fontSize: "32px", textAlign: "center", marginBottom: "16px" }}>📦</div>
-            <h2 style={{ margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textAlign: "center" }}>Jahr abschließen?</h2>
-            <p style={{ margin: "0 0 24px 0", fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT, textAlign: "center", lineHeight: "1.6" }}>Alle {eintraege.length} Einträge werden ins Archiv verschoben. Die Pflanzenkasse startet danach neu und leer.</p>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setShowAbschluss(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
-              <button onClick={handleAbschluss} disabled={abschlussLoading} style={{ flex: 2, padding: "11px", borderRadius: "8px", border: "none", background: "#b94040", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>
-                {abschlussLoading ? "Wird archiviert …" : "Ja, abschließen"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {editEntry && (
-        <div onClick={() => setEditEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
-            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Eintrag bearbeiten</h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
-              <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: `1px solid ${BG_DARK}` }}>
-                {[["ausgabe", "Ausgabe"], ["einnahme", "Einnahme"]].map(([val, label]) => (
-                  <button key={val} onClick={() => set("typ", val)} style={{ flex: 1, padding: "10px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: form.typ === val ? "700" : "400", background: form.typ === val ? (val === "einnahme" ? "#4a7c59" : "#b94040") : "#fff", color: form.typ === val ? "#fff" : TEXT_MID, transition: "all 0.15s" }}>{label}</button>
-                ))}
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
-                <input value={form.name} onChange={e => set("name", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Beschreibung *</label>
-                <input value={form.beschreibung} onChange={e => set("beschreibung", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Betrag (€) *</label>
-                <input type="number" step="0.01" value={form.betrag} onChange={e => set("betrag", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Kategorie</label>
-                <select value={form.kategorie} onChange={e => set("kategorie", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
-                  {KASSE_KATEGORIEN.map(k => <option key={k} value={k}>{k}</option>)}
-                </select>
-              </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-                <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
-              <button onClick={() => setEditEntry(null)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
-              <button onClick={handleEdit} disabled={saving || !form.name.trim() || !form.beschreibung.trim() || !form.betrag} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() || !form.beschreibung.trim() || !form.betrag ? 0.6 : 1 }}>
-                {saving ? "Speichert …" : "Speichern"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add Modal */}
       {showAdd && (
