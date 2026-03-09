@@ -1427,88 +1427,119 @@ const SHAREABLE_PAGES = [
   { id: "unsere-pflanzen", label: "Unsere Pflanzen" },
 ];
 
+// One single share entry: token + pages[] + active
 function GastzugangPage() {
-  const [links, setLinks] = useState([]);
+  const [shareData, setShareData] = useState(null); // { id, token, pages, active }
   const [loading, setLoading] = useState(true);
-  const [copying, setCopying] = useState(null);
+  const [selected, setSelected] = useState([]);
+  const [active, setActive] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.from("share_links").select("*");
-      if (data) setLinks(data);
+      const { data } = await supabase.from("share_links").select("*").limit(1).maybeSingle();
+      if (data) {
+        setShareData(data);
+        setActive(data.active);
+        try { setSelected(JSON.parse(data.page_id)); } catch { setSelected([data.page_id]); }
+      }
       setLoading(false);
     };
     load();
   }, []);
 
-  const generateToken = () => {
-    return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const token = shareData?.token || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
+  const url = active && selected.length > 0 ? `${window.location.origin}${window.location.pathname}#share/${shareData?.token}` : null;
+
+  const togglePage = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const handleSave = async () => {
+    if (selected.length === 0) return;
+    setSaving(true);
+    const pageJson = JSON.stringify(selected);
+    if (shareData) {
+      const { data } = await supabase.from("share_links").update({ page_id: pageJson, active }).eq("id", shareData.id).select().single();
+      if (data) setShareData(data);
+    } else {
+      const newToken = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      const { data } = await supabase.from("share_links").insert({ page_id: pageJson, token: newToken, active: true }).select().single();
+      if (data) { setShareData(data); setActive(true); }
+    }
+    setSaving(false);
   };
 
-  const handleToggle = async (page) => {
-    const existing = links.find(l => l.page_id === page.id);
-    if (existing) {
-      const { data } = await supabase.from("share_links").update({ active: !existing.active }).eq("id", existing.id).select().single();
-      if (data) setLinks(prev => prev.map(l => l.id === existing.id ? data : l));
-    } else {
-      const token = generateToken();
-      const { data } = await supabase.from("share_links").insert({ page_id: page.id, token, active: true }).select().single();
-      if (data) setLinks(prev => [...prev, data]);
+  const handleToggleActive = async () => {
+    const newActive = !active;
+    setActive(newActive);
+    if (shareData) {
+      await supabase.from("share_links").update({ active: newActive }).eq("id", shareData.id);
     }
   };
 
-  const getLink = (pageId) => {
-    const l = links.find(l => l.page_id === pageId);
-    if (!l || !l.active) return null;
-    return `${window.location.origin}${window.location.pathname}#share/${l.token}`;
+  const handleCopy = async () => {
+    const u = shareData ? `${window.location.origin}${window.location.pathname}#share/${shareData.token}` : null;
+    if (!u) return;
+    await navigator.clipboard.writeText(u);
+    setCopying(true);
+    setTimeout(() => setCopying(false), 2000);
   };
 
-  const handleCopy = async (pageId) => {
-    const url = getLink(pageId);
-    if (!url) return;
-    await navigator.clipboard.writeText(url);
-    setCopying(pageId);
-    setTimeout(() => setCopying(null), 2000);
-  };
+  const sharedUrl = shareData ? `${window.location.origin}${window.location.pathname}#share/${shareData.token}` : null;
 
   return (
     <div>
       <div style={{ marginBottom: "22px" }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Gastzugang</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Seiten öffentlich freigeben – nur Leseansicht, kein Login nötig.</p>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Einen Link generieren – nur Leseansicht, kein Login nötig.</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
 
       {loading ? (
         <div style={{ padding: "40px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px", maxWidth: "560px" }}>
-          {SHAREABLE_PAGES.map(page => {
-            const link = links.find(l => l.page_id === page.id);
-            const active = link?.active === true;
-            const url = getLink(page.id);
-            return (
-              <div key={page.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: active ? "14px" : "0" }}>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{page.label}</div>
-                    <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{active ? "Freigegeben" : "Nicht freigegeben"}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "560px" }}>
+
+          {/* Page selection */}
+          <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div style={{ fontSize: "12px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "14px" }}>Seiten auswählen</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {SHAREABLE_PAGES.map(page => (
+                <div key={page.id} onClick={() => togglePage(page.id)} style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
+                  <div style={{ width: "18px", height: "18px", border: `2px solid ${ACCENT}`, borderRadius: "3px", background: selected.includes(page.id) ? ACCENT : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {selected.includes(page.id) && <span style={{ color: "white", fontSize: "12px", lineHeight: 1 }}>✓</span>}
                   </div>
-                  <div onClick={() => handleToggle(page)} style={{ width: "44px", height: "24px", borderRadius: "12px", background: active ? ACCENT : BG_DARK, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-                    <div style={{ position: "absolute", top: "3px", left: active ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-                  </div>
+                  <span style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT }}>{page.label}</span>
                 </div>
-                {active && url && (
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    <div style={{ flex: 1, background: BG, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", color: TEXT_MID, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: `1px solid ${BG_DARK}` }}>{url}</div>
-                    <button onClick={() => handleCopy(page.id)} style={{ background: copying === page.id ? ACCENT : BTN, border: "none", borderRadius: "6px", padding: "8px 14px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, whiteSpace: "nowrap", transition: "background 0.2s" }}>
-                      {copying === page.id ? "✓ Kopiert" : "Kopieren"}
-                    </button>
-                  </div>
-                )}
+              ))}
+            </div>
+            <button onClick={handleSave} disabled={saving || selected.length === 0} style={{ marginTop: "16px", background: selected.length > 0 ? ACCENT : BG_DARK, border: "none", borderRadius: "6px", padding: "9px 20px", cursor: selected.length > 0 ? "pointer" : "default", fontSize: "12px", color: "#fff", fontFamily: FONT }}>
+              {saving ? "Speichert …" : shareData ? "Auswahl speichern" : "Link generieren"}
+            </button>
+          </div>
+
+          {/* Link + toggle */}
+          {shareData && (
+            <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Link</div>
+                  <div style={{ fontSize: "11px", color: active ? ACCENT : TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{active ? "Aktiv – Zugriff möglich" : "Deaktiviert – kein Zugriff"}</div>
+                </div>
+                <div onClick={handleToggleActive} style={{ width: "44px", height: "24px", borderRadius: "12px", background: active ? ACCENT : BG_DARK, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                  <div style={{ position: "absolute", top: "3px", left: active ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                </div>
               </div>
-            );
-          })}
+              {active && sharedUrl && (
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <div style={{ flex: 1, background: BG, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", color: TEXT_MID, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: `1px solid ${BG_DARK}` }}>{sharedUrl}</div>
+                  <button onClick={handleCopy} style={{ background: copying ? ACCENT : BTN, border: "none", borderRadius: "6px", padding: "8px 14px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, whiteSpace: "nowrap", transition: "background 0.2s" }}>
+                    {copying ? "✓ Kopiert" : "Kopieren"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1516,14 +1547,20 @@ function GastzugangPage() {
 }
 
 function SharedView({ token }) {
-  const [status, setStatus] = useState("loading"); // loading | valid | invalid
-  const [pageId, setPageId] = useState(null);
+  const [status, setStatus] = useState("loading");
+  const [pages, setPages] = useState([]);
+  const [activePage, setActivePage] = useState(null);
 
   useEffect(() => {
     const check = async () => {
-      const { data } = await supabase.from("share_links").select("*").eq("token", token).eq("active", true).single();
-      if (data) { setPageId(data.page_id); setStatus("valid"); }
-      else setStatus("invalid");
+      const { data } = await supabase.from("share_links").select("*").eq("token", token).eq("active", true).maybeSingle();
+      if (data) {
+        let pgs = [];
+        try { pgs = JSON.parse(data.page_id); } catch { pgs = [data.page_id]; }
+        setPages(pgs);
+        setActivePage(pgs[0]);
+        setStatus("valid");
+      } else setStatus("invalid");
     };
     check();
   }, [token]);
@@ -1538,18 +1575,28 @@ function SharedView({ token }) {
       <div style={{ fontSize: "13px", color: TEXT_LIGHT }}>Dieser Link ist nicht mehr aktiv.</div>
     </div>
   );
+
+  const pageLabels = { "fotoalbum": "Fotoalbum", "unsere-pflanzen": "Unsere Pflanzen" };
+
   return (
     <RoleContext.Provider value="readonly">
-      <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden" }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <header style={{ height: "54px", background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, display: "flex", alignItems: "center", padding: "0 20px", gap: "10px", flexShrink: 0 }}>
-            <span style={{ fontSize: "15px", color: TEXT_DARK, fontWeight: "600", fontFamily: FONT }}>🌿 GreenLove2Leaves</span>
-            <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT }}>Leseansicht</span>
-          </header>
-          <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {pageId === "fotoalbum" ? <FotoalbumPage /> : pageId === "unsere-pflanzen" ? <PflanzenPage /> : null}
-          </main>
-        </div>
+      <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden", flexDirection: "column" }}>
+        <header style={{ height: "54px", background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, display: "flex", alignItems: "center", padding: "0 20px", gap: "10px", flexShrink: 0 }}>
+          <span style={{ fontSize: "15px", color: TEXT_DARK, fontWeight: "600", fontFamily: FONT }}>🌿 GreenLove2Leaves</span>
+          {pages.length > 1 && (
+            <div style={{ display: "flex", gap: "6px", marginLeft: "16px" }}>
+              {pages.map(p => (
+                <button key={p} onClick={() => setActivePage(p)} style={{ padding: "5px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, background: activePage === p ? ACCENT : GLASS, color: activePage === p ? "#fff" : TEXT_MID }}>
+                  {pageLabels[p] || p}
+                </button>
+              ))}
+            </div>
+          )}
+          <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT }}>Leseansicht</span>
+        </header>
+        <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
+          {activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : null}
+        </main>
       </div>
     </RoleContext.Provider>
   );
