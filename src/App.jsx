@@ -1553,7 +1553,7 @@ function PflanzenkassePage() {
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
             <div style={{ fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>{label}</div>
-            <div style={{ fontSize: "18px", fontWeight: "700", color, fontFamily: FONT }}>{formatBetrag(value)}</div>
+            <div style={{ fontSize: "18px", fontWeight: "700", color, fontFamily: FONT, whiteSpace: "nowrap" }}>{formatBetrag(value)}</div>
           </div>
         ))}
       </div>
@@ -1600,11 +1600,7 @@ function PflanzenkassePage() {
                       <span style={{ fontSize: "11px", color: TEXT_LIGHT, transition: "transform 0.2s", display: "inline-block", transform: openMonths[key] ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
                       <div style={{ fontSize: "13px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "0.5px" }}>{monthLabel}</div>
                     </div>
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                      <span style={{ fontSize: "11px", color: "#4a7c59", fontFamily: FONT }}>+{formatBetrag(monatEinnahmen)}</span>
-                      <span style={{ fontSize: "11px", color: "#b94040", fontFamily: FONT }}>-{formatBetrag(monatAusgaben)}</span>
-                      <span style={{ fontSize: "12px", fontWeight: "700", color: monatSaldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT }}>{monatSaldo >= 0 ? "+" : ""}{formatBetrag(monatSaldo)}</span>
-                    </div>
+                    <span style={{ fontSize: "13px", fontWeight: "700", color: monatSaldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT }}>{monatSaldo >= 0 ? "+" : ""}{formatBetrag(monatSaldo)}</span>
                   </div>
                   {openMonths[key] && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
