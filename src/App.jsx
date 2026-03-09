@@ -314,7 +314,7 @@ const menu = [
     { id: "akklimatisierung", label: "Akklimatisierung", emoji: "»" },
   ]},
   { id: "einverkauf", label: "Ein & Verkauf", emoji: "»", sub: [
-    { id: "bestellungen", label: "Bestellungen & Einkäufe", emoji: "»" },
+    { id: "bestellungen", label: "Bestellungen & Käufe", emoji: "»" },
     { id: "anzeigen", label: "Aktuelle Anzeigen", emoji: "»" },
     { id: "pflanzenkasse", label: "Pflanzenkasse", emoji: "»" },
   ]},
@@ -344,7 +344,7 @@ const pages = {
   todo: { title: "To Do Liste", desc: "Alle anstehenden Aufgaben.", empty: "Keine offenen Aufgaben!" },
   "sale-termine": { title: "Sale Termine", desc: "Bevorstehende Verkaufs- und Tauschtermine.", empty: "Keine Termine eingetragen." },
   akklimatisierung: { title: "Akklimatisierung", desc: "Neue Pflanzen in der Eingewöhnungsphase.", empty: "Keine Pflanzen in der Akklimatisierung." },
-  bestellungen: { title: "Bestellungen & Einkäufe", desc: "Übersicht aller Käufe und Bestellungen.", empty: "Noch keine Bestellungen erfasst." },
+  bestellungen: { title: "Bestellungen & Käufe", desc: "Übersicht aller Käufe und Bestellungen.", empty: "Noch keine Bestellungen erfasst." },
   anzeigen: { title: "Aktuelle Anzeigen", desc: "Deine aktiven Verkaufs- und Tauschangebote.", empty: "Keine aktiven Anzeigen." },
   pflanzenkasse: { title: "Pflanzenkasse", desc: "Einnahmen und Ausgaben rund um deine Pflanzen.", empty: "Noch keine Einträge in der Kasse." },
   "duenger-detail": { title: "Dünger", desc: "Alle Düngemittel, Dosierungen und Vorräte.", empty: "Noch kein Dünger eingetragen." },
@@ -2222,8 +2222,8 @@ function AppInner({ onLogout }) {
                   {item.sub.map(sub => {
                     const isSub = activePage === sub.id;
                     return (
-                      <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: "3px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "16px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", fontFamily: FONT }}>
-                        <span style={{ opacity: 0.6, fontSize: "11px" }}>{sub.emoji}</span>{sub.label}
+                      <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: "3px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "16px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: FONT }}>
+                        {sub.label}
                       </button>
                     );
                   })}
