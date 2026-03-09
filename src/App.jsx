@@ -1222,7 +1222,7 @@ async function sendPostfachDiscord(text) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        embeds: [{ description: text, color: 5792367, footer: { text: "System | " + datum } }]
+        embeds: [{ description: text, color: 6057046, footer: { text: "GreenLove2Leaves | " + datum } }]
       })
     });
   } catch(e) { console.error("Postfach Discord Fehler:", e); }
