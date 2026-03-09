@@ -2112,7 +2112,7 @@ function AppInner({ onLogout }) {
                     const isSub = activePage === sub.id;
                     return (
                       <button key={sub.id} onClick={() => handlePageClick(sub.id)} style={{ width: "100%", background: isSub ? "rgba(235,235,230,0.15)" : "none", border: "none", borderLeft: "3px solid transparent", color: isSub ? "#ffffff" : "rgba(255,255,255,0.6)", padding: "10px 14px 10px 34px", textAlign: "left", cursor: "pointer", fontSize: "16px", letterSpacing: "0.3px", display: "flex", alignItems: "center", gap: "7px", transition: "background 0.15s, color 0.15s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: FONT }}>
-                        {sub.label}
+                        <span style={{ opacity: 0.5, fontSize: "10px" }}>»</span>{sub.label}
                       </button>
                     );
                   })}
