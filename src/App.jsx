@@ -1507,17 +1507,6 @@ function PflanzenkassePage() {
   const saldo = gesamtEinnahmen - gesamtAusgaben;
 
   const formatBetrag = (b) => parseFloat(b).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
-  const openEdit = (b) => { setEditEntry(b); setEditForm({ artikel: b.artikel, datum: b.datum, gekauft_bei: b.gekauft_bei, auf_im: b.auf_im || "" }); setOpenMenuId(null); };
-
-  const handleSaveEdit = async () => {
-    if (!editForm.artikel.trim() || !editForm.gekauft_bei.trim()) return;
-    setSaving(true);
-    const { data } = await supabase.from("bestellungen").update({ artikel: editForm.artikel.trim(), datum: editForm.datum, gekauft_bei: editForm.gekauft_bei.trim(), auf_im: editForm.auf_im.trim() || null }).eq("id", editEntry.id).select().single();
-    if (data) setBestellungen(prev => prev.map(x => x.id === data.id ? data : x).sort((a, b) => new Date(b.datum) - new Date(a.datum)));
-    setEditEntry(null);
-    setSaving(false);
-  };
-
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
@@ -1692,17 +1681,6 @@ function ArchivPage() {
   }, []);
 
   const formatBetrag = (b) => parseFloat(b).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
-  const openEdit = (b) => { setEditEntry(b); setEditForm({ artikel: b.artikel, datum: b.datum, gekauft_bei: b.gekauft_bei, auf_im: b.auf_im || "" }); setOpenMenuId(null); };
-
-  const handleSaveEdit = async () => {
-    if (!editForm.artikel.trim() || !editForm.gekauft_bei.trim()) return;
-    setSaving(true);
-    const { data } = await supabase.from("bestellungen").update({ artikel: editForm.artikel.trim(), datum: editForm.datum, gekauft_bei: editForm.gekauft_bei.trim(), auf_im: editForm.auf_im.trim() || null }).eq("id", editEntry.id).select().single();
-    if (data) setBestellungen(prev => prev.map(x => x.id === data.id ? data : x).sort((a, b) => new Date(b.datum) - new Date(a.datum)));
-    setEditEntry(null);
-    setSaving(false);
-  };
-
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
