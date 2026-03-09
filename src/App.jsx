@@ -1425,7 +1425,7 @@ function PostfachPage() {
 }
 
 // ── Pflanzenkasse Page ────────────────────────────────────────────────────────
-const KASSE_KATEGORIEN = ["Pflanzenkauf", "Verkauf", "Dünger", "Substrat", "Töpfe & Zubehör", "Versand", "Sonstiges"];
+const KASSE_KATEGORIEN = ["Pflanzen", "Dünger", "Töpfe & Zubehör", "Sonstiges"];
 
 function PflanzenkassePage() {
   const role = useRole();
@@ -1434,7 +1434,7 @@ function PflanzenkassePage() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [filterTyp, setFilterTyp] = useState("alle");
-  const [form, setForm] = useState({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzenkauf", datum: new Date().toISOString().split("T")[0] });
+  const [form, setForm] = useState({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzen", datum: new Date().toISOString().split("T")[0] });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -1451,10 +1451,10 @@ function PflanzenkassePage() {
   const handleAdd = async () => {
     if (!form.name.trim() || !form.betrag) return;
     setSaving(true);
-    const row = { name: form.name.trim(), beschreibung: form.beschreibung.trim() || null, betrag: parseFloat(form.betrag), typ: form.typ, kategorie: form.kategorie, datum: form.datum };
+    const row = { name: form.name.trim(), beschreibung: form.beschreibung.trim(), betrag: parseFloat(form.betrag), typ: form.typ, kategorie: form.kategorie, datum: form.datum };
     const { data } = await supabase.from("pflanzenkasse").insert(row).select().single();
     if (data) setEintraege(prev => [data, ...prev].sort((a, b) => new Date(b.datum) - new Date(a.datum)));
-    setForm({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzenkauf", datum: new Date().toISOString().split("T")[0] });
+    setForm({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzen", datum: new Date().toISOString().split("T")[0] });
     setShowAdd(false);
     setSaving(false);
   };
@@ -1513,27 +1513,60 @@ function PflanzenkassePage() {
           <span style={{ fontSize: "30px", opacity: 0.3 }}>💰</span>
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Einträge vorhanden.</p>
         </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {filtered.map(e => (
-            <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-              <div style={{ width: "4px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{e.name}</div>
-                <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontSize: "11px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{e.kategorie}</span>
-                  <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.datum)}</span>
-                  {e.beschreibung && <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>· {e.beschreibung}</span>}
+      ) : (() => {
+        // Group by month
+        const groups = {};
+        filtered.forEach(e => {
+          const d = new Date(e.datum);
+          const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(e);
+        });
+        const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {sortedKeys.map(key => {
+              const [year, month] = key.split("-");
+              const monthLabel = new Date(parseInt(year), parseInt(month)-1, 1).toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+              const monatEinnahmen = groups[key].filter(e => e.typ === "einnahme").reduce((s, e) => s + parseFloat(e.betrag), 0);
+              const monatAusgaben = groups[key].filter(e => e.typ === "ausgabe").reduce((s, e) => s + parseFloat(e.betrag), 0);
+              const monatSaldo = monatEinnahmen - monatAusgaben;
+              return (
+                <div key={key}>
+                  {/* Month header */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <div style={{ fontSize: "13px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "0.5px" }}>{monthLabel}</div>
+                    <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                      <span style={{ fontSize: "11px", color: "#4a7c59", fontFamily: FONT }}>+{formatBetrag(monatEinnahmen)}</span>
+                      <span style={{ fontSize: "11px", color: "#b94040", fontFamily: FONT }}>-{formatBetrag(monatAusgaben)}</span>
+                      <span style={{ fontSize: "12px", fontWeight: "700", color: monatSaldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT }}>{monatSaldo >= 0 ? "+" : ""}{formatBetrag(monatSaldo)}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {groups[key].map(e => (
+                      <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+                        <div style={{ width: "4px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{e.name}</div>
+                          <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
+                            <span style={{ fontSize: "11px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{e.kategorie}</span>
+                            <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.datum)}</span>
+                            {e.beschreibung && <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>· {e.beschreibung}</span>}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#b94040", fontFamily: FONT, flexShrink: 0 }}>
+                          {e.typ === "einnahme" ? "+" : "-"}{formatBetrag(e.betrag)}
+                        </div>
+                        {canEdit && <button onClick={() => handleDelete(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0 }}>✕</button>}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div style={{ fontSize: "16px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#b94040", fontFamily: FONT, flexShrink: 0 }}>
-                {e.typ === "einnahme" ? "+" : "-"}{formatBetrag(e.betrag)}
-              </div>
-              {canEdit && <button onClick={() => handleDelete(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0 }}>✕</button>}
-            </div>
-          ))}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Add Modal */}
       {showAdd && (
@@ -1552,6 +1585,9 @@ function PflanzenkassePage() {
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
                 <input value={form.name} onChange={e => set("name", e.target.value)} placeholder="z.B. Monstera verkauft" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
               </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Beschreibung *</label>
+                <input value={form.beschreibung} onChange={e => set("beschreibung", e.target.value)} placeholder="z.B. Verkauft auf Kleinanzeigen" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Betrag (€) *</label>
                 <input type="number" step="0.01" value={form.betrag} onChange={e => set("betrag", e.target.value)} placeholder="0.00" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
               </div>
@@ -1563,13 +1599,10 @@ function PflanzenkassePage() {
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
                 <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
               </div>
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Beschreibung</label>
-                <input value={form.beschreibung} onChange={e => set("beschreibung", e.target.value)} placeholder="optional" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-              </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
-              <button onClick={handleAdd} disabled={saving || !form.name.trim() || !form.betrag} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() || !form.betrag ? 0.6 : 1 }}>
+              <button onClick={handleAdd} disabled={saving || !form.name.trim() || !form.beschreibung.trim() || !form.betrag} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() || !form.beschreibung.trim() || !form.betrag ? 0.6 : 1 }}>
                 {saving ? "Speichert …" : "Speichern"}
               </button>
             </div>
