@@ -1,5 +1,78 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { createClient } from "@supabase/supabase-js";
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+const MAIN_PW = import.meta.env.VITE_PASSWORD_MAIN;
+const GUEST_PW = import.meta.env.VITE_PASSWORD_GUEST;
+const SESSION_KEY = "gl2_session";
+const SESSION_DAYS = 7;
+
+function getSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const { role, expires } = JSON.parse(raw);
+    if (Date.now() > expires) { localStorage.removeItem(SESSION_KEY); return null; }
+    return role;
+  } catch { return null; }
+}
+
+function setSession(role) {
+  const expires = role === "guest"
+    ? Date.now() + 2 * 60 * 60 * 1000
+    : Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ role, expires }));
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+// Context for role
+const RoleContext = createContext("guest");
+const useRole = () => useContext(RoleContext);
+
+function LoginScreen({ onLogin }) {
+  const [pw, setPw] = useState("");
+  const [error, setError] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const handleSubmit = () => {
+    if (pw === MAIN_PW) { setSession("main"); onLogin("main"); }
+    else if (pw === GUEST_PW) { setSession("guest"); onLogin("guest"); }
+    else {
+      setError(true); setShake(true);
+      setTimeout(() => setShake(false), 500);
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }`}</style>
+      <div style={{ background: "rgba(255,255,255,0.6)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderRadius: "16px", padding: "40px 36px", width: "100%", maxWidth: "340px", boxShadow: "0 8px 40px rgba(0,0,0,0.12)", border: "1px solid rgba(255,255,255,0.7)", animation: shake ? "shake 0.5s ease" : "none" }}>
+        <div style={{ textAlign: "center", marginBottom: "28px" }}>
+          <div style={{ fontSize: "32px", marginBottom: "10px" }}>🌿</div>
+          <div style={{ fontSize: "20px", fontWeight: "700", color: "#1e2218", letterSpacing: "0.5px" }}>GreenLove2Leaves</div>
+          <div style={{ fontSize: "12px", color: "#8a9080", marginTop: "4px" }}>Bitte Passwort eingeben</div>
+        </div>
+        <input
+          type="password"
+          value={pw}
+          onChange={e => { setPw(e.target.value); setError(false); }}
+          onKeyDown={e => e.key === "Enter" && handleSubmit()}
+          placeholder="Passwort"
+          autoFocus
+          style={{ width: "100%", padding: "11px 14px", borderRadius: "8px", border: `1px solid ${error ? "#b94040" : "rgba(255,255,255,0.7)"}`, background: "rgba(235,235,230,0.8)", fontSize: "14px", color: "#1e2218", outline: "none", boxSizing: "border-box", fontFamily: "system-ui, sans-serif", transition: "border 0.2s" }}
+        />
+        {error && <div style={{ fontSize: "11px", color: "#b94040", marginTop: "6px", textAlign: "center" }}>Falsches Passwort</div>}
+        <button onClick={handleSubmit} style={{ width: "100%", marginTop: "14px", padding: "11px", borderRadius: "8px", border: "none", background: "#5c6c56", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "system-ui, sans-serif" }}>
+          Einloggen
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ── Toast Notifications ──────────────────────────────────────────────────────
 function ToastContainer({ toasts, onRemove }) {
@@ -254,6 +327,9 @@ const menu = [
     { id: "gewebe", label: "Gewebebeurteilung", emoji: "»" },
     { id: "nuetzlinge", label: "Nützlinge", emoji: "»" },
     { id: "wiki", label: "Pflanzen Wiki", emoji: "»" },
+  ]},
+  { id: "system", label: "System", emoji: "»", sub: [
+    { id: "gastzugang", label: "Gastzugang", emoji: "»" },
   ]},
 ];
 
@@ -809,6 +885,7 @@ const GROUP_OPTIONS = [
 ];
 
 function PflanzenPage() {
+  const role = useRole();
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -895,7 +972,7 @@ function PflanzenPage() {
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
           <input placeholder="Suchen …" value={search} onChange={e => setSearch(e.target.value)} style={{ background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 14px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none", flex: 1 }} />
-          <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "9px 18px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap" }}>+ Pflanze hinzufügen</button>
+          {role !== "guest" && role !== "readonly" && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "9px 18px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap" }}>+ Pflanze hinzufügen</button>}
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <select value={groupBy} onChange={e => { setGroupBy(e.target.value); localStorage.setItem("groupBy", e.target.value); setCollapsedGroups({}); }} style={{ background: BTN, border: `1px solid ${BTN}`, borderRadius: "6px", padding: "7px 12px", fontSize: "12px", color: WHITE, fontFamily: FONT, outline: "none", cursor: "pointer", appearance: "none", WebkitAppearance: "none" }}>
@@ -948,6 +1025,7 @@ function PflanzenPage() {
 const TODO_KATEGORIEN = ["Bestellungen", "Label", "Organisation", "Ableger"];
 
 function TodoPage() {
+  const role = useRole();
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -1011,7 +1089,7 @@ function TodoPage() {
           <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>To Do Liste</h1>
           <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} offene Aufgabe{offen.length !== 1 ? "n" : ""}</p>
         </div>
-        <button data-quickadd-todo onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Aufgabe hinzufügen</button>
+        {role !== "guest" && role !== "readonly" && <button data-quickadd-todo onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Aufgabe hinzufügen</button>}
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
 
@@ -1044,7 +1122,7 @@ function TodoPage() {
                   {todo.datum && <span style={{ fontSize: "12px", color: TEXT_DARK, fontFamily: FONT }}>{new Date(todo.datum).toLocaleDateString("de-DE")}</span>}
                 </div>
               </div>
-              <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_DARK, flexShrink: 0, fontWeight: "600", lineHeight: 1 }}>✕</button>
+              {role !== "guest" && role !== "readonly" && <button onClick={() => handleDelete(todo.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_DARK, flexShrink: 0, fontWeight: "600", lineHeight: 1 }}>✕</button>}
             </div>
           ))}
 
@@ -1052,7 +1130,7 @@ function TodoPage() {
             <div style={{ marginTop: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "1.5px", textTransform: "uppercase" }}>Erledigt ({erledigt.length})</div>
-                <button onClick={deleteAllErledigt} style={{ background: "#5c6c56", border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, display: "flex", alignItems: "center", gap: "4px" }}>Erledigte löschen</button>
+                {role !== "guest" && role !== "readonly" && <button onClick={deleteAllErledigt} style={{ background: "#5c6c56", border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, display: "flex", alignItems: "center", gap: "4px" }}>Erledigte löschen</button>}
               </div>
               {erledigt.map(todo => (
                 <div key={todo.id} style={{ background: "rgba(255,255,255,0.25)", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", display: "flex", alignItems: "center", gap: "14px", marginBottom: "6px", opacity: 0.65 }}>
@@ -1229,6 +1307,7 @@ async function sendPostfachDiscord(text) {
 }
 
 function PostfachPage() {
+  const role = useRole();
   const [nachrichten, setNachrichten] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -1278,7 +1357,7 @@ function PostfachPage() {
           <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Postfach</h1>
           <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} unerledigte Nachricht{offen.length !== 1 ? "en" : ""} · automatische Löschung nach 3 Tagen</p>
         </div>
-        <button data-quickadd-postfach onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Nachricht</button>
+        {role !== "guest" && role !== "readonly" && <button data-quickadd-postfach onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Nachricht</button>}
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
 
@@ -1292,7 +1371,7 @@ function PostfachPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {offen.map(n => (
-            <div key={n.id} onClick={() => handleToggle(n)} style={{ background: GLASS, borderRadius: "10px", border: "1px solid #5c6c56", padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div key={n.id} onClick={() => role !== "guest" && role !== "readonly" && handleToggle(n)} style={{ background: GLASS, borderRadius: "10px", border: "1px solid #5c6c56", padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${ACCENT}`, flexShrink: 0, marginTop: "2px" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.5" }}>{n.text}</div>
@@ -1304,7 +1383,7 @@ function PostfachPage() {
             <div style={{ marginTop: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "1.5px", textTransform: "uppercase" }}>Erledigt ({erledigt.length})</div>
-                <button onClick={e => { e.stopPropagation(); handleDeleteErledigt(); }} style={{ background: ACCENT, border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT }}>Erledigte löschen</button>
+                {role !== "guest" && role !== "readonly" && <button onClick={e => { e.stopPropagation(); handleDeleteErledigt(); }} style={{ background: ACCENT, border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT }}>Erledigte löschen</button>}
               </div>
               {erledigt.map(n => (
                 <div key={n.id} onClick={() => handleToggle(n)} style={{ background: "rgba(255,255,255,0.25)", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", marginBottom: "6px", opacity: 0.6 }}>
@@ -1341,7 +1420,162 @@ function PostfachPage() {
 }
 
 // ── App ───────────────────────────────────────────────────────────────────────
+// ── Gastzugang Page ───────────────────────────────────────────────────────────
+// ── Shareable Pages Config ───────────────────────────────────────────────────
+const SHAREABLE_PAGES = [
+  { id: "fotoalbum", label: "Fotoalbum" },
+  { id: "unsere-pflanzen", label: "Unsere Pflanzen" },
+];
+
+function GastzugangPage() {
+  const [links, setLinks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [copying, setCopying] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from("share_links").select("*");
+      if (data) setLinks(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const generateToken = () => {
+    return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  };
+
+  const handleToggle = async (page) => {
+    const existing = links.find(l => l.page_id === page.id);
+    if (existing) {
+      const { data } = await supabase.from("share_links").update({ active: !existing.active }).eq("id", existing.id).select().single();
+      if (data) setLinks(prev => prev.map(l => l.id === existing.id ? data : l));
+    } else {
+      const token = generateToken();
+      const { data } = await supabase.from("share_links").insert({ page_id: page.id, token, active: true }).select().single();
+      if (data) setLinks(prev => [...prev, data]);
+    }
+  };
+
+  const getLink = (pageId) => {
+    const l = links.find(l => l.page_id === pageId);
+    if (!l || !l.active) return null;
+    return `${window.location.origin}${window.location.pathname}#share/${l.token}`;
+  };
+
+  const handleCopy = async (pageId) => {
+    const url = getLink(pageId);
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    setCopying(pageId);
+    setTimeout(() => setCopying(null), 2000);
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Gastzugang</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Seiten öffentlich freigeben – nur Leseansicht, kein Login nötig.</p>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
+
+      {loading ? (
+        <div style={{ padding: "40px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px", maxWidth: "560px" }}>
+          {SHAREABLE_PAGES.map(page => {
+            const link = links.find(l => l.page_id === page.id);
+            const active = link?.active === true;
+            const url = getLink(page.id);
+            return (
+              <div key={page.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: active ? "14px" : "0" }}>
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{page.label}</div>
+                    <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{active ? "Freigegeben" : "Nicht freigegeben"}</div>
+                  </div>
+                  <div onClick={() => handleToggle(page)} style={{ width: "44px", height: "24px", borderRadius: "12px", background: active ? ACCENT : BG_DARK, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+                    <div style={{ position: "absolute", top: "3px", left: active ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+                  </div>
+                </div>
+                {active && url && (
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <div style={{ flex: 1, background: BG, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", color: TEXT_MID, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: `1px solid ${BG_DARK}` }}>{url}</div>
+                    <button onClick={() => handleCopy(page.id)} style={{ background: copying === page.id ? ACCENT : BTN, border: "none", borderRadius: "6px", padding: "8px 14px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, whiteSpace: "nowrap", transition: "background 0.2s" }}>
+                      {copying === page.id ? "✓ Kopiert" : "Kopieren"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SharedView({ token }) {
+  const [status, setStatus] = useState("loading"); // loading | valid | invalid
+  const [pageId, setPageId] = useState(null);
+
+  useEffect(() => {
+    const check = async () => {
+      const { data } = await supabase.from("share_links").select("*").eq("token", token).eq("active", true).single();
+      if (data) { setPageId(data.page_id); setStatus("valid"); }
+      else setStatus("invalid");
+    };
+    check();
+  }, [token]);
+
+  if (status === "loading") return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: BG, fontFamily: FONT, color: TEXT_LIGHT }}>Laden …</div>
+  );
+  if (status === "invalid") return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: BG, fontFamily: FONT, gap: "12px" }}>
+      <span style={{ fontSize: "32px" }}>🔒</span>
+      <div style={{ fontSize: "16px", fontWeight: "600", color: TEXT_DARK }}>Kein Zugriff</div>
+      <div style={{ fontSize: "13px", color: TEXT_LIGHT }}>Dieser Link ist nicht mehr aktiv.</div>
+    </div>
+  );
+  return (
+    <RoleContext.Provider value="readonly">
+      <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden" }}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <header style={{ height: "54px", background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, display: "flex", alignItems: "center", padding: "0 20px", gap: "10px", flexShrink: 0 }}>
+            <span style={{ fontSize: "15px", color: TEXT_DARK, fontWeight: "600", fontFamily: FONT }}>🌿 GreenLove2Leaves</span>
+            <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT }}>Leseansicht</span>
+          </header>
+          <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
+            {pageId === "fotoalbum" ? <FotoalbumPage /> : pageId === "unsere-pflanzen" ? <PflanzenPage /> : null}
+          </main>
+        </div>
+      </div>
+    </RoleContext.Provider>
+  );
+}
+
 export default function App() {
+  const shareToken = (() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash.startsWith("share/")) return hash.replace("share/", "");
+    return null;
+  })();
+
+  const [role, setRole] = useState(() => getSession());
+
+  if (shareToken) return <SharedView token={shareToken} />;
+  if (!role) return <LoginScreen onLogin={setRole} />;
+
+  return (
+    <RoleContext.Provider value={role}>
+      <AppInner onLogout={() => { clearSession(); setRole(null); }} />
+    </RoleContext.Provider>
+  );
+}
+
+function AppInner({ onLogout }) {
+  const role = useRole();
   const [activeMenu, setActiveMenu] = useState(() => {
     try {
       const hash = window.location.hash.replace("#", "");
@@ -1456,7 +1690,9 @@ export default function App() {
       {(!collapsed || mobile) && (
           <div style={{ padding: "11px 14px", borderTop: "1px solid #4a5a44", display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isOnline ? "#EBEBE6" : "#e05555", flexShrink: 0 }} />
-            <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT }}>{isOnline ? "Online" : "Offline"}</span>
+            <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", letterSpacing: "2px", textTransform: "uppercase", fontFamily: FONT, flex: 1 }}>{isOnline ? "Online" : "Offline"}</span>
+            {role === "guest" && <span style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT }}>Gast</span>}
+            <button onClick={onLogout} title="Ausloggen" style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "13px", padding: "0", lineHeight: 1 }}>⏻</button>
           </div>
       )}
     </aside>
@@ -1502,12 +1738,12 @@ export default function App() {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
       {/* Mobile floating + button */}
-      <button onClick={openQuickAdd} style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, width: "56px", height: "56px", borderRadius: "50%", background: ACCENT, border: "none", color: "#fff", fontSize: "30px", cursor: "pointer", boxShadow: "0 4px 24px rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>+</button>
+      {role !== "guest" && role !== "readonly" && <button onClick={openQuickAdd} style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, width: "56px", height: "56px", borderRadius: "50%", background: ACCENT, border: "none", color: "#fff", fontSize: "30px", cursor: "pointer", boxShadow: "0 4px 24px rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>+</button>}
 
       {/* QuickAdd Modal */}
       {quickAdd && (
