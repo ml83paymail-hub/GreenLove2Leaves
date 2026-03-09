@@ -1018,7 +1018,7 @@ function TodoPage() {
       <div style={{ marginBottom: "22px" }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen ..." style={{ width: "100%", padding: "9px 14px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "10px" }} />
         <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none" }}>
-          {["Alle", ...TODO_KATEGORIEN].map(k => (
+          {["Alle", ...[...new Set(todos.map(t => t.kategorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"))].map(k => (
             <button key={k} onClick={() => setGruppeFilter(k)} style={{ padding: "8px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: gruppeFilter === k ? "700" : "400", background: gruppeFilter === k ? ACCENT : GLASS, color: gruppeFilter === k ? "#fff" : TEXT_MID, whiteSpace: "nowrap", flexShrink: 0 }}>
               {k}
             </button>
