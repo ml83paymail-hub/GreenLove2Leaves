@@ -375,7 +375,7 @@ function PlantCard({ plant, onClick }) {
         aspectRatio: "3/4",
         height: "auto",
       }}>
-        {!plant.foto && <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.75 }}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>}
+        {!plant.foto && <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#EBEBE6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.85 }}><rect x="1" y="6" width="22" height="15" rx="3" ry="3"/><path d="M8 6l2-3h4l2 3"/><circle cx="12" cy="13.5" r="3.5"/><circle cx="17.5" cy="9.5" r="1"/></svg>}
         {plant.typ && (
           <span style={{
             position: "absolute", top: "10px", right: "10px",
