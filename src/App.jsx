@@ -331,6 +331,7 @@ const menu = [
   { id: "system", label: "System", emoji: "»", sub: [
     { id: "postfach", label: "Postfach", emoji: "»" },
     { id: "gastzugang", label: "Gastzugang", emoji: "»" },
+    { id: "archiv", label: "Archiv", emoji: "»" },
   ]},
 ];
 
@@ -1156,6 +1157,23 @@ function TodoPage() {
         </div>
       )}
 
+      {/* Jahresabschluss Confirmation */}
+      {showAbschluss && (
+        <div onClick={() => setShowAbschluss(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ fontSize: "32px", textAlign: "center", marginBottom: "16px" }}>📦</div>
+            <h2 style={{ margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textAlign: "center" }}>Jahr abschließen?</h2>
+            <p style={{ margin: "0 0 24px 0", fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT, textAlign: "center", lineHeight: "1.6" }}>Alle {eintraege.length} Einträge werden ins Archiv verschoben. Die Pflanzenkasse startet danach neu und leer.</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setShowAbschluss(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAbschluss} disabled={abschlussLoading} style={{ flex: 2, padding: "11px", borderRadius: "8px", border: "none", background: "#b94040", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>
+                {abschlussLoading ? "Wird archiviert …" : "Ja, abschließen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Modal */}
       {editEntry && (
         <div onClick={() => setEditEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
@@ -1475,6 +1493,8 @@ function PflanzenkassePage() {
   const [filterTyp, setFilterTyp] = useState("alle");
   const [form, setForm] = useState({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzen", datum: new Date().toISOString().split("T")[0] });
   const [editEntry, setEditEntry] = useState(null);
+  const [showAbschluss, setShowAbschluss] = useState(false);
+  const [abschlussLoading, setAbschlussLoading] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -1525,6 +1545,17 @@ function PflanzenkassePage() {
     setOpenMenuId(null);
   };
 
+  const handleAbschluss = async () => {
+    if (eintraege.length === 0) return;
+    setAbschlussLoading(true);
+    const jahr = new Date(eintraege[0].datum).getFullYear();
+    await supabase.from("pflanzenkasse_archiv").insert({ jahr, eintraege: JSON.stringify(eintraege) });
+    await supabase.from("pflanzenkasse").delete().neq("id", 0);
+    setEintraege([]);
+    setShowAbschluss(false);
+    setAbschlussLoading(false);
+  };
+
   const filtered = filterTyp === "alle" ? eintraege : eintraege.filter(e => e.typ === filterTyp);
   const gesamtEinnahmen = eintraege.filter(e => e.typ === "einnahme").reduce((s, e) => s + parseFloat(e.betrag), 0);
   const gesamtAusgaben = eintraege.filter(e => e.typ === "ausgabe").reduce((s, e) => s + parseFloat(e.betrag), 0);
@@ -1540,7 +1571,10 @@ function PflanzenkassePage() {
           <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenkasse</h1>
           <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "einträge" : ""}</p>
         </div>
-        {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
+        <div style={{ display: "flex", gap: "10px" }}>
+          {canEdit && eintraege.length > 0 && <button onClick={() => setShowAbschluss(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, color: TEXT_MID, padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT }}>Jahr abschließen</button>}
+          {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
+        </div>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
 
@@ -1640,6 +1674,23 @@ function PflanzenkassePage() {
         );
       })()}
 
+      {/* Jahresabschluss Confirmation */}
+      {showAbschluss && (
+        <div onClick={() => setShowAbschluss(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ fontSize: "32px", textAlign: "center", marginBottom: "16px" }}>📦</div>
+            <h2 style={{ margin: "0 0 10px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textAlign: "center" }}>Jahr abschließen?</h2>
+            <p style={{ margin: "0 0 24px 0", fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT, textAlign: "center", lineHeight: "1.6" }}>Alle {eintraege.length} Einträge werden ins Archiv verschoben. Die Pflanzenkasse startet danach neu und leer.</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setShowAbschluss(false)} style={{ flex: 1, padding: "11px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAbschluss} disabled={abschlussLoading} style={{ flex: 2, padding: "11px", borderRadius: "8px", border: "none", background: "#b94040", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>
+                {abschlussLoading ? "Wird archiviert …" : "Ja, abschließen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Modal */}
       {editEntry && (
         <div onClick={() => setEditEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
@@ -1724,6 +1775,130 @@ function PflanzenkassePage() {
   );
 }
 
+
+// ── Archiv Page ──────────────────────────────────────────────────────────────
+function ArchivPage() {
+  const [archive, setArchive] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [openJahr, setOpenJahr] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from("pflanzenkasse_archiv").select("*").order("jahr", { ascending: false });
+      if (data) { setArchive(data); if (data.length > 0) setOpenJahr(data[0].id); }
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const formatBetrag = (b) => parseFloat(b).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Archiv</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Abgeschlossene Pflanzenkassen-Jahre</p>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : archive.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📦</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine archivierten Jahre.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "680px" }}>
+          {archive.map(a => {
+            const eintraege = typeof a.eintraege === "string" ? JSON.parse(a.eintraege) : a.eintraege;
+            const einnahmen = eintraege.filter(e => e.typ === "einnahme").reduce((s, e) => s + parseFloat(e.betrag), 0);
+            const ausgaben = eintraege.filter(e => e.typ === "ausgabe").reduce((s, e) => s + parseFloat(e.betrag), 0);
+            const saldo = einnahmen - ausgaben;
+            const isOpen = openJahr === a.id;
+
+            // Group by month
+            const groups = {};
+            eintraege.forEach(e => {
+              const d = new Date(e.datum);
+              const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+              if (!groups[key]) groups[key] = [];
+              groups[key].push(e);
+            });
+            const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+
+            return (
+              <div key={a.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", overflow: "hidden" }}>
+                {/* Year header */}
+                <div onClick={() => setOpenJahr(isOpen ? null : a.id)} style={{ padding: "18px 20px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "11px", color: TEXT_LIGHT, transition: "transform 0.2s", display: "inline-block", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                    <div>
+                      <div style={{ fontSize: "16px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{a.jahr}</div>
+                      <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{eintraege.length} Einträge</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px" }}>EINNAHMEN</div>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#4a7c59", fontFamily: FONT, whiteSpace: "nowrap" }}>+{formatBetrag(einnahmen)}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px" }}>AUSGABEN</div>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#b94040", fontFamily: FONT, whiteSpace: "nowrap" }}>-{formatBetrag(ausgaben)}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px" }}>SALDO</div>
+                      <div style={{ fontSize: "14px", fontWeight: "700", color: saldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT, whiteSpace: "nowrap" }}>{saldo >= 0 ? "+" : ""}{formatBetrag(saldo)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Entries */}
+                {isOpen && (
+                  <div style={{ borderTop: `1px solid ${BG_DARK}`, padding: "16px 20px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                    {sortedKeys.map(key => {
+                      const [year, month] = key.split("-");
+                      const monthLabel = new Date(parseInt(year), parseInt(month)-1, 1).toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+                      const mSaldo = groups[key].filter(e => e.typ === "einnahme").reduce((s,e) => s+parseFloat(e.betrag),0) - groups[key].filter(e => e.typ === "ausgabe").reduce((s,e) => s+parseFloat(e.betrag),0);
+                      return (
+                        <div key={key}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <div style={{ fontSize: "12px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "0.5px" }}>{monthLabel}</div>
+                            <span style={{ fontSize: "12px", fontWeight: "700", color: mSaldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT }}>{mSaldo >= 0 ? "+" : ""}{formatBetrag(mSaldo)}</span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            {groups[key].map((e, i) => (
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "rgba(255,255,255,0.5)", borderRadius: "8px" }}>
+                                <div style={{ width: "3px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", flexShrink: 0 }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{e.name}</div>
+                                  <div style={{ display: "flex", gap: "8px", marginTop: "3px", alignItems: "center", flexWrap: "wrap" }}>
+                                    <span style={{ fontSize: "10px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", color: "#fff", borderRadius: "4px", padding: "2px 7px", fontFamily: FONT }}>{e.kategorie}</span>
+                                    <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.datum)}</span>
+                                    {e.beschreibung && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>· {e.beschreibung}</span>}
+                                  </div>
+                                </div>
+                                <div style={{ fontSize: "14px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#b94040", fontFamily: FONT, flexShrink: 0, whiteSpace: "nowrap" }}>
+                                  {e.typ === "einnahme" ? "+" : "-"}{formatBetrag(e.betrag)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── App ───────────────────────────────────────────────────────────────────────
 // ── Gastzugang Page ───────────────────────────────────────────────────────────
@@ -2108,7 +2283,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
