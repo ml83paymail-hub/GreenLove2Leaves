@@ -1463,12 +1463,13 @@ function GastzugangPage() {
     if (selected.length === 0) return;
     setSaving(true);
     const pageJson = JSON.stringify(selected);
+    const newToken = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
     if (shareData) {
-      const { data } = await supabase.from("share_links").update({ page_id: pageJson, active }).eq("id", shareData.id).select().single();
-      if (data) setShareData(data);
+      const { data } = await supabase.from("share_links").update({ page_id: pageJson, token: newToken, active: true, expires_at: expiresAt }).eq("id", shareData.id).select().single();
+      if (data) { setShareData(data); setActive(true); }
     } else {
-      const newToken = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-      const { data } = await supabase.from("share_links").insert({ page_id: pageJson, token: newToken, active: true }).select().single();
+      const { data } = await supabase.from("share_links").insert({ page_id: pageJson, token: newToken, active: true, expires_at: expiresAt }).select().single();
       if (data) { setShareData(data); setActive(true); }
     }
     setSaving(false);
@@ -1535,14 +1536,25 @@ function GastzugangPage() {
                   <div style={{ position: "absolute", top: "3px", left: active ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
                 </div>
               </div>
-              {active && sharedUrl && (
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                  <div style={{ flex: 1, background: BG, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", color: TEXT_MID, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: `1px solid ${BG_DARK}` }}>{sharedUrl}</div>
-                  <button onClick={handleCopy} style={{ background: copying ? ACCENT : BTN, border: "none", borderRadius: "6px", padding: "8px 14px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, whiteSpace: "nowrap", transition: "background 0.2s" }}>
-                    {copying ? "✓ Kopiert" : "Kopieren"}
-                  </button>
-                </div>
-              )}
+              {active && sharedUrl && (() => {
+                const exp = shareData?.expires_at ? new Date(shareData.expires_at) : null;
+                const remaining = exp ? Math.max(0, Math.round((exp - Date.now()) / 60000)) : null;
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {remaining !== null && (
+                      <div style={{ fontSize: "11px", color: remaining < 5 ? "#b94040" : ACCENT, fontFamily: FONT }}>
+                        ⏱ Läuft ab in {remaining} Minute{remaining !== 1 ? "n" : ""}
+                      </div>
+                    )}
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <div style={{ flex: 1, background: BG, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", color: TEXT_MID, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: `1px solid ${BG_DARK}` }}>{sharedUrl}</div>
+                      <button onClick={handleCopy} style={{ background: copying ? ACCENT : BTN, border: "none", borderRadius: "6px", padding: "8px 14px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, whiteSpace: "nowrap", transition: "background 0.2s" }}>
+                        {copying ? "✓ Kopiert" : "Kopieren"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -1560,6 +1572,12 @@ function SharedView({ token }) {
     const check = async () => {
       const { data } = await supabase.from("share_links").select("*").eq("token", token).eq("active", true).maybeSingle();
       if (data) {
+        // Check expiry
+        if (data.expires_at && new Date(data.expires_at) < new Date()) {
+          await supabase.from("share_links").update({ active: false }).eq("id", data.id);
+          setStatus("invalid");
+          return;
+        }
         let pgs = [];
         try { pgs = JSON.parse(data.page_id); } catch { pgs = [data.page_id]; }
         setPages(pgs);
