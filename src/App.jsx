@@ -1292,7 +1292,7 @@ function PostfachPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {offen.map(n => (
-            <div key={n.id} onClick={() => handleToggle(n)} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div key={n.id} onClick={() => handleToggle(n)} style={{ background: GLASS, borderRadius: "10px", border: "1px solid #5c6c56", padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${ACCENT}`, flexShrink: 0, marginTop: "2px" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.5" }}>{n.text}</div>
