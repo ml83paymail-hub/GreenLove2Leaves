@@ -1424,6 +1424,163 @@ function PostfachPage() {
   );
 }
 
+// ── Pflanzenkasse Page ────────────────────────────────────────────────────────
+const KASSE_KATEGORIEN = ["Pflanzenkauf", "Verkauf", "Dünger", "Substrat", "Töpfe & Zubehör", "Versand", "Sonstiges"];
+
+function PflanzenkassePage() {
+  const role = useRole();
+  const canEdit = role !== "readonly" && role !== "guest";
+  const [eintraege, setEintraege] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [filterTyp, setFilterTyp] = useState("alle");
+  const [form, setForm] = useState({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzenkauf", datum: new Date().toISOString().split("T")[0] });
+  const [saving, setSaving] = useState(false);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("pflanzenkasse").select("*").order("datum", { ascending: false });
+      if (data) setEintraege(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleAdd = async () => {
+    if (!form.name.trim() || !form.betrag) return;
+    setSaving(true);
+    const row = { name: form.name.trim(), beschreibung: form.beschreibung.trim() || null, betrag: parseFloat(form.betrag), typ: form.typ, kategorie: form.kategorie, datum: form.datum };
+    const { data } = await supabase.from("pflanzenkasse").insert(row).select().single();
+    if (data) setEintraege(prev => [data, ...prev].sort((a, b) => new Date(b.datum) - new Date(a.datum)));
+    setForm({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzenkauf", datum: new Date().toISOString().split("T")[0] });
+    setShowAdd(false);
+    setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("pflanzenkasse").delete().eq("id", id);
+    setEintraege(prev => prev.filter(e => e.id !== id));
+  };
+
+  const filtered = filterTyp === "alle" ? eintraege : eintraege.filter(e => e.typ === filterTyp);
+  const gesamtEinnahmen = eintraege.filter(e => e.typ === "einnahme").reduce((s, e) => s + parseFloat(e.betrag), 0);
+  const gesamtAusgaben = eintraege.filter(e => e.typ === "ausgabe").reduce((s, e) => s + parseFloat(e.betrag), 0);
+  const saldo = gesamtEinnahmen - gesamtAusgaben;
+
+  const formatBetrag = (b) => parseFloat(b).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenkasse</h1>
+          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "einträge" : ""}</p>
+        </div>
+        {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
+
+      {/* Saldo Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
+        {[
+          { label: "Einnahmen", value: gesamtEinnahmen, color: "#4a7c59" },
+          { label: "Ausgaben", value: gesamtAusgaben, color: "#b94040" },
+          { label: "Saldo", value: saldo, color: saldo >= 0 ? "#4a7c59" : "#b94040" },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div style={{ fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>{label}</div>
+            <div style={{ fontSize: "18px", fontWeight: "700", color, fontFamily: FONT }}>{formatBetrag(value)}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filter */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
+        {[["alle", "Alle"], ["einnahme", "Einnahmen"], ["ausgabe", "Ausgaben"]].map(([val, label]) => (
+          <button key={val} onClick={() => setFilterTyp(val)} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: filterTyp === val ? "700" : "400", background: filterTyp === val ? ACCENT : GLASS, color: filterTyp === val ? "#fff" : TEXT_MID }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>💰</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Einträge vorhanden.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {filtered.map(e => (
+            <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <div style={{ width: "4px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{e.name}</div>
+                <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: "11px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{e.kategorie}</span>
+                  <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.datum)}</span>
+                  {e.beschreibung && <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>· {e.beschreibung}</span>}
+                </div>
+              </div>
+              <div style={{ fontSize: "16px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#b94040", fontFamily: FONT, flexShrink: 0 }}>
+                {e.typ === "einnahme" ? "+" : "-"}{formatBetrag(e.betrag)}
+              </div>
+              {canEdit && <button onClick={() => handleDelete(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, flexShrink: 0 }}>✕</button>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Modal */}
+      {showAdd && (
+        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neuer Eintrag</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+              {/* Einnahme / Ausgabe Toggle */}
+              <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: `1px solid ${BG_DARK}` }}>
+                {[["ausgabe", "Ausgabe"], ["einnahme", "Einnahme"]].map(([val, label]) => (
+                  <button key={val} onClick={() => set("typ", val)} style={{ flex: 1, padding: "10px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: form.typ === val ? "700" : "400", background: form.typ === val ? (val === "einnahme" ? "#4a7c59" : "#b94040") : "#fff", color: form.typ === val ? "#fff" : TEXT_MID, transition: "all 0.15s" }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
+                <input value={form.name} onChange={e => set("name", e.target.value)} placeholder="z.B. Monstera verkauft" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Betrag (€) *</label>
+                <input type="number" step="0.01" value={form.betrag} onChange={e => set("betrag", e.target.value)} placeholder="0.00" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Kategorie</label>
+                <select value={form.kategorie} onChange={e => set("kategorie", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+                  {KASSE_KATEGORIEN.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
+                <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Beschreibung</label>
+                <input value={form.beschreibung} onChange={e => set("beschreibung", e.target.value)} placeholder="optional" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
+              <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAdd} disabled={saving || !form.name.trim() || !form.betrag} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() || !form.betrag ? 0.6 : 1 }}>
+                {saving ? "Speichert …" : "Speichern"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ── App ───────────────────────────────────────────────────────────────────────
 // ── Gastzugang Page ───────────────────────────────────────────────────────────
 // ── Shareable Pages Config ───────────────────────────────────────────────────
@@ -1807,7 +1964,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
