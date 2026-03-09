@@ -1789,6 +1789,136 @@ function ArchivPage() {
   );
 }
 
+// ── Bestellungen Page ────────────────────────────────────────────────────────
+function BestellungenPage() {
+  const role = useRole();
+  const canEdit = role !== "readonly" && role !== "guest";
+  const [bestellungen, setBestellungen] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [erhalten, setErhalten] = useState(null); // id being processed
+  const [form, setForm] = useState({ artikel: "", datum: new Date().toISOString().split("T")[0], gekauft_bei: "", auf_im: "" });
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("bestellungen").select("*").order("datum", { ascending: false });
+      if (data) setBestellungen(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleAdd = async () => {
+    if (!form.artikel.trim() || !form.gekauft_bei.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("bestellungen").insert({ artikel: form.artikel.trim(), datum: form.datum, gekauft_bei: form.gekauft_bei.trim(), auf_im: form.auf_im.trim() || null }).select().single();
+    if (data) setBestellungen(prev => [data, ...prev].sort((a, b) => new Date(b.datum) - new Date(a.datum)));
+    setForm({ artikel: "", datum: new Date().toISOString().split("T")[0], gekauft_bei: "", auf_im: "" });
+    setShowAdd(false);
+    setSaving(false);
+  };
+
+  const handleErhalten = async (b) => {
+    setErhalten(b.id);
+    // Create Todo
+    const titel = `${b.artikel} erhalten, bitte einpflegen!`;
+    await supabase.from("todos").insert({ titel, kategorie: "Bestellungen", datum: new Date().toISOString().split("T")[0], erledigt: false });
+    // Delete Bestellung
+    await supabase.from("bestellungen").delete().eq("id", b.id);
+    setBestellungen(prev => prev.filter(x => x.id !== b.id));
+    setErhalten(null);
+  };
+
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Bestellungen & Käufe</h1>
+          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{bestellungen.length} offene Bestellung{bestellungen.length !== 1 ? "en" : ""}</p>
+        </div>
+        {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Bestellung</button>}
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : bestellungen.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📦</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Keine offenen Bestellungen.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "680px" }}>
+          {bestellungen.map(b => (
+            <div key={b.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "15px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, marginBottom: "6px" }}>{b.artikel}</div>
+                  <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px", textTransform: "uppercase" }}>Gekauft bei</span>
+                      <span style={{ fontSize: "13px", color: TEXT_DARK, fontFamily: FONT }}>{b.gekauft_bei}</span>
+                    </div>
+                    {b.auf_im && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                        <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px", textTransform: "uppercase" }}>Auf / Im</span>
+                        <span style={{ fontSize: "13px", color: TEXT_DARK, fontFamily: FONT }}>{b.auf_im}</span>
+                      </div>
+                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                      <span style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px", textTransform: "uppercase" }}>Datum</span>
+                      <span style={{ fontSize: "13px", color: TEXT_DARK, fontFamily: FONT }}>{formatDate(b.datum)}</span>
+                    </div>
+                  </div>
+                </div>
+                {canEdit && (
+                  <button onClick={() => handleErhalten(b)} disabled={erhalten === b.id} style={{ background: ACCENT, border: "none", borderRadius: "8px", padding: "8px 14px", cursor: "pointer", fontSize: "12px", color: "#fff", fontFamily: FONT, fontWeight: "600", flexShrink: 0, opacity: erhalten === b.id ? 0.6 : 1, whiteSpace: "nowrap" }}>
+                    {erhalten === b.id ? "…" : "✓ Erhalten"}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Modal */}
+      {showAdd && (
+        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neue Bestellung</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Artikel *</label>
+                <input value={form.artikel} onChange={e => set("artikel", e.target.value)} placeholder="z.B. Monstera deliciosa" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Gekauft bei *</label>
+                <input value={form.gekauft_bei} onChange={e => set("gekauft_bei", e.target.value)} placeholder="z.B. Etsy, eBay, Kleinanzeigen" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Auf / Im</label>
+                <input value={form.auf_im} onChange={e => set("auf_im", e.target.value)} placeholder="optional" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
+                <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
+              <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAdd} disabled={saving || !form.artikel.trim() || !form.gekauft_bei.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.artikel.trim() || !form.gekauft_bei.trim() ? 0.6 : 1 }}>
+                {saving ? "Speichert …" : "Speichern"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 // ── Gastzugang Page ───────────────────────────────────────────────────────────
 // ── Shareable Pages Config ───────────────────────────────────────────────────
@@ -2172,7 +2302,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
