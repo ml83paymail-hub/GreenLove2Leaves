@@ -466,8 +466,8 @@ function Tagebuch({ plantId, plantName }) {
                             <span>✎</span> Bearbeiten
                           </button>
                           <div style={{ height: "1px", background: BG_DARK }} />
-                          <button onClick={() => handleDelete(entry.id)} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>🗑</span> Löschen
+                          <button onClick={() => handleDelete(entry.id)} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#222", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}>
+                            <span>✕</span> Löschen
                           </button>
                         </div>
                       </div>
