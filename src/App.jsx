@@ -1216,8 +1216,8 @@ function FotoalbumPage() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(null);
-  const [showAll, setShowAll] = useState(false);
   const LIMIT = 20;
+  const [visibleCount, setVisibleCount] = useState(LIMIT);
 
   useEffect(() => {
     const load = async () => {
@@ -1232,8 +1232,6 @@ function FotoalbumPage() {
     };
     load();
   }, []);
-
-  const toggleShowAll = () => setShowAll(!showAll);
 
   return (
     <div>
@@ -1253,7 +1251,7 @@ function FotoalbumPage() {
       ) : (
         <div>
           <div className="foto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-            {(showAll ? photos : photos.slice(0, LIMIT)).map(photo => (
+            {photos.slice(0, visibleCount).map(photo => (
               <div key={photo.id} onClick={() => setLightbox(photo)}
                 style={{ cursor: "pointer", borderRadius: "8px", overflow: "hidden", background: BTN, aspectRatio: "3/4", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
                 <img src={photo.foto_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
@@ -1266,10 +1264,10 @@ function FotoalbumPage() {
               </div>
             ))}
           </div>
-          {photos.length > LIMIT && (
+          {visibleCount < photos.length && (
             <div style={{ textAlign: "center", marginTop: "24px" }}>
-              <button onClick={toggleShowAll} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: "#fff", fontFamily: FONT }}>
-                {showAll ? "Weniger anzeigen" : (photos.length - LIMIT) + " weitere Fotos anzeigen"}
+              <button onClick={() => setVisibleCount(v => v + LIMIT)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: "#fff", fontFamily: FONT }}>
+                {Math.min(LIMIT, photos.length - visibleCount)} weitere Fotos laden
               </button>
             </div>
           )}
