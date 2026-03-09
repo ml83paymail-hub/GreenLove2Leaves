@@ -227,7 +227,7 @@ async function uploadPhoto(file, folder = "pflanzen") {
 
 // ── Menu ──────────────────────────────────────────────────────────────────────
 const menu = [
-  { id: "updates", label: "Updates", emoji: "»", sub: [{ id: "fotoalbum", label: "Fotoalbum", emoji: "»" }] },
+  { id: "updates", label: "Updates", emoji: "»", sub: [{ id: "fotoalbum", label: "Fotoalbum", emoji: "»" }, { id: "postfach", label: "Postfach", emoji: "»" }] },
   { id: "content", label: "Content", emoji: "»", sub: [{ id: "social-media", label: "Social Media", emoji: "»" }] },
   { id: "pflanzen", label: "Pflanzen", emoji: "»", sub: [
     { id: "unsere-pflanzen", label: "Unsere Pflanzen", emoji: "»" },
@@ -259,6 +259,7 @@ const menu = [
 
 const pages = {
   "social-media": { title: "Social Media", desc: "Dein Foto-Grid für deine Pflanzenmomente.", empty: "Noch keine Fotos vorhanden." },
+  "postfach": { title: "Postfach", desc: "Deine Nachrichten und Benachrichtigungen.", empty: "Dein Postfach ist leer." },
   ableger: { title: "Unsere Ableger", desc: "Alle Ableger und Stecklinge im Überblick.", empty: "Noch keine Ableger dokumentiert." },
   wishlist: { title: "Wishlist", desc: "Pflanzen die du noch haben möchtest.", empty: "Deine Wunschliste ist noch leer." },
   notizbuch: { title: "Notizbuch", desc: "Persönliche Notizen rund um deine Pflanzen.", empty: "Noch keine Notizen vorhanden." },
@@ -1209,6 +1210,136 @@ function FotoalbumPage() {
   );
 }
 
+// ── Postfach ──────────────────────────────────────────────────────────────────
+const POSTFACH_WEBHOOK = "https://discord.com/api/webhooks/1473445983189864538/bG9uouHTFFBGm1HiuQRslDP6IB_WgdA8tIACuqWLmvHCGFSgbbR-LaOCoXKlA7hhydAu";
+
+async function sendPostfachDiscord(text) {
+  const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const d = new Date();
+  const datum = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
+  try {
+    await fetch(POSTFACH_WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [{ description: text, color: 5792367, footer: { text: "System | " + datum } }]
+      })
+    });
+  } catch(e) { console.error("Postfach Discord Fehler:", e); }
+}
+
+function PostfachPage() {
+  const [nachrichten, setNachrichten] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 3);
+    await supabase.from("postfach").delete().lt("created_at", cutoff.toISOString());
+    const { data } = await supabase.from("postfach").select("*").order("created_at", { ascending: false });
+    if (data) setNachrichten(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleAdd = async () => {
+    if (!text.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("postfach").insert({ text: text.trim(), erledigt: false }).select().single();
+    if (data) { setNachrichten(prev => [data, ...prev]); await sendPostfachDiscord(text.trim()); }
+    setText(""); setShowAdd(false); setSaving(false);
+  };
+
+  const handleToggle = async (n) => {
+    const { data } = await supabase.from("postfach").update({ erledigt: !n.erledigt }).eq("id", n.id).select().single();
+    if (data) setNachrichten(prev => prev.map(x => x.id === n.id ? data : x));
+  };
+
+  const handleDeleteErledigt = async () => {
+    const ids = nachrichten.filter(n => n.erledigt).map(n => n.id);
+    if (!ids.length) return;
+    await supabase.from("postfach").delete().in("id", ids);
+    setNachrichten(prev => prev.filter(n => !n.erledigt));
+  };
+
+  const formatDate = (iso) => new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const offen = nachrichten.filter(n => !n.erledigt);
+  const erledigt = nachrichten.filter(n => n.erledigt);
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Postfach</h1>
+          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} unerledigte Nachricht{offen.length !== 1 ? "en" : ""} · automatische Löschung nach 3 Tagen</p>
+        </div>
+        <button data-quickadd-postfach onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Nachricht</button>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Nachrichten werden geladen …</div>
+      ) : nachrichten.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📬</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Dein Postfach ist leer.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {offen.map(n => (
+            <div key={n.id} onClick={() => handleToggle(n)} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${ACCENT}`, flexShrink: 0, marginTop: "2px" }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.5" }}>{n.text}</div>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "6px" }}>{formatDate(n.created_at)}</div>
+              </div>
+            </div>
+          ))}
+          {erledigt.length > 0 && (
+            <div style={{ marginTop: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "1.5px", textTransform: "uppercase" }}>Erledigt ({erledigt.length})</div>
+                <button onClick={e => { e.stopPropagation(); handleDeleteErledigt(); }} style={{ background: ACCENT, border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT }}>Erledigte löschen</button>
+              </div>
+              {erledigt.map(n => (
+                <div key={n.id} onClick={() => handleToggle(n)} style={{ background: "rgba(255,255,255,0.25)", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", marginBottom: "6px", opacity: 0.6 }}>
+                  <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: ACCENT, border: `2px solid ${ACCENT}`, flexShrink: 0, marginTop: "2px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "14px", color: TEXT_LIGHT, fontFamily: FONT, textDecoration: "line-through", lineHeight: "1.5" }}>{n.text}</div>
+                    <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "6px" }}>{formatDate(n.created_at)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {showAdd && (
+        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neue Nachricht</h2>
+            <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Nachricht schreiben …" rows={4} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", gap: "10px", marginTop: "18px", justifyContent: "flex-end" }}>
+              <button onClick={() => { setShowAdd(false); setText(""); }} style={{ padding: "10px 20px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAdd} disabled={saving || !text.trim()} style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !text.trim() ? 0.6 : 1 }}>
+                {saving ? "Senden …" : "Senden"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const [activeMenu, setActiveMenu] = useState(() => {
@@ -1371,7 +1502,7 @@ export default function App() {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
@@ -1383,13 +1514,22 @@ export default function App() {
         <div onClick={closeQuickAdd} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 600, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "22px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", marginBottom: "20px" }}>
             <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Schnell hinzufügen</h3>
-            <button onClick={() => { setQuickAdd(false); setActivePage("todo"); sessionStorage.setItem("activePage", "todo"); history.replaceState(null, "", "#todo"); setTimeout(() => { const btn = document.querySelector("[data-quickadd-todo]"); if (btn) btn.click(); }, 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "32px", fontWeight: "700", color: "#5c6c56" }}>»</span>
-              <div>
-                <div style={{ fontWeight: "600" }}>To Do Aufgabe</div>
-                <div style={{ fontSize: "11px", color: TEXT_LIGHT, marginTop: "2px" }}>Neue Aufgabe in der To Do Liste</div>
-              </div>
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <button onClick={() => { setQuickAdd(false); setActiveMenu("updates"); setActivePage("postfach"); sessionStorage.setItem("activePage", "postfach"); sessionStorage.setItem("activeMenu", "updates"); history.replaceState(null, "", "#postfach"); setTimeout(() => { const btn = document.querySelector("[data-quickadd-postfach]"); if (btn) btn.click(); }, 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "32px", fontWeight: "700", color: "#5c6c56" }}>»</span>
+                <div>
+                  <div style={{ fontWeight: "600" }}>Nachricht</div>
+                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, marginTop: "2px" }}>Neue Nachricht ins Postfach</div>
+                </div>
+              </button>
+              <button onClick={() => { setQuickAdd(false); setActivePage("todo"); sessionStorage.setItem("activePage", "todo"); history.replaceState(null, "", "#todo"); setTimeout(() => { const btn = document.querySelector("[data-quickadd-todo]"); if (btn) btn.click(); }, 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "32px", fontWeight: "700", color: "#5c6c56" }}>»</span>
+                <div>
+                  <div style={{ fontWeight: "600" }}>To Do Aufgabe</div>
+                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, marginTop: "2px" }}>Neue Aufgabe in der To Do Liste</div>
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       )}
