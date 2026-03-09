@@ -442,8 +442,8 @@ function Tagebuch({ plantId, plantName }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {visible.map(entry => (
-            <div key={entry.id} style={{ background: BG, borderRadius: "8px", border: `1px solid ${BG_DARK}`, overflow: "hidden" }}>
-              {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block" }} />}
+            <div key={entry.id} style={{ background: BG, borderRadius: "8px", border: `1px solid ${BG_DARK}`, overflow: "visible", position: "relative" }}>
+              {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: "8px 8px 0 0" }} />}
               <div style={{ padding: "10px 12px" }}>
                 {editingEntry === entry.id ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -461,7 +461,7 @@ function Tagebuch({ plantId, plantName }) {
                       <span style={{ fontSize: "12px", color: "#222", fontFamily: FONT }}>{formatEntryDate(entry.date)}</span>
                       <div style={{ position: "relative" }}>
                         <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>
-                        <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, bottom: "28px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 20, overflow: "hidden" }}>
+                        <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, top: "100%", marginTop: "4px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 100, overflow: "hidden" }}>
                           <button onClick={() => { setEditingEntry(entry.id); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>✎</span> Bearbeiten
                           </button>
