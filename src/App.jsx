@@ -1507,6 +1507,17 @@ function PflanzenkassePage() {
   const saldo = gesamtEinnahmen - gesamtAusgaben;
 
   const formatBetrag = (b) => parseFloat(b).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  const openEdit = (b) => { setEditEntry(b); setEditForm({ artikel: b.artikel, datum: b.datum, gekauft_bei: b.gekauft_bei, auf_im: b.auf_im || "" }); setOpenMenuId(null); };
+
+  const handleSaveEdit = async () => {
+    if (!editForm.artikel.trim() || !editForm.gekauft_bei.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("bestellungen").update({ artikel: editForm.artikel.trim(), datum: editForm.datum, gekauft_bei: editForm.gekauft_bei.trim(), auf_im: editForm.auf_im.trim() || null }).eq("id", editEntry.id).select().single();
+    if (data) setBestellungen(prev => prev.map(x => x.id === data.id ? data : x).sort((a, b) => new Date(b.datum) - new Date(a.datum)));
+    setEditEntry(null);
+    setSaving(false);
+  };
+
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
@@ -1681,6 +1692,17 @@ function ArchivPage() {
   }, []);
 
   const formatBetrag = (b) => parseFloat(b).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+  const openEdit = (b) => { setEditEntry(b); setEditForm({ artikel: b.artikel, datum: b.datum, gekauft_bei: b.gekauft_bei, auf_im: b.auf_im || "" }); setOpenMenuId(null); };
+
+  const handleSaveEdit = async () => {
+    if (!editForm.artikel.trim() || !editForm.gekauft_bei.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("bestellungen").update({ artikel: editForm.artikel.trim(), datum: editForm.datum, gekauft_bei: editForm.gekauft_bei.trim(), auf_im: editForm.auf_im.trim() || null }).eq("id", editEntry.id).select().single();
+    if (data) setBestellungen(prev => prev.map(x => x.id === data.id ? data : x).sort((a, b) => new Date(b.datum) - new Date(a.datum)));
+    setEditEntry(null);
+    setSaving(false);
+  };
+
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
@@ -1798,6 +1820,10 @@ function BestellungenPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [saving, setSaving] = useState(false);
   const [erhalten, setErhalten] = useState(null); // id being processed
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [editEntry, setEditEntry] = useState(null);
+  const [editForm, setEditForm] = useState({ artikel: '', datum: '', gekauft_bei: '', auf_im: '' });
+  const setE = (k, v) => setEditForm(f => ({ ...f, [k]: v }));
   const [form, setForm] = useState({ artikel: "", datum: new Date().toISOString().split("T")[0], gekauft_bei: "", auf_im: "" });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -1832,6 +1858,17 @@ function BestellungenPage() {
     setErhalten(null);
   };
 
+  const openEdit = (b) => { setEditEntry(b); setEditForm({ artikel: b.artikel, datum: b.datum, gekauft_bei: b.gekauft_bei, auf_im: b.auf_im || "" }); setOpenMenuId(null); };
+
+  const handleSaveEdit = async () => {
+    if (!editForm.artikel.trim() || !editForm.gekauft_bei.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("bestellungen").update({ artikel: editForm.artikel.trim(), datum: editForm.datum, gekauft_bei: editForm.gekauft_bei.trim(), auf_im: editForm.auf_im.trim() || null }).eq("id", editEntry.id).select().single();
+    if (data) setBestellungen(prev => prev.map(x => x.id === data.id ? data : x).sort((a, b) => new Date(b.datum) - new Date(a.datum)));
+    setEditEntry(null);
+    setSaving(false);
+  };
+
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 
   return (
@@ -1853,7 +1890,7 @@ function BestellungenPage() {
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Keine offenen Bestellungen.</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxWidth: "680px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {bestellungen.map(b => (
             <div key={b.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
@@ -1877,13 +1914,52 @@ function BestellungenPage() {
                   </div>
                 </div>
                 {canEdit && (
-                  <button onClick={() => handleErhalten(b)} disabled={erhalten === b.id} style={{ background: ACCENT, border: "none", borderRadius: "8px", padding: "8px 14px", cursor: "pointer", fontSize: "12px", color: "#fff", fontFamily: FONT, fontWeight: "600", flexShrink: 0, opacity: erhalten === b.id ? 0.6 : 1, whiteSpace: "nowrap" }}>
-                    {erhalten === b.id ? "…" : "✓ Erhalten"}
-                  </button>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
+                    <button onClick={() => handleErhalten(b)} disabled={erhalten === b.id} style={{ background: ACCENT, border: "none", borderRadius: "8px", padding: "8px 14px", cursor: "pointer", fontSize: "12px", color: "#fff", fontFamily: FONT, fontWeight: "600", opacity: erhalten === b.id ? 0.6 : 1, whiteSpace: "nowrap" }}>
+                      {erhalten === b.id ? "…" : "✓ Erhalten"}
+                    </button>
+                    <div style={{ position: "relative" }}>
+                      <button onClick={() => setOpenMenuId(openMenuId === b.id ? null : b.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
+                      {openMenuId === b.id && (
+                        <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                          <button onClick={() => openEdit(b)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editEntry && (
+        <div onClick={() => setEditEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Bestellung bearbeiten</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Artikel *</label>
+                <input value={editForm.artikel} onChange={e => setE("artikel", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Gekauft bei *</label>
+                <input value={editForm.gekauft_bei} onChange={e => setE("gekauft_bei", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Auf / Im</label>
+                <input value={editForm.auf_im} onChange={e => setE("auf_im", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
+                <input type="date" value={editForm.datum} onChange={e => setE("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
+              <button onClick={() => setEditEntry(null)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleSaveEdit} disabled={saving || !editForm.artikel.trim() || !editForm.gekauft_bei.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !editForm.artikel.trim() || !editForm.gekauft_bei.trim() ? 0.6 : 1 }}>
+                {saving ? "Speichert …" : "Speichern"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
