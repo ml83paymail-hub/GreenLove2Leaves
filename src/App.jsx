@@ -2371,6 +2371,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
   const [saving, setSaving] = useState(false);
   const [visible, setVisible] = useState(10);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [datum, setDatum] = useState(new Date().toISOString().split("T")[0]);
 
   useEffect(() => { if (triggerAdd) { setText(""); setShowAdd(true); onAddHandled(); } }, [triggerAdd]);
 
@@ -2387,18 +2388,19 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
   const handleAdd = async () => {
     if (!text.trim()) return;
     setSaving(true);
-    const now = new Date().toISOString();
-    const { data } = await supabase.from("notizbuch_notizen").insert({ text: text.trim(), updated_at: now }).select().single();
-    if (data) setNotizen(prev => [data, ...prev]);
-    setText(""); setShowAdd(false); setSaving(false);
+    const ts = new Date(datum).toISOString();
+    const { data } = await supabase.from("notizbuch_notizen").insert({ text: text.trim(), created_at: ts, updated_at: ts }).select().single();
+    if (data) setNotizen(prev => [data, ...prev].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)));
+    setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(false); setSaving(false);
   };
 
   const handleEdit = async () => {
     if (!text.trim()) return;
     setSaving(true);
-    const { data } = await supabase.from("notizbuch_notizen").update({ text: text.trim(), updated_at: new Date().toISOString() }).eq("id", editEntry.id).select().single();
-    if (data) setNotizen(prev => prev.map(n => n.id === data.id ? data : n));
-    setEditEntry(null); setText(""); setSaving(false);
+    const ts = new Date(datum).toISOString();
+    const { data } = await supabase.from("notizbuch_notizen").update({ text: text.trim(), created_at: ts, updated_at: ts }).eq("id", editEntry.id).select().single();
+    if (data) setNotizen(prev => prev.map(n => n.id === data.id ? data : n).sort((a,b) => new Date(b.created_at) - new Date(a.created_at)));
+    setEditEntry(null); setText(""); setDatum(new Date().toISOString().split("T")[0]); setSaving(false);
   };
 
   const handleDelete = async (id) => {
@@ -2429,7 +2431,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
                     <button onClick={() => setOpenMenuId(openMenuId === n.id ? null : n.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                     {openMenuId === n.id && (
                       <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
-                        <button onClick={() => { setEditEntry(n); setText(n.text); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                        <button onClick={() => { setEditEntry(n); setText(n.text); setDatum(n.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
                         <button onClick={() => handleDelete(n.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                       </div>
                     )}
@@ -2453,7 +2455,10 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
         <div onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{editEntry ? "Notiz bearbeiten" : "Neue Notiz"}</h2>
-            <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Datum</label>
+            <input type="date" value={datum} onChange={e => setDatum(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "12px", marginTop: "4px" }} />
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Notiz</label>
+            <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginTop: "4px" }} />
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
               <button onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
               <button onClick={editEntry ? handleEdit : handleAdd} disabled={saving || !text.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !text.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
@@ -2480,7 +2485,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("notizbuch_themen").select("*, notizbuch_eintraege(count)").order("created_at", { ascending: false });
       if (data) setThemen(data);
       setLoading(false);
     };
@@ -2492,7 +2497,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
     setSaving(true);
     const { error } = await supabase.from("notizbuch_themen").insert({ name: name.trim() });
     if (error) { alert("Fehler: " + error.message); setSaving(false); return; }
-    const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+    const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*, notizbuch_eintraege(count)").order("created_at", { ascending: false });
     if (e2) { alert("Ladefehler: " + e2.message); setSaving(false); return; }
     if (fresh) setThemen(fresh);
     setName(""); setShowAdd(false); setSaving(false);
@@ -2530,7 +2535,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
             <div key={t.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 18px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", cursor: "pointer", position: "relative", zIndex: openMenuId === t.id ? 50 : 1 }} onClick={() => onOpen(t)}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "15px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{t.name}</div>
-                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{new Date(t.created_at).toLocaleDateString("de-DE")}</div>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{t.notizbuch_eintraege?.[0]?.count ?? 0} Einträge</div>
               </div>
               <span style={{ fontSize: "18px", color: TEXT_LIGHT }}>›</span>
               {canEdit && (
@@ -2584,7 +2589,10 @@ function ThemaDetail({ thema, canEdit, onBack }) {
   const [showAdd, setShowAdd] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
   const [text, setText] = useState("");
+  const [datum, setDatum] = useState(new Date().toISOString().split("T")[0]);
   const [saving, setSaving] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [visible, setVisible] = useState(10);
 
   useEffect(() => {
     const load = async () => {
@@ -2599,32 +2607,38 @@ function ThemaDetail({ thema, canEdit, onBack }) {
   const handleAdd = async () => {
     if (!text.trim()) return;
     setSaving(true);
-    const { data } = await supabase.from("notizbuch_eintraege").insert({ thema_id: thema.id, text: text.trim() }).select().single();
-    if (data) setEintraege(prev => [data, ...prev]);
-    setText(""); setShowAdd(false); setSaving(false);
+    const ts = new Date(datum).toISOString();
+    await supabase.from("notizbuch_eintraege").insert({ thema_id: thema.id, text: text.trim(), created_at: ts });
+    const { data: fresh } = await supabase.from("notizbuch_eintraege").select("*").eq("thema_id", thema.id).order("created_at", { ascending: false });
+    if (fresh) setEintraege(fresh);
+    setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(false); setSaving(false);
   };
 
   const handleEdit = async () => {
     if (!text.trim()) return;
     setSaving(true);
-    const { data } = await supabase.from("notizbuch_eintraege").update({ text: text.trim() }).eq("id", editEntry.id).select().single();
-    if (data) setEintraege(prev => prev.map(e => e.id === data.id ? data : e));
-    setEditEntry(null); setText(""); setSaving(false);
+    const ts = new Date(datum).toISOString();
+    await supabase.from("notizbuch_eintraege").update({ text: text.trim(), created_at: ts }).eq("id", editEntry.id);
+    const { data: fresh } = await supabase.from("notizbuch_eintraege").select("*").eq("thema_id", thema.id).order("created_at", { ascending: false });
+    if (fresh) setEintraege(fresh);
+    setEditEntry(null); setText(""); setDatum(new Date().toISOString().split("T")[0]); setSaving(false);
   };
 
   const handleDelete = async (id) => {
     await supabase.from("notizbuch_eintraege").delete().eq("id", id);
     setEintraege(prev => prev.filter(e => e.id !== id));
+    setOpenMenuId(null);
   };
 
-  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const shown = eintraege.slice(0, visible);
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px", flexWrap: "wrap" }}>
         <button onClick={onBack} style={{ background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "7px 14px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>← Zurück</button>
         <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{thema.name}</h2>
-        {canEdit && <button onClick={() => { setText(""); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto" }}>+ Eintrag</button>}
+        {canEdit && <button onClick={() => { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto" }}>+ Eintrag</button>}
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
 
@@ -2632,25 +2646,36 @@ function ThemaDetail({ thema, canEdit, onBack }) {
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
       ) : eintraege.length === 0 ? (
         <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
-          <span style={{ fontSize: "30px", opacity: 0.3 }}>📝</span>
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Einträge in diesem Thema.</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {eintraege.map(e => (
-            <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-              <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{e.text}</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
-                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.created_at)}</span>
+          {shown.map(e => (
+            <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap", flex: 1 }}>{e.text}</div>
                 {canEdit && (
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button onClick={() => { setEditEntry(e); setText(e.text); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT, padding: "2px 6px" }}>✎ Bearbeiten</button>
-                    <button onClick={() => handleDelete(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, padding: "2px 6px" }}>🗑</button>
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
+                    {openMenuId === e.id && (
+                      <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                        <button onClick={() => { setEditEntry(e); setText(e.text); setDatum(e.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                        <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+              <div style={{ marginTop: "8px" }}>
+                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.created_at)}</span>
+              </div>
             </div>
           ))}
+          {visible < eintraege.length && (
+            <button onClick={() => setVisible(v => v + 10)} style={{ alignSelf: "center", marginTop: "4px", background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "9px 22px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>
+              {eintraege.length - visible} weitere anzeigen
+            </button>
+          )}
         </div>
       )}
 
@@ -2658,7 +2683,10 @@ function ThemaDetail({ thema, canEdit, onBack }) {
         <div onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{editEntry ? "Eintrag bearbeiten" : "Neuer Eintrag"}</h2>
-            <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Datum</label>
+            <input type="date" value={datum} onChange={e => setDatum(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "12px", marginTop: "4px" }} />
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Notiz</label>
+            <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginTop: "4px" }} />
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
               <button onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
               <button onClick={editEntry ? handleEdit : handleAdd} disabled={saving || !text.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !text.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
