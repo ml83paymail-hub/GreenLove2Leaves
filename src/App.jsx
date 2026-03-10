@@ -2325,6 +2325,327 @@ function AblegerPage() {
 }
 
 
+// ── Notizbuch Page ────────────────────────────────────────────────────────────
+function NotizbuchPage() {
+  const role = useRole();
+  const canEdit = role !== "readonly" && role !== "guest";
+  const [tab, setTab] = useState("notizen"); // "notizen" | "themen"
+  const [activeThema, setActiveThema] = useState(null);
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Notizbuch</h1>
+        </div>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "26px" }}>
+        {[["notizen", "📝 Allgemeine Notizen"], ["themen", "📂 Themen"]].map(([val, label]) => (
+          <button key={val} onClick={() => { setTab(val); setActiveThema(null); }} style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: tab === val ? "700" : "400", background: tab === val ? ACCENT : GLASS, color: tab === val ? "#fff" : TEXT_MID }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} />}
+      {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={setActiveThema} />}
+      {tab === "themen" && activeThema && <ThemaDetail thema={activeThema} canEdit={canEdit} onBack={() => setActiveThema(null)} />}
+    </div>
+  );
+}
+
+function AllgemeineNotizen({ canEdit }) {
+  const [notizen, setNotizen] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editEntry, setEditEntry] = useState(null);
+  const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("notizbuch_notizen").select("*").order("created_at", { ascending: false });
+      if (data) setNotizen(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleAdd = async () => {
+    if (!text.trim()) return;
+    setSaving(true);
+    const now = new Date().toISOString();
+    const { data } = await supabase.from("notizbuch_notizen").insert({ text: text.trim(), updated_at: now }).select().single();
+    if (data) setNotizen(prev => [data, ...prev]);
+    setText(""); setShowAdd(false); setSaving(false);
+  };
+
+  const handleEdit = async () => {
+    if (!text.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("notizbuch_notizen").update({ text: text.trim(), updated_at: new Date().toISOString() }).eq("id", editEntry.id).select().single();
+    if (data) setNotizen(prev => prev.map(n => n.id === data.id ? data : n));
+    setEditEntry(null); setText(""); setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("notizbuch_notizen").delete().eq("id", id);
+    setNotizen(prev => prev.filter(n => n.id !== id));
+  };
+
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div>
+      {canEdit && <button onClick={() => { setText(""); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginBottom: "20px" }}>+ Notiz</button>}
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : notizen.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📝</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Notizen vorhanden.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {notizen.map(n => (
+            <div key={n.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{n.text}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
+                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(n.created_at)}</span>
+                {canEdit && (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => { setEditEntry(n); setText(n.text); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT, padding: "2px 6px" }}>✎ Bearbeiten</button>
+                    <button onClick={() => handleDelete(n.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, padding: "2px 6px" }}>🗑</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(showAdd || editEntry) && (
+        <div onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{editEntry ? "Notiz bearbeiten" : "Neue Notiz"}</h2>
+            <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+              <button onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={editEntry ? handleEdit : handleAdd} disabled={saving || !text.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !text.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ThemenListe({ canEdit, onOpen }) {
+  const [themen, setThemen] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [editThema, setEditThema] = useState(null);
+  const [editName, setEditName] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+      if (data) setThemen(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleAdd = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("notizbuch_themen").insert({ name: name.trim() }).select().single();
+    if (data) setThemen(prev => [data, ...prev]);
+    setName(""); setShowAdd(false); setSaving(false);
+  };
+
+  const handleEdit = async () => {
+    if (!editName.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("notizbuch_themen").update({ name: editName.trim() }).eq("id", editThema.id).select().single();
+    if (data) setThemen(prev => prev.map(t => t.id === data.id ? data : t));
+    setEditThema(null); setEditName(""); setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("notizbuch_eintraege").delete().eq("thema_id", id);
+    await supabase.from("notizbuch_themen").delete().eq("id", id);
+    setThemen(prev => prev.filter(t => t.id !== id));
+    setOpenMenuId(null);
+  };
+
+  return (
+    <div>
+      {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginBottom: "20px" }}>+ Thema</button>}
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : themen.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📂</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Themen vorhanden.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {themen.map(t => (
+            <div key={t.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 18px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", cursor: "pointer", position: "relative", zIndex: openMenuId === t.id ? 50 : 1 }} onClick={() => onOpen(t)}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "15px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{t.name}</div>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{new Date(t.created_at).toLocaleDateString("de-DE")}</div>
+              </div>
+              <span style={{ fontSize: "18px", color: TEXT_LIGHT }}>›</span>
+              {canEdit && (
+                <div style={{ position: "relative", flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                  <button onClick={() => setOpenMenuId(openMenuId === t.id ? null : t.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
+                  {openMenuId === t.id && (
+                    <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                      <button onClick={() => { setEditThema(t); setEditName(t.name); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Umbenennen</button>
+                      <button onClick={() => handleDelete(t.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showAdd && (
+        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neues Thema</h2>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="z.B. Projekt Growbox" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+              <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAdd} disabled={saving || !name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Erstellen"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editThema && (
+        <div onClick={() => setEditThema(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Thema umbenennen</h2>
+            <input value={editName} onChange={e => setEditName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+              <button onClick={() => setEditThema(null)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleEdit} disabled={saving || !editName.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !editName.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ThemaDetail({ thema, canEdit, onBack }) {
+  const [eintraege, setEintraege] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editEntry, setEditEntry] = useState(null);
+  const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase.from("notizbuch_eintraege").select("*").eq("thema_id", thema.id).order("created_at", { ascending: false });
+      if (data) setEintraege(data);
+      setLoading(false);
+    };
+    load();
+  }, [thema.id]);
+
+  const handleAdd = async () => {
+    if (!text.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("notizbuch_eintraege").insert({ thema_id: thema.id, text: text.trim() }).select().single();
+    if (data) setEintraege(prev => [data, ...prev]);
+    setText(""); setShowAdd(false); setSaving(false);
+  };
+
+  const handleEdit = async () => {
+    if (!text.trim()) return;
+    setSaving(true);
+    const { data } = await supabase.from("notizbuch_eintraege").update({ text: text.trim() }).eq("id", editEntry.id).select().single();
+    if (data) setEintraege(prev => prev.map(e => e.id === data.id ? data : e));
+    setEditEntry(null); setText(""); setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("notizbuch_eintraege").delete().eq("id", id);
+    setEintraege(prev => prev.filter(e => e.id !== id));
+  };
+
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px", flexWrap: "wrap" }}>
+        <button onClick={onBack} style={{ background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "7px 14px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>← Zurück</button>
+        <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{thema.name}</h2>
+        {canEdit && <button onClick={() => { setText(""); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto" }}>+ Eintrag</button>}
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : eintraege.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📝</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Einträge in diesem Thema.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {eintraege.map(e => (
+            <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+              <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{e.text}</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
+                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.created_at)}</span>
+                {canEdit && (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={() => { setEditEntry(e); setText(e.text); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT, padding: "2px 6px" }}>✎ Bearbeiten</button>
+                    <button onClick={() => handleDelete(e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, padding: "2px 6px" }}>🗑</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(showAdd || editEntry) && (
+        <div onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{editEntry ? "Eintrag bearbeiten" : "Neuer Eintrag"}</h2>
+            <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+              <button onClick={() => { setShowAdd(false); setEditEntry(null); setText(""); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={editEntry ? handleEdit : handleAdd} disabled={saving || !text.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !text.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ── App ───────────────────────────────────────────────────────────────────────
 // ── Gastzugang Page ───────────────────────────────────────────────────────────
 // ── Shareable Pages Config ───────────────────────────────────────────────────
@@ -2708,7 +3029,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
