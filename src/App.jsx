@@ -2049,6 +2049,8 @@ function AblegerPage() {
     const { data } = await supabase.from("ableger").insert(row).select().single();
     if (data) setAbleger(prev => [data, ...prev]);
   };
+
+  const openEdit = (a) => {
     setEditEntry(a);
     setForm({ name: a.name, nr: a.nr || "", typ: a.typ, datum: a.datum, standort: a.standort, mutterpflanze_id: a.mutterpflanze_id ? String(a.mutterpflanze_id) : "" });
     setOpenMenuId(null);
