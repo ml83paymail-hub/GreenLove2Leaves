@@ -1374,7 +1374,7 @@ function PostfachPage() {
     <div>
       <div style={{ marginBottom: "8px" }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Postfach</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>({nachrichten.length}) Nachrichten</p>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{nachrichten.length} Nachricht{nachrichten.length !== 1 ? "en" : ""}</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
