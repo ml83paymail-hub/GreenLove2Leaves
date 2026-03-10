@@ -2064,7 +2064,7 @@ function AblegerPage() {
 
   const MutterpflanzeDropdown = ({ value, onChange }) => {
     const [open, setOpen] = useState(false);
-    const [collapsedTyp, setCollapsedTyp] = useState({});
+    const [collapsedTyp, setCollapsedTyp] = useState(() => { const c = {}; getMutterGruppen().forEach(({ typ }) => { c[typ] = true; }); return c; });
     const gruppen = getMutterGruppen();
     const selectedName = value ? (pflanzen.find(p => p.id === parseInt(value))?.name || "–") : "– keine Verknüpfung –";
     const toggleTyp = (typ) => setCollapsedTyp(prev => ({ ...prev, [typ]: !prev[typ] }));
