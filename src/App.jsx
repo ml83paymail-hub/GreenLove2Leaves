@@ -2331,13 +2331,18 @@ function NotizbuchPage() {
   const canEdit = role !== "readonly" && role !== "guest";
   const [tab, setTab] = useState("notizen"); // "notizen" | "themen"
   const [activeThema, setActiveThema] = useState(null);
+  const [addNotiz, setAddNotiz] = useState(false);
+  const [addThema, setAddThema] = useState(false);
 
   return (
     <div>
       <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Notizbuch</h1>
-        </div>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Notizbuch</h1>
+        {canEdit && !activeThema && (
+          <button onClick={() => tab === "notizen" ? setAddNotiz(true) : setAddThema(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>
+            {tab === "notizen" ? "+ Notiz" : "+ Thema"}
+          </button>
+        )}
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
 
@@ -2350,20 +2355,22 @@ function NotizbuchPage() {
         ))}
       </div>
 
-      {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} />}
-      {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={setActiveThema} />}
+      {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} triggerAdd={addNotiz} onAddHandled={() => setAddNotiz(false)} />}
+      {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={setActiveThema} triggerAdd={addThema} onAddHandled={() => setAddThema(false)} />}
       {tab === "themen" && activeThema && <ThemaDetail thema={activeThema} canEdit={canEdit} onBack={() => setActiveThema(null)} />}
     </div>
   );
 }
 
-function AllgemeineNotizen({ canEdit }) {
+function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
   const [notizen, setNotizen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => { if (triggerAdd) { setText(""); setShowAdd(true); onAddHandled(); } }, [triggerAdd]);
 
   useEffect(() => {
     const load = async () => {
@@ -2401,7 +2408,7 @@ function AllgemeineNotizen({ canEdit }) {
 
   return (
     <div>
-      {canEdit && <button onClick={() => { setText(""); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginBottom: "20px" }}>+ Notiz</button>}
+
 
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
@@ -2445,7 +2452,7 @@ function AllgemeineNotizen({ canEdit }) {
   );
 }
 
-function ThemenListe({ canEdit, onOpen }) {
+function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
   const [themen, setThemen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -2454,6 +2461,8 @@ function ThemenListe({ canEdit, onOpen }) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editThema, setEditThema] = useState(null);
   const [editName, setEditName] = useState("");
+
+  useEffect(() => { if (triggerAdd) { setShowAdd(true); onAddHandled(); } }, [triggerAdd]);
 
   useEffect(() => {
     const load = async () => {
@@ -2490,7 +2499,7 @@ function ThemenListe({ canEdit, onOpen }) {
 
   return (
     <div>
-      {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginBottom: "20px" }}>+ Thema</button>}
+
 
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
