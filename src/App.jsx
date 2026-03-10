@@ -2511,6 +2511,8 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editThema, setEditThema] = useState(null);
   const [editName, setEditName] = useState("");
+  const [editBeschreibung, setEditBeschreibung] = useState("");
+  const [beschreibung, setBeschreibung] = useState("");
 
   useEffect(() => { if (triggerAdd) { setShowAdd(true); onAddHandled(); } }, [triggerAdd]);
 
@@ -2532,7 +2534,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
   const handleAdd = async () => {
     if (!name.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from("notizbuch_themen").insert({ name: name.trim() });
+    const { error } = await supabase.from("notizbuch_themen").insert({ name: name.trim(), beschreibung: beschreibung.trim() || null });
     if (error) { alert("Fehler: " + error.message); setSaving(false); return; }
     const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
     if (e2) { alert("Ladefehler: " + e2.message); setSaving(false); return; }
@@ -2542,15 +2544,15 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
       (counts || []).forEach(e => { countMap[e.thema_id] = (countMap[e.thema_id] || 0) + 1; });
       setThemen(fresh.map(t => ({ ...t, _count: countMap[t.id] || 0 })));
     }
-    setName(""); setShowAdd(false); setSaving(false);
+    setName(""); setBeschreibung(""); setShowAdd(false); setSaving(false);
   };
 
   const handleEdit = async () => {
     if (!editName.trim()) return;
     setSaving(true);
-    const { data } = await supabase.from("notizbuch_themen").update({ name: editName.trim() }).eq("id", editThema.id).select().single();
-    if (data) setThemen(prev => prev.map(t => t.id === data.id ? data : t));
-    setEditThema(null); setEditName(""); setSaving(false);
+    const { data } = await supabase.from("notizbuch_themen").update({ name: editName.trim(), beschreibung: editBeschreibung.trim() || null }).eq("id", editThema.id).select().single();
+    if (data) setThemen(prev => prev.map(t => t.id === data.id ? { ...t, ...data } : t));
+    setEditThema(null); setEditName(""); setEditBeschreibung(""); setSaving(false);
   };
 
   const handleDelete = async (id) => {
@@ -2616,7 +2618,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
                   {openMenuId === t.id && (
                     <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "160px", zIndex: 20 }}>
                       <button onClick={(e) => handleToggleStatus(t, e)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>{t.status === "abgeschlossen" ? "↩ Reaktivieren" : "✓ Abschließen"}</button>
-                      <button onClick={() => { setEditThema(t); setEditName(t.name); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Umbenennen</button>
+                      <button onClick={() => { setEditThema(t); setEditName(t.name); setEditBeschreibung(t.beschreibung || ""); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Umbenennen</button>
                       <button onClick={() => handleDelete(t.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                     </div>
                   )}
@@ -2648,7 +2650,10 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
         <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neues Thema</h2>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="z.B. Projekt Growbox" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Name</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="z.B. Projekt Growbox" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginTop: "4px", marginBottom: "12px" }} />
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Beschreibung (optional)</label>
+            <textarea value={beschreibung} onChange={e => setBeschreibung(e.target.value)} placeholder="Worum geht es in diesem Thema?" rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginTop: "4px" }} />
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
               <button onClick={handleAdd} disabled={saving || !name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Erstellen"}</button>
@@ -2660,8 +2665,11 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
       {editThema && (
         <div onClick={() => setEditThema(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
-            <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Thema umbenennen</h2>
-            <input value={editName} onChange={e => setEditName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+            <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Thema bearbeiten</h2>
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Name</label>
+            <input value={editName} onChange={e => setEditName(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginTop: "4px", marginBottom: "12px" }} />
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Beschreibung (optional)</label>
+            <textarea value={editBeschreibung} onChange={e => setEditBeschreibung(e.target.value)} placeholder="Worum geht es in diesem Thema?" rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginTop: "4px" }} />
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
               <button onClick={() => setEditThema(null)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
               <button onClick={handleEdit} disabled={saving || !editName.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !editName.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
@@ -2731,7 +2739,10 @@ function ThemaDetail({ thema, canEdit, onBack }) {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px", flexWrap: "wrap" }}>
         <button onClick={onBack} style={{ background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "7px 14px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>← Zurück</button>
-        <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{thema.name}</h2>
+        <div style={{ flex: 1 }}>
+          <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{thema.name}</h2>
+          {thema.beschreibung && <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.5" }}>{thema.beschreibung}</p>}
+        </div>
         {canEdit && <button onClick={() => { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto" }}>+ Eintrag</button>}
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
