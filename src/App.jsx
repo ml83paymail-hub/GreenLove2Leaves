@@ -2369,6 +2369,8 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
   const [editEntry, setEditEntry] = useState(null);
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [visible, setVisible] = useState(10);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => { if (triggerAdd) { setText(""); setShowAdd(true); onAddHandled(); } }, [triggerAdd]);
 
@@ -2402,37 +2404,48 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
   const handleDelete = async (id) => {
     await supabase.from("notizbuch_notizen").delete().eq("id", id);
     setNotizen(prev => prev.filter(n => n.id !== id));
+    setOpenMenuId(null);
   };
 
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const shown = notizen.slice(0, visible);
 
   return (
     <div>
-
-
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
       ) : notizen.length === 0 ? (
         <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
-          <span style={{ fontSize: "30px", opacity: 0.3 }}>📝</span>
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Notizen vorhanden.</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          {notizen.map(n => (
-            <div key={n.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-              <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{n.text}</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "10px" }}>
-                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(n.created_at)}</span>
+          {shown.map(n => (
+            <div key={n.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === n.id ? 50 : 1 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap", flex: 1 }}>{n.text}</div>
                 {canEdit && (
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button onClick={() => { setEditEntry(n); setText(n.text); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT, padding: "2px 6px" }}>✎ Bearbeiten</button>
-                    <button onClick={() => handleDelete(n.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, padding: "2px 6px" }}>🗑</button>
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <button onClick={() => setOpenMenuId(openMenuId === n.id ? null : n.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
+                    {openMenuId === n.id && (
+                      <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                        <button onClick={() => { setEditEntry(n); setText(n.text); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                        <button onClick={() => handleDelete(n.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+              <div style={{ marginTop: "8px" }}>
+                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(n.created_at)}</span>
+              </div>
             </div>
           ))}
+          {visible < notizen.length && (
+            <button onClick={() => setVisible(v => v + 10)} style={{ alignSelf: "center", marginTop: "4px", background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "9px 22px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>
+              {notizen.length - visible} weitere anzeigen
+            </button>
+          )}
         </div>
       )}
 
@@ -2477,7 +2490,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
   const handleAdd = async () => {
     if (!name.trim()) return;
     setSaving(true);
-    const { data } = await supabase.from("notizbuch_themen").insert({ name: name.trim() }).select().single();
+    const { data } = await supabase.from("notizbuch_themen").insert({ name: name.trim(), created_at: new Date().toISOString() }).select().single();
     if (data) setThemen(prev => [data, ...prev]);
     setName(""); setShowAdd(false); setSaving(false);
   };
