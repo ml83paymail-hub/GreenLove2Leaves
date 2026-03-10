@@ -2490,8 +2490,9 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
   const handleAdd = async () => {
     if (!name.trim()) return;
     setSaving(true);
-    const { data } = await supabase.from("notizbuch_themen").insert({ name: name.trim(), created_at: new Date().toISOString() }).select().single();
-    if (data) setThemen(prev => [data, ...prev]);
+    await supabase.from("notizbuch_themen").insert({ name: name.trim() });
+    const { data: fresh } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+    if (fresh) setThemen(fresh);
     setName(""); setShowAdd(false); setSaving(false);
   };
 
