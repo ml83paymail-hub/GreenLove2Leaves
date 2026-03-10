@@ -2005,7 +2005,7 @@ function AblegerPage() {
       setLoading(true);
       const [{ data: a }, { data: p }] = await Promise.all([
         supabase.from("ableger").select("*").order("created_at", { ascending: false }),
-        supabase.from("pflanzen").select("id, name").order("name")
+        supabase.from("pflanzen").select("id, name, typ").order("name")
       ]);
       if (a) { setAbleger(a); const keys = [...new Set(a.map(x => x.typ)), ...new Set(a.map(x => x.standort))]; const collapsed = {}; keys.forEach(k => { if (k) collapsed[k] = true; }); setCollapsedGroups(collapsed); }
       if (p) setPflanzen(p);
@@ -2051,6 +2051,20 @@ function AblegerPage() {
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
   const getMutterName = (id) => pflanzen.find(p => p.id === id)?.name || "–";
   const getDisplayName = (a) => a.nr ? `${a.name} – Nr. ${a.nr}` : a.name;
+
+  const mutterOptions = () => {
+    const grouped = {};
+    pflanzen.forEach(p => {
+      const t = p.typ || "Sonstige";
+      if (!grouped[t]) grouped[t] = [];
+      grouped[t].push(p);
+    });
+    return Object.keys(grouped).sort((a, b) => a.localeCompare(b, "de")).map(typ => (
+      <optgroup key={typ} label={typ}>
+        {grouped[typ].map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+      </optgroup>
+    ));
+  };
 
   const handleBulkEdit = async () => {
     setBulkSaving(true);
@@ -2098,7 +2112,7 @@ function AblegerPage() {
       <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Mutterpflanze</label>
         <select value={form.mutterpflanze_id} onChange={e => set("mutterpflanze_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
           <option value="">– keine Verknüpfung –</option>
-          {pflanzen.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {mutterOptions()}
         </select>
       </div>
     </div>
@@ -2208,7 +2222,7 @@ function AblegerPage() {
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Neuer Wert</label>
                 {bulkField === "standort" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>{ABLEGER_STANDORTE.map(s => <option key={s} value={s}>{s}</option>)}</select>}
                 {bulkField === "typ" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>{ABLEGER_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}</select>}
-                {bulkField === "mutterpflanze_id" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}><option value="">– keine Verknüpfung –</option>{pflanzen.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select>}
+                {bulkField === "mutterpflanze_id" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}><option value="">– keine Verknüpfung –</option>{mutterOptions()}</select>}
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
