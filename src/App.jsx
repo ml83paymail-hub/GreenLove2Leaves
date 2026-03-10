@@ -1514,7 +1514,9 @@ function PflanzenkassePage() {
     setAbschlussLoading(false);
   };
 
-  const filtered = filterTyp === "alle" ? eintraege : eintraege.filter(e => e.typ === filterTyp);
+  const [kasseSearch, setKasseSearch] = useState("");
+  const filtered = (filterTyp === "alle" ? eintraege : eintraege.filter(e => e.typ === filterTyp))
+    .filter(e => !kasseSearch.trim() || [e.name, e.beschreibung, e.kategorie, e.gekauft_bei].some(f => f?.toLowerCase().includes(kasseSearch.toLowerCase())));
   const gesamtEinnahmen = eintraege.filter(e => e.typ === "einnahme").reduce((s, e) => s + parseFloat(e.betrag), 0);
   const gesamtAusgaben = eintraege.filter(e => e.typ === "ausgabe").reduce((s, e) => s + parseFloat(e.betrag), 0);
   const saldo = gesamtEinnahmen - gesamtAusgaben;
@@ -1526,9 +1528,10 @@ function PflanzenkassePage() {
     <div>
       <div style={{ marginBottom: "8px" }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenkasse</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "einträge" : ""} · <span style={{ color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontWeight: "600" }}>Kassenstand: {formatBetrag(saldo)}</span></p>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "e" : ""} · <span style={{ color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontWeight: "600" }}>Kassenstand: {formatBetrag(saldo)}</span></p>
       </div>
-      <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
+      <input value={kasseSearch} onChange={e => setKasseSearch(e.target.value)} placeholder="Suche nach Schlagwort …" style={{ width: "100%", padding: "9px 14px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: GLASS, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "14px" }} />
 
       {/* Filter + Button */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "18px", alignItems: "center" }}>
