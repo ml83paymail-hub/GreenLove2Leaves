@@ -1985,6 +1985,8 @@ function AblegerPage() {
   const [editEntry, setEditEntry] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [gruppierung, setGruppierung] = useState("typ");
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
   const [saving, setSaving] = useState(false);
   const emptyForm = { name: "", nr: "", typ: "Hoya", datum: new Date().toISOString().split("T")[0], standort: "Growbox 1", mutterpflanze_id: "" };
   const [form, setForm] = useState(emptyForm);
@@ -1997,7 +1999,7 @@ function AblegerPage() {
         supabase.from("ableger").select("*").order("created_at", { ascending: false }),
         supabase.from("pflanzen").select("id, name").order("name")
       ]);
-      if (a) setAbleger(a);
+      if (a) { setAbleger(a); const keys = [...new Set(a.map(x => x.typ)), ...new Set(a.map(x => x.standort))]; const collapsed = {}; keys.forEach(k => { if (k) collapsed[k] = true; }); setCollapsedGroups(collapsed); }
       if (p) setPflanzen(p);
       setLoading(false);
     };
@@ -2062,6 +2064,9 @@ function AblegerPage() {
           <input value={form.nr} onChange={e => set("nr", e.target.value)} placeholder="z.B. 1" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
         </div>
       </div>
+      <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
+        <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+      </div>
       <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Typ</label>
         <select value={form.typ} onChange={e => set("typ", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
           {ABLEGER_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}
@@ -2077,9 +2082,6 @@ function AblegerPage() {
           <option value="">– keine Verknüpfung –</option>
           {pflanzen.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
-      </div>
-      <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-        <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
       </div>
     </div>
   );
@@ -2115,10 +2117,12 @@ function AblegerPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {sortedGroupKeys.map(groupName => (
             <div key={groupName}>
-              <div style={{ fontSize: "11px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
-                {groupName} <span style={{ fontWeight: "400", color: TEXT_LIGHT }}>({groups[groupName].length})</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <button onClick={() => toggleGroup(groupName)} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "10px", padding: 0, width: "100%", textAlign: "left" }}>
+                <span style={{ fontSize: "11px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "1.5px" }}>{groupName}</span>
+                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>({groups[groupName].length})</span>
+                <span style={{ fontSize: "13px", color: TEXT_LIGHT, marginLeft: "auto" }}>{collapsedGroups[groupName] ? "▶" : "▼"}</span>
+              </button>
+              {!collapsedGroups[groupName] && <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {groups[groupName].map(a => (
                   <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -2143,7 +2147,7 @@ function AblegerPage() {
                     )}
                   </div>
                 ))}
-              </div>
+              </div>}
             </div>
           ))}
         </div>
