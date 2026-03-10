@@ -2549,20 +2549,30 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
     setOpenMenuId(null);
   };
 
-  return (
-    <div>
+  const [collapsed, setCollapsed] = useState({ aktiv: false, abgeschlossen: true });
 
+  const handleToggleStatus = async (t, e) => {
+    e.stopPropagation();
+    const newStatus = t.status === "abgeschlossen" ? "aktiv" : "abgeschlossen";
+    await supabase.from("notizbuch_themen").update({ status: newStatus }).eq("id", t.id);
+    setThemen(prev => prev.map(x => x.id === t.id ? { ...x, status: newStatus } : x));
+    setOpenMenuId(null);
+  };
 
-      {loading ? (
-        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
-      ) : themen.length === 0 ? (
-        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
-          <span style={{ fontSize: "30px", opacity: 0.3 }}>📂</span>
-          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Themen vorhanden.</p>
-        </div>
-      ) : (
+  const aktiv = themen.filter(t => t.status !== "abgeschlossen");
+  const abgeschlossen = themen.filter(t => t.status === "abgeschlossen");
+
+  const renderGruppe = (liste, label) => (
+    <div style={{ marginBottom: "16px" }}>
+      <button onClick={() => setCollapsed(c => ({ ...c, [label]: !c[label] }))} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", marginBottom: "8px" }}>
+        <span style={{ fontSize: "13px", fontWeight: "600", color: ACCENT, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "0.5px" }}>{label === "aktiv" ? "Aktiv" : "Abgeschlossen"}</span>
+        <span style={{ fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT }}>({liste.length})</span>
+        <div style={{ flex: 1, height: "1px", background: BG_DARK }} />
+        <span style={{ fontSize: "13px", color: TEXT_LIGHT }}>{collapsed[label] ? "▶" : "▼"}</span>
+      </button>
+      {!collapsed[label] && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {themen.map(t => (
+          {liste.map(t => (
             <div key={t.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 18px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", cursor: "pointer", position: "relative", zIndex: openMenuId === t.id ? 50 : 1 }} onClick={() => onOpen(t)}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "15px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{t.name}</div>
@@ -2573,7 +2583,8 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
                 <div style={{ position: "relative", flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                   <button onClick={() => setOpenMenuId(openMenuId === t.id ? null : t.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                   {openMenuId === t.id && (
-                    <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                    <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "160px", zIndex: 20 }}>
+                      <button onClick={(e) => handleToggleStatus(t, e)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>{t.status === "abgeschlossen" ? "↩ Reaktivieren" : "✓ Abschließen"}</button>
                       <button onClick={() => { setEditThema(t); setEditName(t.name); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Umbenennen</button>
                       <button onClick={() => handleDelete(t.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                     </div>
@@ -2582,6 +2593,23 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
               )}
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div>
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : themen.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Themen vorhanden.</p>
+        </div>
+      ) : (
+        <div>
+          {renderGruppe(aktiv, "aktiv")}
+          {abgeschlossen.length > 0 && renderGruppe(abgeschlossen, "abgeschlossen")}
         </div>
       )}
 
