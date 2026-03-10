@@ -2472,7 +2472,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled, suche }) {
                 )}
               </div>
               <div style={{ marginTop: "8px" }}>
-                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(n.created_at)}</span>
+                <span style={{ fontSize: "13px", color: TEXT_DARK, fontFamily: FONT }}>{formatDate(n.created_at)}</span>
               </div>
             </div>
           ))}
@@ -2776,7 +2776,7 @@ function ThemaDetail({ thema, canEdit, onBack }) {
                 )}
               </div>
               <div style={{ marginTop: "8px" }}>
-                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.created_at)}</span>
+                <span style={{ fontSize: "13px", color: TEXT_DARK, fontFamily: FONT }}>{formatDate(e.created_at)}</span>
               </div>
             </div>
           ))}
