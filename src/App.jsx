@@ -2913,7 +2913,7 @@ function WishlistPage() {
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Einträge.</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "12px" }}>
           {filtered.map(e => (
             <div key={e.id} style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
               {/* Foto – klicken zum Detail, Label zum Upload */}
