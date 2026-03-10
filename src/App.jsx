@@ -2519,7 +2519,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+      const { data } = await supabase.from("notizbuch_themen").select("*").order("name", { ascending: true });
       if (data) {
         const { data: counts } = await supabase.from("notizbuch_eintraege").select("thema_id");
         const countMap = {};
@@ -2536,7 +2536,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
     setSaving(true);
     const { error } = await supabase.from("notizbuch_themen").insert({ name: name.trim(), beschreibung: beschreibung.trim() || null });
     if (error) { alert("Fehler: " + error.message); setSaving(false); return; }
-    const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+    const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*").order("name", { ascending: true });
     if (e2) { alert("Ladefehler: " + e2.message); setSaving(false); return; }
     if (fresh) {
       const { data: counts } = await supabase.from("notizbuch_eintraege").select("thema_id");
