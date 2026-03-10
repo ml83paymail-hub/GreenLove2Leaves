@@ -1531,8 +1531,8 @@ function PflanzenkassePage() {
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
 
       {/* Kassenstand */}
-      <div style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "10px 14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", marginBottom: "18px", display: "inline-block" }}>
-        <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "4px" }}>Kassenstand</div>
+      <div style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontSize: "13px", color: TEXT_MID, letterSpacing: "0.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "600" }}>Kassenstand</div>
         <div style={{ fontSize: "15px", fontWeight: "700", color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontFamily: FONT, whiteSpace: "nowrap" }}>{formatBetrag(saldo)}</div>
       </div>
 
