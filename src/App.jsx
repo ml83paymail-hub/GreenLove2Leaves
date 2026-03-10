@@ -2907,25 +2907,33 @@ function WishlistPage() {
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Einträge.</p>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px" }}>
           {filtered.map(e => (
-            <div key={e.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, overflow: "hidden", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
-              <div onClick={() => setDetailEntry(e)} style={{ width: "100%", aspectRatio: "1", background: BG_DARK, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                {e.foto_url ? <img src={e.foto_url} alt={e.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c8c8c0" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
-              </div>
-              <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div onClick={() => setDetailEntry(e)} style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer" }}>{e.name}</div>
+            <div key={e.id} style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
+              {/* Foto – klicken zum Detail, Label zum Upload */}
+              <div style={{ position: "relative", aspectRatio: "3/4", background: e.foto_url ? `url(${e.foto_url}) center/cover no-repeat` : BTN, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {!e.foto_url && (
+                  <label style={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#EBEBE6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="6" width="22" height="15" rx="3"/><path d="M8 6l2-3h4l2 3"/><circle cx="12" cy="13.5" r="3.5"/></svg>
+                    <input type="file" accept="image/*" style={{ display: "none" }} onChange={async (ev) => { if (ev.target.files[0]) { setUploading(true); try { const url = await uploadPhoto(ev.target.files[0], "wishlist"); const { data } = await supabase.from("wishlist").update({ foto_url: url }).eq("id", e.id).select().single(); if (data) setEintraege(prev => prev.map(x => x.id === data.id ? data : x)); } catch(err){} setUploading(false); }}} />
+                  </label>
+                )}
+                {e.foto_url && <div onClick={() => setDetailEntry(e)} style={{ position: "absolute", inset: 0, cursor: "pointer" }} />}
                 {canEdit && (
-                  <div style={{ position: "relative", flexShrink: 0 }} onClick={ev => ev.stopPropagation()}>
-                    <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, padding: "2px 4px", lineHeight: 1 }}>⋯</button>
+                  <div style={{ position: "absolute", top: "8px", right: "8px" }} onClick={ev => ev.stopPropagation()}>
+                    <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "4px 8px", borderRadius: "6px", lineHeight: 1 }}>⋯</button>
                     {openMenuId === e.id && (
-                      <div style={{ position: "absolute", top: "24px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                      <div style={{ position: "absolute", top: "32px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(e); setForm({ name: e.name, beschreibung: e.beschreibung || "", kategorie: e.kategorie, foto_url: e.foto_url || "" }); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
                         <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                       </div>
                     )}
                   </div>
                 )}
+              </div>
+              {/* Name */}
+              <div onClick={() => setDetailEntry(e)} style={{ padding: "12px 14px", background: "rgba(255,255,255,0.3)", cursor: "pointer" }}>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</div>
               </div>
             </div>
           ))}
