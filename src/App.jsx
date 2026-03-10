@@ -3321,7 +3321,7 @@ function AppInner({ onLogout }) {
     history.replaceState(null, "", "#" + id);
   };
 
-  const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : pages[activePage]?.title;
+  const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : activePage === "fotoalbum" ? "Fotoalbum" : activePage === "ableger" ? "Unsere Ableger" : activePage === "wishlist" ? "Wishlist" : activePage === "notizbuch" ? "Notizbuch" : activePage === "todo" ? "To Do Liste" : activePage === "pflanzenkasse" ? "Pflanzenkasse" : activePage === "bestellungen" ? "Bestellungen & Käufe" : activePage === "postfach" ? "Postfach" : activePage === "gastzugang" ? "Gastzugang" : activePage === "archiv" ? "Archiv" : pages[activePage]?.title;
 
   const Sidebar = ({ mobile }) => (
     <aside style={{
