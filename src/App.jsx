@@ -1984,6 +1984,7 @@ function AblegerPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editEntry, setEditEntry] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [detailEntry, setDetailEntry] = useState(null);
   const [gruppierung, setGruppierung] = useState("typ");
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
@@ -2042,7 +2043,12 @@ function AblegerPage() {
     setOpenMenuId(null);
   };
 
-  const openEdit = (a) => {
+  const handleDuplicate = async (a) => {
+    setOpenMenuId(null);
+    const row = { name: a.name, nr: a.nr || null, typ: a.typ, datum: new Date().toISOString().split("T")[0], standort: a.standort, mutterpflanze_id: a.mutterpflanze_id || null };
+    const { data } = await supabase.from("ableger").insert(row).select().single();
+    if (data) setAbleger(prev => [data, ...prev]);
+  };
     setEditEntry(a);
     setForm({ name: a.name, nr: a.nr || "", typ: a.typ, datum: a.datum, standort: a.standort, mutterpflanze_id: a.mutterpflanze_id ? String(a.mutterpflanze_id) : "" });
     setOpenMenuId(null);
@@ -2198,7 +2204,7 @@ function AblegerPage() {
               </button>
               {!collapsedGroups[groupName] && <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {groups[groupName].map(a => (
-                  <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${selected.includes(a.id) ? ACCENT : GLASS_BORDER}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1, cursor: selectMode ? "pointer" : "default" }} onClick={() => selectMode && toggleSelect(a.id)}>
+                  <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${selected.includes(a.id) ? ACCENT : GLASS_BORDER}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1, cursor: selectMode ? "pointer" : "default" }} onClick={() => selectMode ? toggleSelect(a.id) : (!selectMode && setDetailEntry(a))}>
                     {selectMode && (
                       <div style={{ width: "18px", height: "18px", border: `2px solid ${ACCENT}`, borderRadius: "4px", background: selected.includes(a.id) ? ACCENT : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {selected.includes(a.id) && <span style={{ color: "#fff", fontSize: "11px", lineHeight: 1 }}>✓</span>}
@@ -2206,19 +2212,14 @@ function AblegerPage() {
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{getDisplayName(a)}</div>
-                      <div style={{ display: "flex", gap: "12px", marginTop: "4px", flexWrap: "wrap" }}>
-                        {gruppierung === "typ" && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📍 {a.standort}</span>}
-                        {gruppierung === "standort" && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>🌿 {a.typ}</span>}
-                        {a.mutterpflanze_id && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>↳ {getMutterName(a.mutterpflanze_id)}</span>}
-                        <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(a.datum)}</span>
-                      </div>
                     </div>
                     {canEdit && !selectMode && (
-                      <div style={{ position: "relative", flexShrink: 0 }}>
+                      <div style={{ position: "relative", flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                         <button onClick={() => setOpenMenuId(openMenuId === a.id ? null : a.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                         {openMenuId === a.id && (
                           <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
                             <button onClick={() => openEdit(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                            <button onClick={() => handleDuplicate(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>⧉ Duplizieren</button>
                             <button onClick={() => handleDelete(a.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                           </div>
                         )}
@@ -2229,6 +2230,36 @@ function AblegerPage() {
               </div>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Detail Card */}
+      {detailEntry && (
+        <div onClick={() => setDetailEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "20px" }}>
+              <div>
+                <div style={{ fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{detailEntry.name}</div>
+                {detailEntry.nr && <div style={{ fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>Nr. {detailEntry.nr}</div>}
+              </div>
+              <button onClick={() => setDetailEntry(null)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: TEXT_LIGHT, padding: "0 4px", lineHeight: 1 }}>✕</button>
+            </div>
+            <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[["🌿 Typ", detailEntry.typ], ["📍 Standort", detailEntry.standort], ["📅 Datum", formatDate(detailEntry.datum)], ["↳ Mutterpflanze", detailEntry.mutterpflanze_id ? getMutterName(detailEntry.mutterpflanze_id) : "–"]].map(([label, value]) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{label}</span>
+                  <span style={{ fontSize: "13px", color: TEXT_DARK, fontFamily: FONT, fontWeight: "500", textAlign: "right", maxWidth: "60%" }}>{value}</span>
+                </div>
+              ))}
+            </div>
+            {canEdit && (
+              <div style={{ display: "flex", gap: "8px", marginTop: "22px" }}>
+                <button onClick={() => { openEdit(detailEntry); setDetailEntry(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>✎ Bearbeiten</button>
+                <button onClick={() => { handleDelete(detailEntry.id); setDetailEntry(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "#b94040", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>🗑 Löschen</button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
