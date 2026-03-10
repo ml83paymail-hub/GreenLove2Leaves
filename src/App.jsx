@@ -2834,11 +2834,10 @@ function WishlistPage() {
   const handlePhoto = async (file) => {
     if (!file) return;
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const path = `wishlist/${Date.now()}.${ext}`;
-    await supabase.storage.from("plant-photos").upload(path, file, { upsert: true });
-    const { data } = supabase.storage.from("plant-photos").getPublicUrl(path);
-    setForm(f => ({ ...f, foto_url: data.publicUrl }));
+    try {
+      const url = await uploadPhoto(file, "wishlist");
+      setForm(f => ({ ...f, foto_url: url }));
+    } catch(e) { alert("Upload fehlgeschlagen: " + e.message); }
     setUploading(false);
   };
 
@@ -2910,12 +2909,12 @@ function WishlistPage() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
           {filtered.map(e => (
-            <div key={e.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, overflow: "hidden", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", cursor: "pointer", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
-              <div onClick={() => setDetailEntry(e)} style={{ width: "100%", aspectRatio: "1", background: BG_DARK, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {e.foto_url ? <img src={e.foto_url} alt={e.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EBEBE6" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
+            <div key={e.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, overflow: "hidden", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
+              <div onClick={() => setDetailEntry(e)} style={{ width: "100%", aspectRatio: "1", background: BG_DARK, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                {e.foto_url ? <img src={e.foto_url} alt={e.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c8c8c0" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
               </div>
               <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div onClick={() => setDetailEntry(e)} style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</div>
+                <div onClick={() => setDetailEntry(e)} style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "pointer" }}>{e.name}</div>
                 {canEdit && (
                   <div style={{ position: "relative", flexShrink: 0 }} onClick={ev => ev.stopPropagation()}>
                     <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, padding: "2px 4px", lineHeight: 1 }}>⋯</button>
@@ -2988,9 +2987,11 @@ function WishlistPage() {
 
             <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Foto</label>
             <div style={{ marginTop: "6px", marginBottom: "16px" }}>
-              <input type="file" accept="image/*" onChange={e => handlePhoto(e.target.files[0])} style={{ fontSize: "12px", fontFamily: FONT, color: TEXT_MID }} />
-              {uploading && <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, marginLeft: "8px" }}>Lädt hoch …</span>}
-              {form.foto_url && <img src={form.foto_url} alt="" style={{ marginTop: "8px", width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px" }} />}
+              <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 16px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID, background: "none" }}>
+                📷 {uploading ? "Lädt hoch …" : "Foto auswählen"}
+                <input type="file" accept="image/*" onChange={e => handlePhoto(e.target.files[0])} style={{ display: "none" }} />
+              </label>
+              {form.foto_url && <img src={form.foto_url} alt="" style={{ marginTop: "10px", display: "block", width: "90px", height: "90px", objectFit: "cover", borderRadius: "8px" }} />}
             </div>
 
             <div style={{ display: "flex", gap: "10px" }}>
