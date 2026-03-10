@@ -2149,10 +2149,11 @@ function AblegerPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {sortedGroupKeys.map(groupName => (
             <div key={groupName}>
-              <button onClick={() => toggleGroup(groupName)} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "10px", padding: 0, width: "100%", textAlign: "left" }}>
-                <span style={{ fontSize: "11px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "1.5px" }}>{groupName}</span>
-                <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>({groups[groupName].length})</span>
-                <span style={{ fontSize: "13px", color: TEXT_LIGHT, marginLeft: "auto" }}>{collapsedGroups[groupName] ? "▶" : "▼"}</span>
+              <button onClick={() => toggleGroup(groupName)} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "14px", padding: 0, width: "100%", textAlign: "left" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: ACCENT, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>{groupName}</span>
+                <span style={{ fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT }}>({groups[groupName].length})</span>
+                <div style={{ flex: 1, height: "1px", background: BG_DARK }} />
+                <span style={{ fontSize: "13px", color: TEXT_LIGHT }}>{collapsedGroups[groupName] ? "▶" : "▼"}</span>
               </button>
               {!collapsedGroups[groupName] && <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {groups[groupName].map(a => (
