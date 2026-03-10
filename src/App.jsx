@@ -2490,8 +2490,10 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
   const handleAdd = async () => {
     if (!name.trim()) return;
     setSaving(true);
-    await supabase.from("notizbuch_themen").insert({ name: name.trim() });
-    const { data: fresh } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+    const { error } = await supabase.from("notizbuch_themen").insert({ name: name.trim() });
+    if (error) { alert("Fehler: " + error.message); setSaving(false); return; }
+    const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+    if (e2) { alert("Ladefehler: " + e2.message); setSaving(false); return; }
     if (fresh) setThemen(fresh);
     setName(""); setShowAdd(false); setSaving(false);
   };
