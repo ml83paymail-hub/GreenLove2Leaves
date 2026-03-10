@@ -3123,7 +3123,7 @@ function GastzugangPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "560px" }}>
 
           {/* Page selection */}
-          <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
             <div style={{ fontSize: "12px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "14px" }}>Seiten auswählen</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {SHAREABLE_PAGES.map(page => (
@@ -3142,7 +3142,7 @@ function GastzugangPage() {
 
           {/* Link + toggle */}
           {shareData && (
-            <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Link</div>
