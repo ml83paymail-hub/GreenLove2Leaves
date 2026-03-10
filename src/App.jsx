@@ -2336,23 +2336,23 @@ function NotizbuchPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Notizbuch</h1>
-        {canEdit && !activeThema && (
-          <button onClick={() => tab === "notizen" ? setAddNotiz(true) : setAddThema(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>
-            {tab === "notizen" ? "+ Notiz" : "+ Thema"}
-          </button>
-        )}
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: "0 0 16px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Notizbuch</h1>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "26px" }}>
-        {[["notizen", "📝 Allgemeine Notizen"], ["themen", "📂 Themen"]].map(([val, label]) => (
+      {/* Tabs + Button */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "26px", alignItems: "center" }}>
+        {[["notizen", "Allgemeine Notizen"], ["themen", "Nach Thema"]].map(([val, label]) => (
           <button key={val} onClick={() => { setTab(val); setActiveThema(null); }} style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: tab === val ? "700" : "400", background: tab === val ? ACCENT : GLASS, color: tab === val ? "#fff" : TEXT_MID }}>
             {label}
           </button>
         ))}
+        {canEdit && !activeThema && (
+          <button onClick={() => tab === "notizen" ? setAddNotiz(true) : setAddThema(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 18px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto" }}>
+            {tab === "notizen" ? "+ Notiz" : "+ Thema"}
+          </button>
+        )}
       </div>
 
       {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} triggerAdd={addNotiz} onAddHandled={() => setAddNotiz(false)} />}
