@@ -1664,12 +1664,23 @@ function PflanzenkassePage() {
           </div>
         </div>
       )}
+
+      {/* Abschluss Confirm Modal */}
+      {showAbschluss && (
+        <div onClick={() => setShowAbschluss(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 12px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Jahr abschließen?</h2>
+            <p style={{ margin: "0 0 22px 0", fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6" }}>Alle aktuellen Einträge werden ins Archiv verschoben und die Pflanzenkasse geleert.</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setShowAbschluss(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAbschluss} disabled={abschlussLoading} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: "#bc5d58", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: abschlussLoading ? 0.6 : 1 }}>{abschlussLoading ? "Wird abgeschlossen …" : "Ja, abschließen"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
-// ── Archiv Page ──────────────────────────────────────────────────────────────
 function ArchivPage() {
   const [archive, setArchive] = useState([]);
   const [loading, setLoading] = useState(true);
