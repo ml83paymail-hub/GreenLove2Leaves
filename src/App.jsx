@@ -2052,45 +2052,34 @@ function AblegerPage() {
   });
   const sortedGroupKeys = Object.keys(groups).sort((a, b) => a.localeCompare(b, "de"));
 
-  const AblegerForm = ({ onSave, onClose, isEdit }) => (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
-        <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{isEdit ? "Ableger bearbeiten" : "Neuer Ableger"}</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
-          <div style={{ display: "flex", gap: "10px" }}>
-            <div style={{ flex: 2 }}><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
-              <input value={form.name} onChange={e => set("name", e.target.value)} placeholder="z.B. Hoya Linearis" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-            </div>
-            <div style={{ flex: 1 }}><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Nr.</label>
-              <input value={form.nr} onChange={e => set("nr", e.target.value)} placeholder="z.B. 1" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-            </div>
-          </div>
-          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Typ</label>
-            <select value={form.typ} onChange={e => set("typ", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
-              {ABLEGER_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Standort</label>
-            <select value={form.standort} onChange={e => set("standort", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
-              {ABLEGER_STANDORTE.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Mutterpflanze</label>
-            <select value={form.mutterpflanze_id} onChange={e => set("mutterpflanze_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
-              <option value="">– keine Verknüpfung –</option>
-              {pflanzen.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-            <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
-          </div>
+  const formFields = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+      <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ flex: 2 }}><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
+          <input value={form.name} onChange={e => set("name", e.target.value)} placeholder="z.B. Hoya Linearis" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
         </div>
-        <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
-          <button onClick={onClose} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
-          <button onClick={onSave} disabled={saving || !form.name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>
-            {saving ? "Speichert …" : "Speichern"}
-          </button>
+        <div style={{ flex: 1 }}><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Nr.</label>
+          <input value={form.nr} onChange={e => set("nr", e.target.value)} placeholder="z.B. 1" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
         </div>
+      </div>
+      <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Typ</label>
+        <select value={form.typ} onChange={e => set("typ", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+          {ABLEGER_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+      <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Standort</label>
+        <select value={form.standort} onChange={e => set("standort", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+          {ABLEGER_STANDORTE.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+      <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Mutterpflanze</label>
+        <select value={form.mutterpflanze_id} onChange={e => set("mutterpflanze_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+          <option value="">– keine Verknüpfung –</option>
+          {pflanzen.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+      </div>
+      <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
+        <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
       </div>
     </div>
   );
@@ -2160,8 +2149,33 @@ function AblegerPage() {
         </div>
       )}
 
-      {showAdd && <AblegerForm onSave={handleAdd} onClose={() => setShowAdd(false)} isEdit={false} />}
-      {editEntry && <AblegerForm onSave={handleEdit} onClose={() => { setEditEntry(null); setForm(emptyForm); }} isEdit={true} />}
+      {/* Add Modal */}
+      {showAdd && (
+        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neuer Ableger</h2>
+            {formFields}
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
+              <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAdd} disabled={saving || !form.name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editEntry && (
+        <div onClick={() => { setEditEntry(null); setForm(emptyForm); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Ableger bearbeiten</h2>
+            {formFields}
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
+              <button onClick={() => { setEditEntry(null); setForm(emptyForm); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleEdit} disabled={saving || !form.name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
