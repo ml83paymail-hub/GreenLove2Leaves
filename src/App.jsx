@@ -1528,7 +1528,7 @@ function PflanzenkassePage() {
     <div>
       <div style={{ marginBottom: "8px" }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenkasse</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "e" : ""} · <span style={{ color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontWeight: "600" }}>Kassenstand: {formatBetrag(saldo)}</span></p>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Einträge · <span style={{ color: TEXT_DARK, fontWeight: "600" }}>Kassenstand: </span><span style={{ color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontWeight: "600" }}>{formatBetrag(saldo)}</span></p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
       <input value={kasseSearch} onChange={e => setKasseSearch(e.target.value)} placeholder="Suche nach Schlagwort …" style={{ width: "100%", padding: "9px 14px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: GLASS, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "14px" }} />
