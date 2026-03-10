@@ -1296,6 +1296,7 @@ function FotoalbumPage() {
 // ── Postfach ──────────────────────────────────────────────────────────────────
 const POSTFACH_WEBHOOK = import.meta.env.VITE_POSTFACH_WEBHOOK;
 const NOTIZBUCH_WEBHOOK = import.meta.env.VITE_NOTIZBUCH_WEBHOOK;
+const WISHLIST_WEBHOOK = import.meta.env.VITE_WISHLIST_WEBHOOK;
 
 // Renders text with **bold** and line breaks
 function renderText(text) {
@@ -2804,6 +2805,206 @@ function ThemaDetail({ thema, canEdit, onBack }) {
 }
 
 
+// ── Wishlist Page ─────────────────────────────────────────────────────────────
+function WishlistPage() {
+  const role = useRole();
+  const canEdit = role !== "readonly" && role !== "guest";
+  const [kategorie, setKategorie] = useState("wishlist");
+  const [eintraege, setEintraege] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [detailEntry, setDetailEntry] = useState(null);
+  const [editEntry, setEditEntry] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [form, setForm] = useState({ name: "", beschreibung: "", kategorie: "wishlist", foto_url: "" });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("wishlist").select("*").order("created_at", { ascending: false });
+    if (data) setEintraege(data);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const emptyForm = { name: "", beschreibung: "", kategorie: kategorie, foto_url: "" };
+
+  const handlePhoto = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `wishlist/${Date.now()}.${ext}`;
+    await supabase.storage.from("plant-photos").upload(path, file, { upsert: true });
+    const { data } = supabase.storage.from("plant-photos").getPublicUrl(path);
+    setForm(f => ({ ...f, foto_url: data.publicUrl }));
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+    const d = new Date();
+    const datumStr = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
+    const katLabel = form.kategorie === "watchlist" ? "Watchlist" : "Wishlist";
+
+    if (editEntry) {
+      const { data } = await supabase.from("wishlist").update({ name: form.name.trim(), beschreibung: form.beschreibung.trim(), kategorie: form.kategorie, foto_url: form.foto_url }).eq("id", editEntry.id).select().single();
+      if (data) {
+        setEintraege(prev => prev.map(e => e.id === data.id ? data : e));
+        if (detailEntry?.id === data.id) setDetailEntry(data);
+      }
+    } else {
+      const { data } = await supabase.from("wishlist").insert({ name: form.name.trim(), beschreibung: form.beschreibung.trim(), kategorie: form.kategorie, foto_url: form.foto_url }).select().single();
+      if (data) {
+        setEintraege(prev => [data, ...prev]);
+        await fetch(WISHLIST_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ description: `**${form.name.trim()}** wurde in ${katLabel} eingetragen\n\u200B\n${form.beschreibung.trim() || "Keine Beschreibung"}`, color: 6057046, footer: { text: "Wishlist | " + datumStr } }] }) }).catch(()=>{});
+      }
+    }
+    setShowAdd(false); setEditEntry(null); setForm(emptyForm); setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("wishlist").delete().eq("id", id);
+    setEintraege(prev => prev.filter(e => e.id !== id));
+    setOpenMenuId(null);
+    if (detailEntry?.id === id) setDetailEntry(null);
+  };
+
+  const handleMoveKategorie = async (entry) => {
+    const newKat = entry.kategorie === "watchlist" ? "wishlist" : "watchlist";
+    const { data } = await supabase.from("wishlist").update({ kategorie: newKat }).eq("id", entry.id).select().single();
+    if (data) {
+      setEintraege(prev => prev.map(e => e.id === data.id ? data : e));
+      setDetailEntry(data);
+    }
+  };
+
+  const filtered = eintraege.filter(e => e.kategorie === kategorie);
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <h1 style={{ margin: 0, fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Wishlist</h1>
+        {canEdit && <button onClick={() => { setForm({ ...emptyForm, kategorie: kategorie }); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "6px", marginBottom: "24px" }}>
+        {[["wishlist", "Wishlist"], ["watchlist", "Watchlist"]].map(([val, label]) => (
+          <button key={val} onClick={() => setKategorie(val)} style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: kategorie === val ? "700" : "400", background: kategorie === val ? ACCENT : GLASS, color: kategorie === val ? "#fff" : TEXT_MID, whiteSpace: "nowrap" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Einträge.</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
+          {filtered.map(e => (
+            <div key={e.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, overflow: "hidden", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", cursor: "pointer", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
+              <div onClick={() => setDetailEntry(e)} style={{ width: "100%", aspectRatio: "1", background: BG_DARK, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {e.foto_url ? <img src={e.foto_url} alt={e.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#EBEBE6" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
+              </div>
+              <div style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div onClick={() => setDetailEntry(e)} style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</div>
+                {canEdit && (
+                  <div style={{ position: "relative", flexShrink: 0 }} onClick={ev => ev.stopPropagation()}>
+                    <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, padding: "2px 4px", lineHeight: 1 }}>⋯</button>
+                    {openMenuId === e.id && (
+                      <div style={{ position: "absolute", top: "24px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                        <button onClick={() => { setEditEntry(e); setForm({ name: e.name, beschreibung: e.beschreibung || "", kategorie: e.kategorie, foto_url: e.foto_url || "" }); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                        <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {detailEntry && (
+        <div onClick={() => setDetailEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={ev => ev.stopPropagation()} style={{ background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+            {detailEntry.foto_url ? (
+              <img src={detailEntry.foto_url} alt={detailEntry.name} style={{ width: "100%", maxHeight: "260px", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: "100%", height: "180px", background: BG_DARK, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#EBEBE6" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+            )}
+            <div style={{ padding: "22px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div>
+                  <div style={{ fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{detailEntry.name}</div>
+                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px", textTransform: "capitalize" }}>{detailEntry.kategorie}</div>
+                </div>
+                <button onClick={() => setDetailEntry(null)} style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: TEXT_LIGHT, padding: "0 4px" }}>✕</button>
+              </div>
+              {detailEntry.beschreibung && <p style={{ margin: "10px 0 16px", fontSize: "14px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6" }}>{renderText(detailEntry.beschreibung)}</p>}
+              <div style={{ height: "1px", background: BG_DARK, marginBottom: "16px" }} />
+              {canEdit && (
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={() => handleMoveKategorie(detailEntry)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${ACCENT}`, background: "none", color: ACCENT, cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>
+                    {detailEntry.kategorie === "watchlist" ? "→ In Wishlist" : "→ In Watchlist"}
+                  </button>
+                  <button onClick={() => { setEditEntry(detailEntry); setForm({ name: detailEntry.name, beschreibung: detailEntry.beschreibung || "", kategorie: detailEntry.kategorie, foto_url: detailEntry.foto_url || "" }); setDetailEntry(null); setShowAdd(true); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", color: TEXT_MID, cursor: "pointer", fontSize: "13px", fontFamily: FONT }}>✎ Bearbeiten</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Modal */}
+      {showAdd && (
+        <div onClick={() => { setShowAdd(false); setEditEntry(null); setForm(emptyForm); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={ev => ev.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "460px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{editEntry ? "Eintrag bearbeiten" : "Neuer Eintrag"}</h2>
+
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Name *</label>
+            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Pflanzenname" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginTop: "4px", marginBottom: "14px" }} />
+
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Beschreibung</label>
+            <textarea value={form.beschreibung} onChange={e => setForm(f => ({ ...f, beschreibung: e.target.value }))} placeholder="Notizen, Bezugsquellen, Preis …" rows={3} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginTop: "4px", marginBottom: "14px" }} />
+
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Kategorie</label>
+            <div style={{ display: "flex", gap: "8px", marginTop: "6px", marginBottom: "14px" }}>
+              {[["wishlist", "Wishlist"], ["watchlist", "Watchlist"]].map(([val, label]) => (
+                <button key={val} onClick={() => setForm(f => ({ ...f, kategorie: val }))} style={{ flex: 1, padding: "9px", borderRadius: "8px", border: `1px solid ${form.kategorie === val ? ACCENT : BG_DARK}`, background: form.kategorie === val ? ACCENT : "none", color: form.kategorie === val ? "#fff" : TEXT_MID, cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>{label}</button>
+              ))}
+            </div>
+
+            <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Foto</label>
+            <div style={{ marginTop: "6px", marginBottom: "16px" }}>
+              <input type="file" accept="image/*" onChange={e => handlePhoto(e.target.files[0])} style={{ fontSize: "12px", fontFamily: FONT, color: TEXT_MID }} />
+              {uploading && <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, marginLeft: "8px" }}>Lädt hoch …</span>}
+              {form.foto_url && <img src={form.foto_url} alt="" style={{ marginTop: "8px", width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px" }} />}
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => { setShowAdd(false); setEditEntry(null); setForm(emptyForm); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleSave} disabled={saving || !form.name.trim() || uploading} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 // ── App ───────────────────────────────────────────────────────────────────────
 // ── Gastzugang Page ───────────────────────────────────────────────────────────
 // ── Shareable Pages Config ───────────────────────────────────────────────────
@@ -3187,7 +3388,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
