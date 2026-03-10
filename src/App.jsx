@@ -2344,8 +2344,8 @@ function AblegerPage() {
 function NotizbuchPage() {
   const role = useRole();
   const canEdit = role !== "readonly" && role !== "guest";
-  const [tab, setTab] = useState("notizen"); // "notizen" | "themen"
-  const [activeThema, setActiveThema] = useState(null);
+  const [tab, setTab] = useState(() => localStorage.getItem("notizbuchTab") || "notizen");
+  const [activeThema, setActiveThema] = useState(() => { try { const s = localStorage.getItem("notizbuchThema"); return s ? JSON.parse(s) : null; } catch { return null; } });
   const [addNotiz, setAddNotiz] = useState(false);
   const [addThema, setAddThema] = useState(false);
   const [suche, setSuche] = useState("");
@@ -2367,7 +2367,7 @@ function NotizbuchPage() {
       {/* Tabs + Button */}
       <div style={{ display: "flex", gap: "6px", marginBottom: "26px", alignItems: "center" }}>
         {[["notizen", "Allgemeine Notizen"], ["themen", "Nach Thema"]].map(([val, label]) => (
-          <button key={val} onClick={() => { setTab(val); setActiveThema(null); }} style={{ padding: "8px 12px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: tab === val ? "700" : "400", background: tab === val ? ACCENT : GLASS, color: tab === val ? "#fff" : TEXT_MID, whiteSpace: "nowrap" }}>
+          <button key={val} onClick={() => { setTab(val); localStorage.setItem("notizbuchTab", val); setActiveThema(null); localStorage.removeItem("notizbuchThema"); }} style={{ padding: "8px 12px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: tab === val ? "700" : "400", background: tab === val ? ACCENT : GLASS, color: tab === val ? "#fff" : TEXT_MID, whiteSpace: "nowrap" }}>
             {label}
           </button>
         ))}
@@ -2379,8 +2379,8 @@ function NotizbuchPage() {
       </div>
 
       {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} triggerAdd={addNotiz} onAddHandled={() => setAddNotiz(false)} suche={suche} />}
-      {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={setActiveThema} triggerAdd={addThema} onAddHandled={() => setAddThema(false)} suche={suche} />}
-      {tab === "themen" && activeThema && <ThemaDetail thema={activeThema} canEdit={canEdit} onBack={() => setActiveThema(null)} />}
+      {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={t => { setActiveThema(t); localStorage.setItem("notizbuchThema", JSON.stringify(t)); localStorage.setItem("notizbuchTab", "themen"); }} triggerAdd={addThema} onAddHandled={() => setAddThema(false)} suche={suche} />}
+      {tab === "themen" && activeThema && <ThemaDetail thema={activeThema} canEdit={canEdit} onBack={() => { setActiveThema(null); localStorage.removeItem("notizbuchThema"); }} />}
     </div>
   );
 }
@@ -2740,14 +2740,12 @@ function ThemaDetail({ thema, canEdit, onBack }) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", marginBottom: "22px" }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{thema.name}</h2>
-          {thema.beschreibung && <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.5" }}>{thema.beschreibung}</p>}
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0 }}>
-          {canEdit && <button onClick={() => { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
+      <div style={{ marginBottom: "22px" }}>
+        <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{thema.name}</h2>
+        {thema.beschreibung && <p style={{ margin: "4px 0 10px 0", fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.5" }}>{thema.beschreibung}</p>}
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: thema.beschreibung ? 0 : "10px" }}>
           <button onClick={onBack} style={{ background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "7px 14px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>← Zurück</button>
+          {canEdit && <button onClick={() => { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
         </div>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
