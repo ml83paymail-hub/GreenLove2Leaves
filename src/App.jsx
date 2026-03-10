@@ -1092,24 +1092,22 @@ function TodoPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>To Do Liste</h1>
-          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} offene Aufgabe{offen.length !== 1 ? "n" : ""}</p>
-        </div>
-        {role !== "guest" && role !== "readonly" && <button data-quickadd-todo onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Aufgabe hinzufügen</button>}
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>To Do Liste</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} offene Aufgabe{offen.length !== 1 ? "n" : ""}</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
 
       {/* Suche + Filter */}
       <div style={{ marginBottom: "22px" }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Suchen ..." style={{ width: "100%", padding: "9px 14px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "10px" }} />
-        <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none" }}>
+        <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none", alignItems: "center" }}>
           {["Alle", ...[...new Set(todos.map(t => t.kategorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"))].map(k => (
             <button key={k} onClick={() => setGruppeFilter(k)} style={{ padding: "8px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: gruppeFilter === k ? "700" : "400", background: gruppeFilter === k ? ACCENT : GLASS, color: gruppeFilter === k ? "#fff" : TEXT_MID, whiteSpace: "nowrap", flexShrink: 0 }}>
               {k}
             </button>
           ))}
+          {role !== "guest" && role !== "readonly" && <button data-quickadd-todo onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", whiteSpace: "nowrap", flexShrink: 0, marginLeft: "auto" }}>+ Aufgabe</button>}
         </div>
       </div>
 
