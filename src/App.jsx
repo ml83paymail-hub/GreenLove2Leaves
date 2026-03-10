@@ -1987,6 +1987,14 @@ function AblegerPage() {
   const [gruppierung, setGruppierung] = useState("typ");
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState([]);
+  const [bulkModal, setBulkModal] = useState(false);
+  const [bulkField, setBulkField] = useState("standort");
+  const [bulkValue, setBulkValue] = useState(ABLEGER_STANDORTE[0]);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const toggleSelect = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const exitSelectMode = () => { setSelectMode(false); setSelected([]); };
   const [saving, setSaving] = useState(false);
   const emptyForm = { name: "", nr: "", typ: "Hoya", datum: new Date().toISOString().split("T")[0], standort: "Growbox 1", mutterpflanze_id: "" };
   const [form, setForm] = useState(emptyForm);
@@ -2044,6 +2052,16 @@ function AblegerPage() {
   const getMutterName = (id) => pflanzen.find(p => p.id === id)?.name || "–";
   const getDisplayName = (a) => a.nr ? `${a.name} – Nr. ${a.nr}` : a.name;
 
+  const handleBulkEdit = async () => {
+    setBulkSaving(true);
+    const updateVal = bulkField === "mutterpflanze_id" ? (bulkValue ? parseInt(bulkValue) : null) : bulkValue;
+    await supabase.from("ableger").update({ [bulkField]: updateVal }).in("id", selected);
+    setAbleger(prev => prev.map(a => selected.includes(a.id) ? { ...a, [bulkField]: updateVal } : a));
+    setBulkModal(false);
+    setBulkSaving(false);
+    exitSelectMode();
+  };
+
   // Grouping
   const groupKey = gruppierung === "typ" ? "typ" : "standort";
   const groups = {};
@@ -2093,9 +2111,23 @@ function AblegerPage() {
           <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Unsere Ableger</h1>
           <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{ableger.length} Ableger</p>
         </div>
-        {canEdit && <button onClick={() => { setForm(emptyForm); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Ableger</button>}
+        {canEdit && <div style={{ display: "flex", gap: "8px" }}>
+          <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} style={{ background: selectMode ? "#b94040" : GLASS, border: `1px solid ${GLASS_BORDER}`, color: selectMode ? "#fff" : TEXT_MID, padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>{selectMode ? "Abbrechen" : "Mehrfachauswahl"}</button>
+          <button onClick={() => { setForm(emptyForm); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Ableger</button>
+        </div>}
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
+
+      {/* Bulk action bar */}
+      {selectMode && (
+        <div style={{ background: ACCENT, borderRadius: "10px", padding: "12px 16px", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "13px", color: "#fff", fontFamily: FONT, fontWeight: "600" }}>{selected.length} ausgewählt</span>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={() => setSelected(ableger.map(a => a.id))} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: "6px", padding: "7px 14px", cursor: "pointer", fontSize: "12px", color: "#fff", fontFamily: FONT }}>Alle wählen</button>
+            <button onClick={() => { if (selected.length === 0) return; setBulkField("standort"); setBulkValue(ABLEGER_STANDORTE[0]); setBulkModal(true); }} disabled={selected.length === 0} style={{ background: selected.length > 0 ? "#fff" : "rgba(255,255,255,0.3)", border: "none", borderRadius: "6px", padding: "7px 14px", cursor: selected.length > 0 ? "pointer" : "default", fontSize: "12px", color: ACCENT, fontFamily: FONT, fontWeight: "600" }}>Bearbeiten</button>
+          </div>
+        </div>
+      )}
 
       {/* Gruppierung Toggle */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "22px" }}>
@@ -2124,7 +2156,12 @@ function AblegerPage() {
               </button>
               {!collapsedGroups[groupName] && <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {groups[groupName].map(a => (
-                  <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1 }}>
+                  <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${selected.includes(a.id) ? ACCENT : GLASS_BORDER}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1, cursor: selectMode ? "pointer" : "default" }} onClick={() => selectMode && toggleSelect(a.id)}>
+                    {selectMode && (
+                      <div style={{ width: "18px", height: "18px", border: `2px solid ${ACCENT}`, borderRadius: "4px", background: selected.includes(a.id) ? ACCENT : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {selected.includes(a.id) && <span style={{ color: "#fff", fontSize: "11px", lineHeight: 1 }}>✓</span>}
+                      </div>
+                    )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{getDisplayName(a)}</div>
                       <div style={{ display: "flex", gap: "12px", marginTop: "4px", flexWrap: "wrap" }}>
@@ -2134,7 +2171,7 @@ function AblegerPage() {
                         <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(a.datum)}</span>
                       </div>
                     </div>
-                    {canEdit && (
+                    {canEdit && !selectMode && (
                       <div style={{ position: "relative", flexShrink: 0 }}>
                         <button onClick={() => setOpenMenuId(openMenuId === a.id ? null : a.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                         {openMenuId === a.id && (
@@ -2150,6 +2187,34 @@ function AblegerPage() {
               </div>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Bulk Edit Modal */}
+      {bulkModal && (
+        <div onClick={() => setBulkModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 6px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Mehrfach bearbeiten</h2>
+            <p style={{ margin: "0 0 20px 0", fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{selected.length} Ableger werden geändert</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Feld</label>
+                <select value={bulkField} onChange={e => { setBulkField(e.target.value); setBulkValue(e.target.value === "standort" ? ABLEGER_STANDORTE[0] : e.target.value === "typ" ? ABLEGER_TYPEN[0] : ""); }} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+                  <option value="standort">Standort</option>
+                  <option value="typ">Typ</option>
+                  <option value="mutterpflanze_id">Mutterpflanze</option>
+                </select>
+              </div>
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Neuer Wert</label>
+                {bulkField === "standort" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>{ABLEGER_STANDORTE.map(s => <option key={s} value={s}>{s}</option>)}</select>}
+                {bulkField === "typ" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>{ABLEGER_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}</select>}
+                {bulkField === "mutterpflanze_id" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}><option value="">– keine Verknüpfung –</option>{pflanzen.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select>}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
+              <button onClick={() => setBulkModal(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleBulkEdit} disabled={bulkSaving} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: bulkSaving ? 0.6 : 1 }}>{bulkSaving ? "Speichert …" : `${selected.length} Ableger speichern`}</button>
+            </div>
+          </div>
         </div>
       )}
 
