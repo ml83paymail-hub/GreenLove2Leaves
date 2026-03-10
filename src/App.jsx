@@ -2485,8 +2485,13 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.from("notizbuch_themen").select("*, notizbuch_eintraege(count)").order("created_at", { ascending: false });
-      if (data) setThemen(data);
+      const { data } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
+      if (data) {
+        const { data: counts } = await supabase.from("notizbuch_eintraege").select("thema_id");
+        const countMap = {};
+        (counts || []).forEach(e => { countMap[e.thema_id] = (countMap[e.thema_id] || 0) + 1; });
+        setThemen(data.map(t => ({ ...t, _count: countMap[t.id] || 0 })));
+      }
       setLoading(false);
     };
     load();
@@ -2497,9 +2502,14 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
     setSaving(true);
     const { error } = await supabase.from("notizbuch_themen").insert({ name: name.trim() });
     if (error) { alert("Fehler: " + error.message); setSaving(false); return; }
-    const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*, notizbuch_eintraege(count)").order("created_at", { ascending: false });
+    const { data: fresh, error: e2 } = await supabase.from("notizbuch_themen").select("*").order("created_at", { ascending: false });
     if (e2) { alert("Ladefehler: " + e2.message); setSaving(false); return; }
-    if (fresh) setThemen(fresh);
+    if (fresh) {
+      const { data: counts } = await supabase.from("notizbuch_eintraege").select("thema_id");
+      const countMap = {};
+      (counts || []).forEach(e => { countMap[e.thema_id] = (countMap[e.thema_id] || 0) + 1; });
+      setThemen(fresh.map(t => ({ ...t, _count: countMap[t.id] || 0 })));
+    }
     setName(""); setShowAdd(false); setSaving(false);
   };
 
@@ -2535,7 +2545,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
             <div key={t.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 18px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", cursor: "pointer", position: "relative", zIndex: openMenuId === t.id ? 50 : 1 }} onClick={() => onOpen(t)}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: "15px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{t.name}</div>
-                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{t.notizbuch_eintraege?.[0]?.count ?? 0} Einträge</div>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{t._count ?? 0} Einträge</div>
               </div>
               <span style={{ fontSize: "18px", color: TEXT_LIGHT }}>›</span>
               {canEdit && (
