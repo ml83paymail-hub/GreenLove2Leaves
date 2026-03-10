@@ -1865,14 +1865,14 @@ function BestellungenPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Bestellungen & Käufe</h1>
-          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{bestellungen.length} offene Bestellung{bestellungen.length !== 1 ? "en" : ""}</p>
-        </div>
-        {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Bestellung</button>}
+      <div style={{ marginBottom: "8px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Bestellungen & Käufe</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{bestellungen.length} offene Bestellung{bestellungen.length !== 1 ? "en" : ""}</p>
       </div>
-      <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
+        {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Bestellung</button>}
+      </div>
 
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
@@ -1884,7 +1884,7 @@ function BestellungenPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {bestellungen.map(b => (
-            <div key={b.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div key={b.id} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: "15px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, marginBottom: "6px" }}>{b.artikel}</div>
@@ -1913,8 +1913,8 @@ function BestellungenPage() {
                     <div style={{ position: "relative" }}>
                       <button onClick={() => setOpenMenuId(openMenuId === b.id ? null : b.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                       {openMenuId === b.id && (
-                        <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
-                          <button onClick={() => openEdit(b)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                        <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
+                          <button onClick={() => openEdit(b)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                         </div>
                       )}
                     </div>
