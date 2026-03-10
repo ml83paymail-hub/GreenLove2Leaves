@@ -1543,9 +1543,9 @@ function PflanzenkassePage() {
           { label: "Ausgaben", value: gesamtAusgaben, color: "#bc5d58" },
           { label: "Saldo", value: saldo, color: saldo >= 0 ? "#4a7c59" : "#bc5d58" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-            <div style={{ fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>{label}</div>
-            <div style={{ fontSize: "18px", fontWeight: "700", color, fontFamily: FONT, whiteSpace: "nowrap" }}>{formatBetrag(value)}</div>
+          <div key={label} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "10px 14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "4px" }}>{label}</div>
+            <div style={{ fontSize: "15px", fontWeight: "700", color, fontFamily: FONT, whiteSpace: "nowrap" }}>{formatBetrag(value)}</div>
           </div>
         ))}
       </div>
@@ -1597,7 +1597,7 @@ function PflanzenkassePage() {
                   {openMonths[key] && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {groups[key].map(e => (
-                      <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
+                      <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${ACCENT}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
                         <div style={{ width: "4px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#bc5d58", flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{e.name}</div>
