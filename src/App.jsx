@@ -2172,15 +2172,9 @@ function AblegerPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Unsere Ableger</h1>
-          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{ableger.length} Ableger</p>
-        </div>
-        {canEdit && <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} style={{ background: selectMode ? "#bc5d58" : GLASS, border: `1px solid ${selectMode ? "#bc5d58" : GLASS_BORDER}`, color: selectMode ? "#fff" : TEXT_MID, padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>{selectMode ? "Abbrechen" : "Mehrfachauswahl"}</button>
-          <button onClick={() => { setForm(emptyForm); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Ableger</button>
-        </div>}
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Unsere Ableger</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{ableger.length} Ableger</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
 
@@ -2195,13 +2189,17 @@ function AblegerPage() {
         </div>
       )}
 
-      {/* Gruppierung Toggle */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "22px" }}>
+      {/* Gruppierung Toggle + Buttons */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "22px", alignItems: "center" }}>
         {[["typ", "Nach Typ"], ["standort", "Nach Standort"]].map(([val, label]) => (
           <button key={val} onClick={() => setGruppierung(val)} style={{ padding: "7px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: gruppierung === val ? "700" : "400", background: gruppierung === val ? ACCENT : GLASS, color: gruppierung === val ? "#fff" : TEXT_MID }}>
             {label}
           </button>
         ))}
+        {canEdit && <>
+          <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} style={{ background: selectMode ? "#bc5d58" : GLASS, border: `1px solid ${selectMode ? "#bc5d58" : GLASS_BORDER}`, color: selectMode ? "#fff" : TEXT_MID, padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", whiteSpace: "nowrap" }}>{selectMode ? "Abbrechen" : "Mehrfachauswahl"}</button>
+          <button onClick={() => { setForm(emptyForm); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto", whiteSpace: "nowrap" }}>+ Ableger</button>
+        </>}
       </div>
 
       {loading ? (
