@@ -2191,7 +2191,7 @@ function AblegerPage() {
 
       {/* Gruppierung Toggle + Buttons */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "22px", alignItems: "center" }}>
-        {[["typ", "Nach Typ"], ["standort", "Nach Standort"]].map(([val, label]) => (
+        {[["typ", "Typ"], ["standort", "Standort"]].map(([val, label]) => (
           <button key={val} onClick={() => setGruppierung(val)} style={{ padding: "7px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: gruppierung === val ? "700" : "400", background: gruppierung === val ? ACCENT : GLASS, color: gruppierung === val ? "#fff" : TEXT_MID }}>
             {label}
           </button>
