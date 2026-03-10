@@ -661,7 +661,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
             {menuOpen && (
               <div style={{ position: "absolute", top: "36px", right: 0, background: WHITE, borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 10 }}>
                 <button onClick={() => { onDelete(plant.id); setMenuOpen(false); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>🗑</span> Pflanze löschen
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" stroke="#000" strokeWidth="2" strokeLinecap="round"/></svg> Pflanze löschen
                 </button>
               </div>
             )}
