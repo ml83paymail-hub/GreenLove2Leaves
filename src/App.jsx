@@ -2052,18 +2052,48 @@ function AblegerPage() {
   const getMutterName = (id) => pflanzen.find(p => p.id === id)?.name || "–";
   const getDisplayName = (a) => a.nr ? `${a.name} – Nr. ${a.nr}` : a.name;
 
-  const mutterOptions = () => {
+  const getMutterGruppen = () => {
     const grouped = {};
     pflanzen.forEach(p => {
       const t = p.typ || "Sonstige";
       if (!grouped[t]) grouped[t] = [];
       grouped[t].push(p);
     });
-    return Object.keys(grouped).sort((a, b) => a.localeCompare(b, "de")).map(typ => (
-      <optgroup key={typ} label={typ}>
-        {grouped[typ].map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-      </optgroup>
-    ));
+    return Object.keys(grouped).sort((a, b) => a.localeCompare(b, "de")).map(typ => ({ typ, pflanzen: grouped[typ] }));
+  };
+
+  const MutterpflanzeDropdown = ({ value, onChange }) => {
+    const [open, setOpen] = useState(false);
+    const [collapsedTyp, setCollapsedTyp] = useState({});
+    const gruppen = getMutterGruppen();
+    const selectedName = value ? (pflanzen.find(p => p.id === parseInt(value))?.name || "–") : "– keine Verknüpfung –";
+    const toggleTyp = (typ) => setCollapsedTyp(prev => ({ ...prev, [typ]: !prev[typ] }));
+    return (
+      <div style={{ position: "relative" }}>
+        <button type="button" onClick={() => setOpen(!open)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: value ? TEXT_DARK : TEXT_LIGHT, background: "#fff", outline: "none", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span>{selectedName}</span>
+          <span style={{ fontSize: "11px", color: TEXT_LIGHT }}>{open ? "▲" : "▼"}</span>
+        </button>
+        {open && (
+          <div style={{ position: "absolute", top: "42px", left: 0, right: 0, background: "#fff", borderRadius: "8px", border: `1px solid ${BG_DARK}`, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", zIndex: 100, maxHeight: "280px", overflowY: "auto" }}>
+            <div onClick={() => { onChange(""); setOpen(false); }} style={{ padding: "10px 14px", fontSize: "13px", fontFamily: FONT, color: TEXT_LIGHT, cursor: "pointer", borderBottom: `1px solid ${BG_DARK}` }}>– keine Verknüpfung –</div>
+            {gruppen.map(({ typ, pflanzen: pl }) => (
+              <div key={typ}>
+                <div onClick={() => toggleTyp(typ)} style={{ padding: "8px 14px", fontSize: "11px", fontWeight: "700", color: ACCENT, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "1px", background: BG, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", userSelect: "none" }}>
+                  <span>{typ} <span style={{ fontWeight: "400", color: TEXT_LIGHT }}>({pl.length})</span></span>
+                  <span style={{ fontSize: "10px", color: TEXT_LIGHT }}>{collapsedTyp[typ] ? "▶" : "▼"}</span>
+                </div>
+                {!collapsedTyp[typ] && pl.map(p => (
+                  <div key={p.id} onClick={() => { onChange(String(p.id)); setOpen(false); }} style={{ padding: "9px 14px 9px 24px", fontSize: "13px", fontFamily: FONT, color: parseInt(value) === p.id ? ACCENT : TEXT_DARK, fontWeight: parseInt(value) === p.id ? "600" : "400", cursor: "pointer", background: parseInt(value) === p.id ? "rgba(92,108,86,0.07)" : "transparent" }}>
+                    {p.name}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleBulkEdit = async () => {
@@ -2110,10 +2140,7 @@ function AblegerPage() {
         </select>
       </div>
       <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Mutterpflanze</label>
-        <select value={form.mutterpflanze_id} onChange={e => set("mutterpflanze_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
-          <option value="">– keine Verknüpfung –</option>
-          {mutterOptions()}
-        </select>
+        <MutterpflanzeDropdown value={form.mutterpflanze_id} onChange={v => set("mutterpflanze_id", v)} />
       </div>
     </div>
   );
@@ -2222,7 +2249,7 @@ function AblegerPage() {
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Neuer Wert</label>
                 {bulkField === "standort" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>{ABLEGER_STANDORTE.map(s => <option key={s} value={s}>{s}</option>)}</select>}
                 {bulkField === "typ" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>{ABLEGER_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}</select>}
-                {bulkField === "mutterpflanze_id" && <select value={bulkValue} onChange={e => setBulkValue(e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}><option value="">– keine Verknüpfung –</option>{mutterOptions()}</select>}
+                {bulkField === "mutterpflanze_id" && <MutterpflanzeDropdown value={bulkValue} onChange={v => setBulkValue(v)} />}
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
