@@ -1448,7 +1448,7 @@ function PflanzenkassePage() {
   const [eintraege, setEintraege] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [filterTyp, setFilterTyp] = useState("alle");
+  const [filterTyp, setFilterTyp] = useState(() => localStorage.getItem("kasseFilter") || "alle");
   const [form, setForm] = useState({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzen", datum: new Date().toISOString().split("T")[0] });
   const [editEntry, setEditEntry] = useState(null);
   const [showAbschluss, setShowAbschluss] = useState(false);
@@ -1524,39 +1524,29 @@ function PflanzenkassePage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenkasse</h1>
-          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "einträge" : ""}</p>
-        </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          {canEdit && eintraege.length > 0 && <button onClick={() => setShowAbschluss(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, color: TEXT_MID, padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT }}>Jahr abschließen</button>}
-          {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
-        </div>
+      <div style={{ marginBottom: "8px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenkasse</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "einträge" : ""}</p>
       </div>
-      <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
 
-      {/* Saldo Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
-        {[
-          { label: "Einnahmen", value: gesamtEinnahmen, color: "#4a7c59" },
-          { label: "Ausgaben", value: gesamtAusgaben, color: "#bc5d58" },
-          { label: "Saldo", value: saldo, color: saldo >= 0 ? "#4a7c59" : "#bc5d58" },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "10px 14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-            <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "4px" }}>{label}</div>
-            <div style={{ fontSize: "15px", fontWeight: "700", color, fontFamily: FONT, whiteSpace: "nowrap" }}>{formatBetrag(value)}</div>
-          </div>
-        ))}
+      {/* Kassenstand */}
+      <div style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "10px 14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", marginBottom: "18px", display: "inline-block" }}>
+        <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "4px" }}>Kassenstand</div>
+        <div style={{ fontSize: "15px", fontWeight: "700", color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontFamily: FONT, whiteSpace: "nowrap" }}>{formatBetrag(saldo)}</div>
       </div>
 
-      {/* Filter */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
-        {[["alle", "Alle"], ["einnahme", "Einnahmen"], ["ausgabe", "Ausgaben"]].map(([val, label]) => (
-          <button key={val} onClick={() => setFilterTyp(val)} style={{ padding: "7px 14px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: filterTyp === val ? "700" : "400", background: filterTyp === val ? ACCENT : GLASS, color: filterTyp === val ? "#fff" : TEXT_MID }}>
-            {label}
-          </button>
-        ))}
+      {/* Filter + Button */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "18px", alignItems: "center" }}>
+        <select value={filterTyp} onChange={e => { setFilterTyp(e.target.value); localStorage.setItem("kasseFilter", e.target.value); }} style={{ background: ACCENT, border: `1px solid ${ACCENT}`, borderRadius: "8px", padding: "7px 8px", fontSize: "12px", color: "#fff", fontFamily: FONT, outline: "none", cursor: "pointer", appearance: "none", WebkitAppearance: "none", fontWeight: "600" }}>
+          <option value="alle">Alle</option>
+          <option value="einnahme">Einnahmen</option>
+          <option value="ausgabe">Ausgaben</option>
+        </select>
+        <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+          {canEdit && eintraege.length > 0 && <button onClick={() => setShowAbschluss(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, color: TEXT_MID, padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT }}>Jahr abschließen</button>}
+          {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
+        </div>
       </div>
 
       {loading ? (
