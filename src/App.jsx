@@ -2740,13 +2740,15 @@ function ThemaDetail({ thema, canEdit, onBack }) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px", flexWrap: "wrap" }}>
-        <button onClick={onBack} style={{ background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "7px 14px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>← Zurück</button>
-        <div style={{ flex: 1 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", marginBottom: "22px" }}>
+        <div>
           <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{thema.name}</h2>
           {thema.beschreibung && <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.5" }}>{thema.beschreibung}</p>}
         </div>
-        {canEdit && <button onClick={() => { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto" }}>+ Eintrag</button>}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0 }}>
+          {canEdit && <button onClick={() => { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
+          <button onClick={onBack} style={{ background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "7px 14px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>← Zurück</button>
+        </div>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
 
