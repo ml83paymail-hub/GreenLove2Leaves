@@ -1972,7 +1972,7 @@ function BestellungenPage() {
 }
 
 // ── Ableger Page ──────────────────────────────────────────────────────────────
-const ABLEGER_TYPEN = ["Alocasia", "Anthurium", "Begonie", "Hoya", "Monstera", "Philodendron", "Scindapsus", "Epipremnum", "Weitere Pflanzen"];
+const ABLEGER_TYPEN = ["Alocasia", "Anthurium", "Begonie", "Hoya", "Monstera", "Philodendron", "Scindapsus", "Epipremnum", "Weitere Pflanzen", "Wetsticks & Anzuchtboxen"];
 const ABLEGER_STANDORTE = ["Bad-Gitter", "Growbox 1", "Growbox 2", "Pflanzentrolli 1", "Pflanzentrolli 2", "Pflanzentrolli 3", "WZ - großes Regal", "WZ - TV Regal"];
 
 function AblegerPage() {
