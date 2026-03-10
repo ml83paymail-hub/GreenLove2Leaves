@@ -2438,7 +2438,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled, suche }) {
     setOpenMenuId(null);
   };
 
-  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
   const filtered = suche?.trim() ? notizen.filter(n => n.text.toLowerCase().includes(suche.toLowerCase())) : notizen;
   const shown = filtered.slice(0, visible);
 
