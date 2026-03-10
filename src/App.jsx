@@ -63,9 +63,9 @@ function LoginScreen({ onLogin }) {
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
           placeholder="Passwort"
           autoFocus
-          style={{ width: "100%", padding: "11px 14px", borderRadius: "8px", border: `1px solid ${error ? "#b94040" : "rgba(255,255,255,0.7)"}`, background: "rgba(235,235,230,0.8)", fontSize: "14px", color: "#1e2218", outline: "none", boxSizing: "border-box", fontFamily: "system-ui, sans-serif", transition: "border 0.2s" }}
+          style={{ width: "100%", padding: "11px 14px", borderRadius: "8px", border: `1px solid ${error ? "#bc5d58" : "rgba(255,255,255,0.7)"}`, background: "rgba(235,235,230,0.8)", fontSize: "14px", color: "#1e2218", outline: "none", boxSizing: "border-box", fontFamily: "system-ui, sans-serif", transition: "border 0.2s" }}
         />
-        {error && <div style={{ fontSize: "11px", color: "#b94040", marginTop: "6px", textAlign: "center" }}>Falsches Passwort</div>}
+        {error && <div style={{ fontSize: "11px", color: "#bc5d58", marginTop: "6px", textAlign: "center" }}>Falsches Passwort</div>}
         <button onClick={handleSubmit} style={{ width: "100%", marginTop: "14px", padding: "11px", borderRadius: "8px", border: "none", background: "#5c6c56", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "system-ui, sans-serif" }}>
           Einloggen
         </button>
@@ -1542,8 +1542,8 @@ function PflanzenkassePage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "24px" }}>
         {[
           { label: "Einnahmen", value: gesamtEinnahmen, color: "#4a7c59" },
-          { label: "Ausgaben", value: gesamtAusgaben, color: "#b94040" },
-          { label: "Saldo", value: saldo, color: saldo >= 0 ? "#4a7c59" : "#b94040" },
+          { label: "Ausgaben", value: gesamtAusgaben, color: "#bc5d58" },
+          { label: "Saldo", value: saldo, color: saldo >= 0 ? "#4a7c59" : "#bc5d58" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
             <div style={{ fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>{label}</div>
@@ -1594,22 +1594,22 @@ function PflanzenkassePage() {
                       <span style={{ fontSize: "11px", color: TEXT_LIGHT, transition: "transform 0.2s", display: "inline-block", transform: openMonths[key] ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
                       <div style={{ fontSize: "13px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "0.5px" }}>{monthLabel}</div>
                     </div>
-                    <span style={{ fontSize: "13px", fontWeight: "700", color: monatSaldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT }}>{monatSaldo >= 0 ? "+" : ""}{formatBetrag(monatSaldo)}</span>
+                    <span style={{ fontSize: "13px", fontWeight: "700", color: monatSaldo >= 0 ? "#4a7c59" : "#bc5d58", fontFamily: FONT }}>{monatSaldo >= 0 ? "+" : ""}{formatBetrag(monatSaldo)}</span>
                   </div>
                   {openMonths[key] && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {groups[key].map(e => (
                       <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "14px 16px", display: "flex", alignItems: "center", gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
-                        <div style={{ width: "4px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", flexShrink: 0 }} />
+                        <div style={{ width: "4px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#bc5d58", flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{e.name}</div>
                           <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
-                            <span style={{ fontSize: "11px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{e.kategorie}</span>
+                            <span style={{ fontSize: "11px", background: e.typ === "einnahme" ? "#4a7c59" : "#bc5d58", color: "#fff", borderRadius: "4px", padding: "2px 8px", fontFamily: FONT }}>{e.kategorie}</span>
                             <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.datum)}</span>
                             {e.beschreibung && <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>· {e.beschreibung}</span>}
                           </div>
                         </div>
-                        <div style={{ fontSize: "16px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#b94040", fontFamily: FONT, flexShrink: 0 }}>
+                        <div style={{ fontSize: "16px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#bc5d58", fontFamily: FONT, flexShrink: 0 }}>
                           {e.typ === "einnahme" ? "+" : "-"}{formatBetrag(e.betrag)}
                         </div>
                         {canEdit && (
@@ -1618,7 +1618,7 @@ function PflanzenkassePage() {
                             {openMenuId === e.id && (
                               <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
                                 <button onClick={() => openEdit(e)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
-                                <button onClick={() => { handleDelete(e.id); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                                <button onClick={() => { handleDelete(e.id); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#bc5d58", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                               </div>
                             )}
                           </div>
@@ -1643,7 +1643,7 @@ function PflanzenkassePage() {
               {/* Einnahme / Ausgabe Toggle */}
               <div style={{ display: "flex", borderRadius: "8px", overflow: "hidden", border: `1px solid ${BG_DARK}` }}>
                 {[["ausgabe", "Ausgabe"], ["einnahme", "Einnahme"]].map(([val, label]) => (
-                  <button key={val} onClick={() => set("typ", val)} style={{ flex: 1, padding: "10px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: form.typ === val ? "700" : "400", background: form.typ === val ? (val === "einnahme" ? "#4a7c59" : "#b94040") : "#fff", color: form.typ === val ? "#fff" : TEXT_MID, transition: "all 0.15s" }}>
+                  <button key={val} onClick={() => set("typ", val)} style={{ flex: 1, padding: "10px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: form.typ === val ? "700" : "400", background: form.typ === val ? (val === "einnahme" ? "#4a7c59" : "#bc5d58") : "#fff", color: form.typ === val ? "#fff" : TEXT_MID, transition: "all 0.15s" }}>
                     {label}
                   </button>
                 ))}
@@ -1750,11 +1750,11 @@ function ArchivPage() {
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px" }}>AUSGABEN</div>
-                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#b94040", fontFamily: FONT, whiteSpace: "nowrap" }}>-{formatBetrag(ausgaben)}</div>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: "#bc5d58", fontFamily: FONT, whiteSpace: "nowrap" }}>-{formatBetrag(ausgaben)}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: "10px", color: TEXT_LIGHT, fontFamily: FONT, letterSpacing: "0.5px" }}>SALDO</div>
-                      <div style={{ fontSize: "14px", fontWeight: "700", color: saldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT, whiteSpace: "nowrap" }}>{saldo >= 0 ? "+" : ""}{formatBetrag(saldo)}</div>
+                      <div style={{ fontSize: "14px", fontWeight: "700", color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontFamily: FONT, whiteSpace: "nowrap" }}>{saldo >= 0 ? "+" : ""}{formatBetrag(saldo)}</div>
                     </div>
                   </div>
                 </div>
@@ -1770,21 +1770,21 @@ function ArchivPage() {
                         <div key={key}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                             <div style={{ fontSize: "12px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "0.5px" }}>{monthLabel}</div>
-                            <span style={{ fontSize: "12px", fontWeight: "700", color: mSaldo >= 0 ? "#4a7c59" : "#b94040", fontFamily: FONT }}>{mSaldo >= 0 ? "+" : ""}{formatBetrag(mSaldo)}</span>
+                            <span style={{ fontSize: "12px", fontWeight: "700", color: mSaldo >= 0 ? "#4a7c59" : "#bc5d58", fontFamily: FONT }}>{mSaldo >= 0 ? "+" : ""}{formatBetrag(mSaldo)}</span>
                           </div>
                           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             {groups[key].map((e, i) => (
                               <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "rgba(255,255,255,0.5)", borderRadius: "8px" }}>
-                                <div style={{ width: "3px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", flexShrink: 0 }} />
+                                <div style={{ width: "3px", alignSelf: "stretch", borderRadius: "4px", background: e.typ === "einnahme" ? "#4a7c59" : "#bc5d58", flexShrink: 0 }} />
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{e.name}</div>
                                   <div style={{ display: "flex", gap: "8px", marginTop: "3px", alignItems: "center", flexWrap: "wrap" }}>
-                                    <span style={{ fontSize: "10px", background: e.typ === "einnahme" ? "#4a7c59" : "#b94040", color: "#fff", borderRadius: "4px", padding: "2px 7px", fontFamily: FONT }}>{e.kategorie}</span>
+                                    <span style={{ fontSize: "10px", background: e.typ === "einnahme" ? "#4a7c59" : "#bc5d58", color: "#fff", borderRadius: "4px", padding: "2px 7px", fontFamily: FONT }}>{e.kategorie}</span>
                                     <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(e.datum)}</span>
                                     {e.beschreibung && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>· {e.beschreibung}</span>}
                                   </div>
                                 </div>
-                                <div style={{ fontSize: "14px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#b94040", fontFamily: FONT, flexShrink: 0, whiteSpace: "nowrap" }}>
+                                <div style={{ fontSize: "14px", fontWeight: "700", color: e.typ === "einnahme" ? "#4a7c59" : "#bc5d58", fontFamily: FONT, flexShrink: 0, whiteSpace: "nowrap" }}>
                                   {e.typ === "einnahme" ? "+" : "-"}{formatBetrag(e.betrag)}
                                 </div>
                               </div>
@@ -2178,7 +2178,7 @@ function AblegerPage() {
           <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{ableger.length} Ableger</p>
         </div>
         {canEdit && <div style={{ display: "flex", gap: "8px" }}>
-          <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} style={{ background: selectMode ? "#b94040" : GLASS, border: `1px solid ${GLASS_BORDER}`, color: selectMode ? "#fff" : TEXT_MID, padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>{selectMode ? "Abbrechen" : "Mehrfachauswahl"}</button>
+          <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} style={{ background: selectMode ? "#bc5d58" : GLASS, border: `1px solid ${selectMode ? "#bc5d58" : GLASS_BORDER}`, color: selectMode ? "#fff" : TEXT_MID, padding: "10px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>{selectMode ? "Abbrechen" : "Mehrfachauswahl"}</button>
           <button onClick={() => { setForm(emptyForm); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Ableger</button>
         </div>}
       </div>
@@ -2223,7 +2223,7 @@ function AblegerPage() {
               </button>
               {!collapsedGroups[groupName] && <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 {groups[groupName].map(a => (
-                  <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${selected.includes(a.id) ? ACCENT : GLASS_BORDER}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1, cursor: selectMode ? "pointer" : "default" }} onClick={() => selectMode ? toggleSelect(a.id) : (!selectMode && setDetailEntry(a))}>
+                  <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${selected.includes(a.id) ? ACCENT : ACCENT}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1, cursor: selectMode ? "pointer" : "default" }} onClick={() => selectMode ? toggleSelect(a.id) : (!selectMode && setDetailEntry(a))}>
                     {selectMode && (
                       <div style={{ width: "18px", height: "18px", border: `2px solid ${ACCENT}`, borderRadius: "4px", background: selected.includes(a.id) ? ACCENT : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                         {selected.includes(a.id) && <span style={{ color: "#fff", fontSize: "11px", lineHeight: 1 }}>✓</span>}
@@ -2237,9 +2237,9 @@ function AblegerPage() {
                         <button onClick={() => setOpenMenuId(openMenuId === a.id ? null : a.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                         {openMenuId === a.id && (
                           <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
-                            <button onClick={() => openEdit(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                            <button onClick={() => openEdit(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                             <button onClick={() => handleDuplicate(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>⧉ Duplizieren</button>
-                            <button onClick={() => handleDelete(a.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                            <button onClick={() => handleDelete(a.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                           </div>
                         )}
                       </div>
@@ -2265,17 +2265,17 @@ function AblegerPage() {
             </div>
             <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {[["🌿 Typ", detailEntry.typ], ["📍 Standort", detailEntry.standort], ["📅 Datum", formatDate(detailEntry.datum)], ["↳ Mutterpflanze", detailEntry.mutterpflanze_id ? getMutterName(detailEntry.mutterpflanze_id) : "–"]].map(([label, value]) => (
+              {[["Typ", detailEntry.typ], ["Standort", detailEntry.standort], ["Datum", formatDate(detailEntry.datum)], ["↳ Mutterpflanze", detailEntry.mutterpflanze_id ? getMutterName(detailEntry.mutterpflanze_id) : "–"]].map(([label, value]) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{label}</span>
-                  <span style={{ fontSize: "13px", color: TEXT_DARK, fontFamily: FONT, fontWeight: "500", textAlign: "right", maxWidth: "60%" }}>{value}</span>
+                  <span style={{ fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT }}>{label}</span>
+                  <span style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, fontWeight: "500", textAlign: "right", maxWidth: "60%" }}>{value}</span>
                 </div>
               ))}
             </div>
             {canEdit && (
               <div style={{ display: "flex", gap: "8px", marginTop: "22px" }}>
-                <button onClick={() => { openEdit(detailEntry); setDetailEntry(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>✎ Bearbeiten</button>
-                <button onClick={() => { handleDelete(detailEntry.id); setDetailEntry(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "#b94040", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>🗑 Löschen</button>
+                <button onClick={() => { openEdit(detailEntry); setDetailEntry(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: "#000", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
+                <button onClick={() => { handleDelete(detailEntry.id); setDetailEntry(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "none", background: "#bc5d58", color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
               </div>
             )}
           </div>
@@ -2466,7 +2466,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled, suche }) {
                     {openMenuId === n.id && (
                       <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(n); setText(n.text); setDatum(n.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
-                        <button onClick={() => handleDelete(n.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                        <button onClick={() => handleDelete(n.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#bc5d58", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                       </div>
                     )}
                   </div>
@@ -2621,7 +2621,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
                     <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "160px", zIndex: 20 }}>
                       <button onClick={(e) => handleToggleStatus(t, e)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>{t.status === "abgeschlossen" ? "↩ Reaktivieren" : "✓ Abschließen"}</button>
                       <button onClick={() => { setEditThema(t); setEditName(t.name); setEditBeschreibung(t.beschreibung || ""); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Umbenennen</button>
-                      <button onClick={() => handleDelete(t.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                      <button onClick={() => handleDelete(t.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#bc5d58", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                     </div>
                   )}
                 </div>
@@ -2767,7 +2767,7 @@ function ThemaDetail({ thema, canEdit, onBack }) {
                     {openMenuId === e.id && (
                       <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(e); setText(e.text); setDatum(e.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
-                        <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                        <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#bc5d58", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                       </div>
                     )}
                   </div>
@@ -2934,7 +2934,7 @@ function WishlistPage() {
                     {openMenuId === e.id && (
                       <div style={{ position: "absolute", top: "32px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(e); setForm({ name: e.name, beschreibung: e.beschreibung || "", kategorie: e.kategorie, foto_url: e.foto_url || "" }); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
-                        <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                        <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#bc5d58", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
                       </div>
                     )}
                   </div>
@@ -3141,7 +3141,7 @@ function GastzugangPage() {
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {remaining !== null && (
-                      <div style={{ fontSize: "11px", color: remaining < 5 ? "#b94040" : ACCENT, fontFamily: FONT }}>
+                      <div style={{ fontSize: "11px", color: remaining < 5 ? "#bc5d58" : ACCENT, fontFamily: FONT }}>
                         ⏱ Läuft ab in {remaining} Minute{remaining !== 1 ? "n" : ""}
                       </div>
                     )}
