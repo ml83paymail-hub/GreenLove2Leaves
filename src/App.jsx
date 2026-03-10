@@ -2977,11 +2977,6 @@ function WishlistPage() {
                 <div style={{ fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{detailEntry.name}</div>
                 <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px", textTransform: "capitalize" }}>{detailEntry.kategorie}</div>
               </div>
-                      </div>
-                    )}
-                  </div>}
-            </div>
-            <div style={{ padding: "22px" }}>
               {detailEntry.beschreibung && <p style={{ margin: "10px 0 16px", fontSize: "15px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6" }}>{renderText(detailEntry.beschreibung)}</p>}
               <div style={{ height: "1px", background: BG_DARK, marginBottom: "16px" }} />
               {canEdit && (
