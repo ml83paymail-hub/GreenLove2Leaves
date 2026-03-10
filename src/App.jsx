@@ -2886,19 +2886,19 @@ function WishlistPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+      <div style={{ marginBottom: "22px" }}>
         <h1 style={{ margin: 0, fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Wishlist</h1>
-        {canEdit && <button onClick={() => { setForm({ ...emptyForm, kategorie: kategorie }); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "6px", marginBottom: "24px" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "24px", alignItems: "center" }}>
         {[["wishlist", "Wishlist"], ["watchlist", "Watchlist"]].map(([val, label]) => (
           <button key={val} onClick={() => setKategorie(val)} style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: kategorie === val ? "700" : "400", background: kategorie === val ? ACCENT : GLASS, color: kategorie === val ? "#fff" : TEXT_MID, whiteSpace: "nowrap" }}>
             {label}
           </button>
         ))}
+        {canEdit && <button onClick={() => { setForm({ ...emptyForm, kategorie: kategorie }); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 18px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto", whiteSpace: "nowrap" }}>+ Eintrag</button>}
       </div>
 
       {loading ? (
