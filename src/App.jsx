@@ -643,8 +643,26 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
         <div style={{ height: "280px", background: form.foto ? `url(${form.foto}) center/cover` : BTN, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
           {!form.foto && <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.75 }}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>}
           {uploading && <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "13px", fontFamily: FONT }}>Lädt hoch …</div>}
-          <button onClick={onClose} style={{ position: "absolute", top: "12px", left: "12px", background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "13px", color: TEXT_MID }}>✕</button>
-
+          {/* Close + 3-dot menu – top right */}
+          <div style={{ position: "absolute", top: "12px", right: "12px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            {canEdit && (
+              <div style={{ position: "relative" }}>
+                <button onClick={e => { e.stopPropagation(); setMenuOpen(o => !o); }} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "16px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>⋯</button>
+                {menuOpen && (
+                  <div style={{ position: "absolute", top: "36px", right: 0, background: WHITE, borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 10 }}>
+                    <button onClick={() => { setMenuOpen(false); setEditMode(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten
+                    </button>
+                    <div style={{ height: "1px", background: BG_DARK }} />
+                    <button onClick={() => { onDelete(plant.id); setMenuOpen(false); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           {/* Photo upload button (edit mode) */}
           {editMode && (
             <label style={{ position: "absolute", bottom: "12px", left: "12px", background: "rgba(255,255,255,0.9)", borderRadius: "6px", padding: "5px 10px", fontSize: "11px", color: TEXT_MID, cursor: "pointer", fontFamily: FONT }}>
@@ -652,20 +670,6 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
               <input type="file" accept="image/*" onChange={handleFotoUpload} style={{ display: "none" }} />
             </label>
           )}
-
-
-
-          {/* 3-dot menu */}
-          {canEdit && <div style={{ position: "absolute", top: "12px", right: "12px" }}>
-            <button onClick={e => { e.stopPropagation(); setMenuOpen(o => !o); }} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "16px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>⋯</button>
-            {menuOpen && (
-              <div style={{ position: "absolute", top: "36px", right: 0, background: WHITE, borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 10 }}>
-                <button onClick={() => { onDelete(plant.id); setMenuOpen(false); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6" stroke="#000" strokeWidth="2" strokeLinecap="round"/></svg> Löschen
-                </button>
-              </div>
-            )}
-          </div>}
         </div>
 
         <div style={{ padding: "22px" }}>
