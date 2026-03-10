@@ -980,13 +980,13 @@ function PflanzenPage() {
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
           <input placeholder="Suchen …" value={search} onChange={e => setSearch(e.target.value)} style={{ background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 14px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none", flex: 1 }} />
-          {role !== "guest" && role !== "readonly" && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "9px 18px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap" }}>+ Pflanze hinzufügen</button>}
         </div>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <select value={groupBy} onChange={e => { setGroupBy(e.target.value); localStorage.setItem("groupBy", e.target.value); setCollapsedGroups({}); }} style={{ background: BTN, border: `1px solid ${BTN}`, borderRadius: "6px", padding: "7px 12px", fontSize: "12px", color: WHITE, fontFamily: FONT, outline: "none", cursor: "pointer", appearance: "none", WebkitAppearance: "none" }}>
             {GROUP_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <button onClick={() => setShowGiessplan(v => !v)} style={{ background: BTN, border: `1px solid ${BTN}`, borderRadius: "6px", padding: "7px 14px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap" }}>Gießtage</button>
+          {role !== "guest" && role !== "readonly" && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "7px 18px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap", marginLeft: "auto" }}>+ Pflanze hinzufügen</button>}
         </div>
       </div>
 
