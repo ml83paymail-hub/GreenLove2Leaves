@@ -2365,14 +2365,14 @@ function NotizbuchPage() {
       )}
 
       {/* Tabs + Button */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "26px", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: "6px", marginBottom: "26px", alignItems: "center" }}>
         {[["notizen", "Allgemeine Notizen"], ["themen", "Nach Thema"]].map(([val, label]) => (
-          <button key={val} onClick={() => { setTab(val); setActiveThema(null); }} style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: tab === val ? "700" : "400", background: tab === val ? ACCENT : GLASS, color: tab === val ? "#fff" : TEXT_MID }}>
+          <button key={val} onClick={() => { setTab(val); setActiveThema(null); }} style={{ padding: "8px 12px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: tab === val ? "700" : "400", background: tab === val ? ACCENT : GLASS, color: tab === val ? "#fff" : TEXT_MID, whiteSpace: "nowrap" }}>
             {label}
           </button>
         ))}
         {canEdit && !activeThema && (
-          <button onClick={() => tab === "notizen" ? setAddNotiz(true) : setAddThema(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 18px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto" }}>
+          <button onClick={() => tab === "notizen" ? setAddNotiz(true) : setAddThema(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto", whiteSpace: "nowrap" }}>
             {tab === "notizen" ? "+ Notiz" : "+ Thema"}
           </button>
         )}
