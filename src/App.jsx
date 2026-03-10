@@ -1295,6 +1295,21 @@ function FotoalbumPage() {
 
 // ── Postfach ──────────────────────────────────────────────────────────────────
 const POSTFACH_WEBHOOK = import.meta.env.VITE_POSTFACH_WEBHOOK;
+const NOTIZBUCH_WEBHOOK = import.meta.env.VITE_NOTIZBUCH_WEBHOOK;
+
+// Renders text with **bold** and line breaks
+function renderText(text) {
+  if (!text) return null;
+  return text.split("\n").map((line, i, arr) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g).map((part, j) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={j}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+    return <span key={i}>{parts}{i < arr.length - 1 && <br />}</span>;
+  });
+}
 
 async function sendPostfachDiscord(text) {
   const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
@@ -1379,7 +1394,7 @@ function PostfachPage() {
             <div key={n.id} onClick={() => role !== "guest" && role !== "readonly" && handleToggle(n)} style={{ background: GLASS, borderRadius: "10px", border: "1px solid #5c6c56", padding: "14px 16px", display: "flex", alignItems: "flex-start", gap: "14px", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: `2px solid ${ACCENT}`, flexShrink: 0, marginTop: "2px" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.5" }}>{n.text}</div>
+                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6" }}>{renderText(n.text)}</div>
                 <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "6px" }}>{formatDate(n.created_at)}</div>
               </div>
             </div>
@@ -1396,7 +1411,7 @@ function PostfachPage() {
                     <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "14px", color: TEXT_LIGHT, fontFamily: FONT, textDecoration: "line-through", lineHeight: "1.5" }}>{n.text}</div>
+                    <div style={{ fontSize: "14px", color: TEXT_LIGHT, fontFamily: FONT, textDecoration: "line-through", lineHeight: "1.6" }}>{renderText(n.text)}</div>
                     <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "6px" }}>{formatDate(n.created_at)}</div>
                   </div>
                 </div>
@@ -2390,7 +2405,11 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
     setSaving(true);
     const ts = new Date(datum).toISOString();
     const { data } = await supabase.from("notizbuch_notizen").insert({ text: text.trim(), created_at: ts, updated_at: ts }).select().single();
-    if (data) setNotizen(prev => [data, ...prev].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)));
+    if (data) {
+      setNotizen(prev => [data, ...prev].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)));
+      const datumStr = new Date(datum).toLocaleDateString("de-DE");
+      await fetch(NOTIZBUCH_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: `📝 **Allgemeine Notiz** · ${datumStr}\n${text.trim()}` }) }).catch(()=>{});
+    }
     setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(false); setSaving(false);
   };
 
@@ -2425,7 +2444,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
           {shown.map(n => (
             <div key={n.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === n.id ? 50 : 1 }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap", flex: 1 }}>{n.text}</div>
+                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", flex: 1 }}>{renderText(n.text)}</div>
                 {canEdit && (
                   <div style={{ position: "relative", flexShrink: 0 }}>
                     <button onClick={() => setOpenMenuId(openMenuId === n.id ? null : n.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
@@ -2621,6 +2640,8 @@ function ThemaDetail({ thema, canEdit, onBack }) {
     await supabase.from("notizbuch_eintraege").insert({ thema_id: thema.id, text: text.trim(), created_at: ts });
     const { data: fresh } = await supabase.from("notizbuch_eintraege").select("*").eq("thema_id", thema.id).order("created_at", { ascending: false });
     if (fresh) setEintraege(fresh);
+    const datumStr = new Date(datum).toLocaleDateString("de-DE");
+    await fetch(NOTIZBUCH_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: `📂 **${thema.name}** · ${datumStr}\n${text.trim()}` }) }).catch(()=>{});
     setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(false); setSaving(false);
   };
 
@@ -2663,7 +2684,7 @@ function ThemaDetail({ thema, canEdit, onBack }) {
           {shown.map(e => (
             <div key={e.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "16px 18px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === e.id ? 50 : 1 }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap", flex: 1 }}>{e.text}</div>
+                <div style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, lineHeight: "1.6", flex: 1 }}>{renderText(e.text)}</div>
                 {canEdit && (
                   <div style={{ position: "relative", flexShrink: 0 }}>
                     <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
