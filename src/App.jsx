@@ -2407,8 +2407,10 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
     const { data } = await supabase.from("notizbuch_notizen").insert({ text: text.trim(), created_at: ts, updated_at: ts }).select().single();
     if (data) {
       setNotizen(prev => [data, ...prev].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)));
-      const datumStr = new Date(datum).toLocaleDateString("de-DE");
-      await fetch(NOTIZBUCH_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: `📝 **Allgemeine Notiz** · ${datumStr}\n${text.trim()}` }) }).catch(()=>{});
+      const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+      const d = new Date(datum);
+      const datumStr = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
+      await fetch(NOTIZBUCH_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ description: `**Allgemeine Notiz**\n\u200B\n${text.trim()}`, color: 6057046, footer: { text: "Notizbuch | " + datumStr } }] }) }).catch(()=>{});
     }
     setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(false); setSaving(false);
   };
@@ -2640,8 +2642,10 @@ function ThemaDetail({ thema, canEdit, onBack }) {
     await supabase.from("notizbuch_eintraege").insert({ thema_id: thema.id, text: text.trim(), created_at: ts });
     const { data: fresh } = await supabase.from("notizbuch_eintraege").select("*").eq("thema_id", thema.id).order("created_at", { ascending: false });
     if (fresh) setEintraege(fresh);
-    const datumStr = new Date(datum).toLocaleDateString("de-DE");
-    await fetch(NOTIZBUCH_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: `📂 **${thema.name}** · ${datumStr}\n${text.trim()}` }) }).catch(()=>{});
+    const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+    const d = new Date(datum);
+    const datumStr = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
+    await fetch(NOTIZBUCH_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ description: `**${thema.name}**\n\u200B\n${text.trim()}`, color: 6057046, footer: { text: "Notizbuch | " + datumStr } }] }) }).catch(()=>{});
     setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(false); setSaving(false);
   };
 
