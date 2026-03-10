@@ -2927,7 +2927,7 @@ function WishlistPage() {
                 {e.foto_url && <div onClick={() => setDetailEntry(e)} style={{ position: "absolute", inset: 0, cursor: "pointer" }} />}
                 {canEdit && (
                   <div style={{ position: "absolute", top: "8px", right: "8px" }} onClick={ev => ev.stopPropagation()}>
-                    <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "4px 8px", borderRadius: "6px", lineHeight: 1 }}>⋯</button>
+                    <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "0", width: "28px", height: "28px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>⋯</button>
                     {openMenuId === e.id && (
                       <div style={{ position: "absolute", top: "32px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(e); setForm({ name: e.name, beschreibung: e.beschreibung || "", kategorie: e.kategorie, foto_url: e.foto_url || "" }); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
@@ -2950,7 +2950,21 @@ function WishlistPage() {
       {/* Detail Modal */}
       {detailEntry && (
         <div onClick={() => setDetailEntry(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div onClick={ev => ev.stopPropagation()} style={{ background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+          <div onClick={ev => ev.stopPropagation()} style={{ background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", overflow: "hidden", position: "relative" }}>
+            {/* Buttons overlaid on photo */}
+            <div style={{ position: "absolute", top: "12px", right: "12px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", zIndex: 10 }}>
+              <button onClick={() => setDetailEntry(null)} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              {canEdit && <div style={{ position: "relative" }}>
+                <button onClick={() => setOpenMenuId(openMenuId === "detail" ? null : "detail")} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "16px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>⋯</button>
+                {openMenuId === "detail" && (
+                  <div style={{ position: "absolute", top: "34px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
+                    <button onClick={() => { setEditEntry(detailEntry); setForm({ name: detailEntry.name, beschreibung: detailEntry.beschreibung || "", kategorie: detailEntry.kategorie, foto_url: detailEntry.foto_url || "" }); setDetailEntry(null); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
+                    <div style={{ height: "1px", background: BG_DARK }} />
+                    <button onClick={() => { handleDelete(detailEntry.id); setDetailEntry(null); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
+                  </div>
+                )}
+              </div>}
+            </div>
             {detailEntry.foto_url ? (
               <img src={detailEntry.foto_url} alt={detailEntry.name} style={{ width: "100%", maxHeight: "260px", objectFit: "cover" }} />
             ) : (
@@ -2959,25 +2973,13 @@ function WishlistPage() {
               </div>
             )}
             <div style={{ padding: "22px" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "8px" }}>
-                <div>
-                  <div style={{ fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{detailEntry.name}</div>
-                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px", textTransform: "capitalize" }}>{detailEntry.kategorie}</div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
-                  <button onClick={() => setDetailEntry(null)} style={{ background: "rgba(235,235,230,0.9)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", fontSize: "13px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-                  <div style={{ position: "relative" }}>
-                    <button onClick={() => setOpenMenuId(openMenuId === "detail" ? null : "detail")} style={{ background: "rgba(235,235,230,0.9)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", fontSize: "16px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>⋯</button>
-                    {openMenuId === "detail" && (
-                      <div style={{ position: "absolute", top: "36px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
-                        <button onClick={() => { setEditEntry(detailEntry); setForm({ name: detailEntry.name, beschreibung: detailEntry.beschreibung || "", kategorie: detailEntry.kategorie, foto_url: detailEntry.foto_url || "" }); setDetailEntry(null); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
-                        <div style={{ height: "1px", background: BG_DARK }} />
-                        <button onClick={() => { handleDelete(detailEntry.id); setDetailEntry(null); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
+              <div style={{ marginBottom: "8px" }}>
+                <div style={{ fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{detailEntry.name}</div>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px", textTransform: "capitalize" }}>{detailEntry.kategorie}</div>
+              </div>
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
               {detailEntry.beschreibung && <p style={{ margin: "10px 0 16px", fontSize: "15px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6" }}>{renderText(detailEntry.beschreibung)}</p>}
               <div style={{ height: "1px", background: BG_DARK, marginBottom: "16px" }} />
               {canEdit && (
