@@ -665,8 +665,9 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
           </div>
           {/* Photo upload button (edit mode) */}
           {editMode && (
-            <label style={{ position: "absolute", bottom: "12px", left: "12px", background: "rgba(255,255,255,0.9)", borderRadius: "6px", padding: "5px 10px", fontSize: "11px", color: TEXT_MID, cursor: "pointer", fontFamily: FONT }}>
-              📷 Foto ändern
+            <label style={{ position: "absolute", bottom: "12px", left: "12px", background: "rgba(255,255,255,0.9)", borderRadius: "6px", padding: "7px 10px", fontSize: "11px", color: TEXT_MID, cursor: "pointer", fontFamily: FONT, display: "flex", alignItems: "center", gap: "6px" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="6" width="22" height="15" rx="3"/><path d="M8 6l2-3h4l2 3"/><circle cx="12" cy="13.5" r="3.5"/><circle cx="17.5" cy="9.5" r="1"/></svg>
+              Foto ändern
               <input type="file" accept="image/*" onChange={handleFotoUpload} style={{ display: "none" }} />
             </label>
           )}
@@ -684,10 +685,6 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                     <div style={{ fontSize: "12px", color: TEXT_DARK, fontFamily: FONT }}>{value || "–"}</div>
                   </div>
                 ))}
-              </div>
-              <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-                <button onClick={onClose} style={{ flex: 1, background: BG, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "9px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Schließen</button>
-                {canEdit && <button onClick={() => setEditMode(true)} style={{ flex: 1, background: ACCENT, border: "none", borderRadius: "6px", padding: "9px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>✎ Bearbeiten</button>}
               </div>
               <Tagebuch plantId={plant.id} plantName={plant.name} />
             </>
