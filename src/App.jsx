@@ -1971,6 +1971,202 @@ function BestellungenPage() {
   );
 }
 
+// ── Ableger Page ──────────────────────────────────────────────────────────────
+const ABLEGER_TYPEN = ["Alocasia", "Anthurium", "Begonie", "Hoya", "Monstera", "Philodendron", "Scindapsus", "Epipremnum", "Weitere Pflanzen"];
+const ABLEGER_STANDORTE = ["Bad-Gitter", "Growbox 1", "Growbox 2", "Pflanzentrolli 1", "Pflanzentrolli 2", "Pflanzentrolli 3", "WZ - großes Regal", "WZ - TV Regal"];
+
+function AblegerPage() {
+  const role = useRole();
+  const canEdit = role !== "readonly" && role !== "guest";
+  const [ableger, setAbleger] = useState([]);
+  const [pflanzen, setPflanzen] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editEntry, setEditEntry] = useState(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [gruppierung, setGruppierung] = useState("typ");
+  const [saving, setSaving] = useState(false);
+  const emptyForm = { name: "", nr: "", typ: "Hoya", datum: new Date().toISOString().split("T")[0], standort: "Growbox 1", mutterpflanze_id: "" };
+  const [form, setForm] = useState(emptyForm);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const [{ data: a }, { data: p }] = await Promise.all([
+        supabase.from("ableger").select("*").order("created_at", { ascending: false }),
+        supabase.from("pflanzen").select("id, name").order("name")
+      ]);
+      if (a) setAbleger(a);
+      if (p) setPflanzen(p);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const handleAdd = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    const row = { name: form.name.trim(), nr: form.nr.trim() || null, typ: form.typ, datum: form.datum, standort: form.standort, mutterpflanze_id: form.mutterpflanze_id ? parseInt(form.mutterpflanze_id) : null };
+    const { data } = await supabase.from("ableger").insert(row).select().single();
+    if (data) setAbleger(prev => [data, ...prev]);
+    setForm(emptyForm);
+    setShowAdd(false);
+    setSaving(false);
+  };
+
+  const handleEdit = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    const row = { name: form.name.trim(), nr: form.nr.trim() || null, typ: form.typ, datum: form.datum, standort: form.standort, mutterpflanze_id: form.mutterpflanze_id ? parseInt(form.mutterpflanze_id) : null };
+    const { data } = await supabase.from("ableger").update(row).eq("id", editEntry.id).select().single();
+    if (data) setAbleger(prev => prev.map(x => x.id === data.id ? data : x));
+    setEditEntry(null);
+    setForm(emptyForm);
+    setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("ableger").delete().eq("id", id);
+    setAbleger(prev => prev.filter(x => x.id !== id));
+    setOpenMenuId(null);
+  };
+
+  const openEdit = (a) => {
+    setEditEntry(a);
+    setForm({ name: a.name, nr: a.nr || "", typ: a.typ, datum: a.datum, standort: a.standort, mutterpflanze_id: a.mutterpflanze_id ? String(a.mutterpflanze_id) : "" });
+    setOpenMenuId(null);
+  };
+
+  const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const getMutterName = (id) => pflanzen.find(p => p.id === id)?.name || "–";
+  const getDisplayName = (a) => a.nr ? `${a.name} – Nr. ${a.nr}` : a.name;
+
+  // Grouping
+  const groupKey = gruppierung === "typ" ? "typ" : "standort";
+  const groups = {};
+  ableger.forEach(a => {
+    const key = a[groupKey] || "Sonstige";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(a);
+  });
+  const sortedGroupKeys = Object.keys(groups).sort((a, b) => a.localeCompare(b, "de"));
+
+  const AblegerForm = ({ onSave, onClose, isEdit }) => (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "440px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }}>
+        <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{isEdit ? "Ableger bearbeiten" : "Neuer Ableger"}</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <div style={{ flex: 2 }}><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
+              <input value={form.name} onChange={e => set("name", e.target.value)} placeholder="z.B. Hoya Linearis" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+            </div>
+            <div style={{ flex: 1 }}><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Nr.</label>
+              <input value={form.nr} onChange={e => set("nr", e.target.value)} placeholder="z.B. 1" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+            </div>
+          </div>
+          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Typ</label>
+            <select value={form.typ} onChange={e => set("typ", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+              {ABLEGER_TYPEN.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Standort</label>
+            <select value={form.standort} onChange={e => set("standort", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+              {ABLEGER_STANDORTE.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Mutterpflanze</label>
+            <select value={form.mutterpflanze_id} onChange={e => set("mutterpflanze_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+              <option value="">– keine Verknüpfung –</option>
+              {pflanzen.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
+            <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+          <button onClick={onSave} disabled={saving || !form.name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>
+            {saving ? "Speichert …" : "Speichern"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Unsere Ableger</h1>
+          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{ableger.length} Ableger</p>
+        </div>
+        {canEdit && <button onClick={() => { setForm(emptyForm); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Ableger</button>}
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
+
+      {/* Gruppierung Toggle */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "22px" }}>
+        {[["typ", "Nach Typ"], ["standort", "Nach Standort"]].map(([val, label]) => (
+          <button key={val} onClick={() => setGruppierung(val)} style={{ padding: "7px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: gruppierung === val ? "700" : "400", background: gruppierung === val ? ACCENT : GLASS, color: gruppierung === val ? "#fff" : TEXT_MID }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : ableger.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>🌱</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Ableger erfasst.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {sortedGroupKeys.map(groupName => (
+            <div key={groupName}>
+              <div style={{ fontSize: "11px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "10px" }}>
+                {groupName} <span style={{ fontWeight: "400", color: TEXT_LIGHT }}>({groups[groupName].length})</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {groups[groupName].map(a => (
+                  <div key={a.id} style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "13px 16px", display: "flex", alignItems: "center", gap: "12px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative", zIndex: openMenuId === a.id ? 50 : 1 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{getDisplayName(a)}</div>
+                      <div style={{ display: "flex", gap: "12px", marginTop: "4px", flexWrap: "wrap" }}>
+                        {gruppierung === "typ" && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>📍 {a.standort}</span>}
+                        {gruppierung === "standort" && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>🌿 {a.typ}</span>}
+                        {a.mutterpflanze_id && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>↳ {getMutterName(a.mutterpflanze_id)}</span>}
+                        <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT }}>{formatDate(a.datum)}</span>
+                      </div>
+                    </div>
+                    {canEdit && (
+                      <div style={{ position: "relative", flexShrink: 0 }}>
+                        <button onClick={() => setOpenMenuId(openMenuId === a.id ? null : a.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
+                        {openMenuId === a.id && (
+                          <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
+                            <button onClick={() => openEdit(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>✎ Bearbeiten</button>
+                            <button onClick={() => handleDelete(a.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#b94040", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>🗑 Löschen</button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showAdd && <AblegerForm onSave={handleAdd} onClose={() => setShowAdd(false)} isEdit={false} />}
+      {editEntry && <AblegerForm onSave={handleEdit} onClose={() => { setEditEntry(null); setForm(emptyForm); }} isEdit={true} />}
+    </div>
+  );
+}
+
+
 // ── App ───────────────────────────────────────────────────────────────────────
 // ── Gastzugang Page ───────────────────────────────────────────────────────────
 // ── Shareable Pages Config ───────────────────────────────────────────────────
@@ -2354,7 +2550,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
