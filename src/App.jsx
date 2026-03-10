@@ -2866,10 +2866,18 @@ function WishlistPage() {
   };
 
   const handleDelete = async (id) => {
+    const entry = eintraege.find(e => e.id === id);
     await supabase.from("wishlist").delete().eq("id", id);
     setEintraege(prev => prev.filter(e => e.id !== id));
     setOpenMenuId(null);
     if (detailEntry?.id === id) setDetailEntry(null);
+    if (entry) {
+      const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+      const d = new Date();
+      const datumStr = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
+      const katLabel = entry.kategorie === "watchlist" ? "Watchlist" : "Wishlist";
+      await fetch(WISHLIST_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ description: `**${entry.name}** wurde von der ${katLabel} gelöscht`, color: 0xb94040, footer: { text: "Wishlist | " + datumStr } }] }) }).catch(()=>{});
+    }
   };
 
   const handleMoveKategorie = async (entry) => {
@@ -2894,7 +2902,7 @@ function WishlistPage() {
       <div style={{ display: "flex", gap: "6px", marginBottom: "24px", alignItems: "center" }}>
         {[["wishlist", "Wishlist"], ["watchlist", "Watchlist"]].map(([val, label]) => (
           <button key={val} onClick={() => setKategorie(val)} style={{ padding: "8px 18px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: kategorie === val ? "700" : "400", background: kategorie === val ? ACCENT : GLASS, color: kategorie === val ? "#fff" : TEXT_MID, whiteSpace: "nowrap" }}>
-            {label}
+            {label} ({eintraege.filter(e => e.kategorie === val).length})
           </button>
         ))}
         {canEdit && <button onClick={() => { setForm({ ...emptyForm, kategorie: kategorie }); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 18px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto", whiteSpace: "nowrap" }}>+ Eintrag</button>}
