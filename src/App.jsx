@@ -887,9 +887,9 @@ function GiessplanWidget({ plants, activeTag, onTagClick, onClose }) {
 // ── Pflanzen Page ─────────────────────────────────────────────────────────────
 const GROUP_OPTIONS = [
   { value: "none", label: "Keine Gruppierung" },
-  { value: "typ", label: "Nach Typ" },
-  { value: "standort", label: "Nach Standort" },
-  { value: "aufIm", label: "Nach Herkunft" },
+  { value: "typ", label: "Typ" },
+  { value: "standort", label: "Standort" },
+  
 ];
 
 function PflanzenPage() {
@@ -986,7 +986,7 @@ function PflanzenPage() {
             {GROUP_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           <button onClick={() => setShowGiessplan(v => !v)} style={{ background: BTN, border: `1px solid ${BTN}`, borderRadius: "6px", padding: "7px 14px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap" }}>Gießtage</button>
-          {role !== "guest" && role !== "readonly" && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "7px 18px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap", marginLeft: "auto" }}>+ Pflanze hinzufügen</button>}
+          {role !== "guest" && role !== "readonly" && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "7px 18px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap", marginLeft: "auto" }}>+ Neue Pflanze</button>}
         </div>
       </div>
 
@@ -998,7 +998,7 @@ function PflanzenPage() {
         <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", boxShadow: GLASS_SHADOW }}>
           <span style={{ fontSize: "30px", opacity: 0.3 }}>🌿</span>
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>{search ? "Keine Pflanzen gefunden." : "Noch keine Pflanzen eingetragen."}</p>
-          {!search && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "9px 22px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>+ Pflanze hinzufügen</button>}
+          {!search && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "9px 22px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>+ Neue Pflanze</button>}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
