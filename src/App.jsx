@@ -1526,15 +1526,9 @@ function PflanzenkassePage() {
     <div>
       <div style={{ marginBottom: "8px" }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenkasse</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "einträge" : ""}</p>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{eintraege.length} Eintrag{eintraege.length !== 1 ? "einträge" : ""} · <span style={{ color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontWeight: "600" }}>Kassenstand: {formatBetrag(saldo)}</span></p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "18px" }} />
-
-      {/* Kassenstand */}
-      <div style={{ background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, padding: "12px 16px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", marginBottom: "18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ fontSize: "13px", color: TEXT_MID, letterSpacing: "0.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "600" }}>Kassenstand</div>
-        <div style={{ fontSize: "15px", fontWeight: "700", color: saldo >= 0 ? "#4a7c59" : "#bc5d58", fontFamily: FONT, whiteSpace: "nowrap" }}>{formatBetrag(saldo)}</div>
-      </div>
 
       {/* Filter + Button */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "18px", alignItems: "center" }}>
@@ -1543,8 +1537,7 @@ function PflanzenkassePage() {
           <option value="einnahme">Einnahmen</option>
           <option value="ausgabe">Ausgaben</option>
         </select>
-        <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-          {canEdit && eintraege.length > 0 && <button onClick={() => setShowAbschluss(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, color: TEXT_MID, padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT }}>Jahr abschließen</button>}
+        <div style={{ marginLeft: "auto" }}>
           {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
         </div>
       </div>
@@ -1662,6 +1655,12 @@ function PflanzenkassePage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {canEdit && eintraege.length > 0 && (
+        <div style={{ marginTop: "24px" }}>
+          <button onClick={() => setShowAbschluss(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, color: TEXT_MID, padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT }}>Jahr abschließen</button>
         </div>
       )}
 
