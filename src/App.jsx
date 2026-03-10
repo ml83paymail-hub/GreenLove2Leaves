@@ -2817,8 +2817,7 @@ function WishlistPage() {
   const [form, setForm] = useState({ name: "", beschreibung: "", kategorie: "wishlist", foto_url: "" });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  const load = async () => {
+  const [lightboxPhoto, setLightboxPhoto] = useState(null);  const load = async () => {
     setLoading(true);
     const { data } = await supabase.from("wishlist").select("*").order("created_at", { ascending: false });
     if (data) setEintraege(data);
@@ -2966,7 +2965,7 @@ function WishlistPage() {
               </div>}
             </div>
             {detailEntry.foto_url ? (
-              <img src={detailEntry.foto_url} alt={detailEntry.name} style={{ width: "100%", maxHeight: "260px", objectFit: "cover" }} />
+              <img src={detailEntry.foto_url} alt={detailEntry.name} onClick={() => setLightboxPhoto(detailEntry.foto_url)} style={{ width: "100%", maxHeight: "260px", objectFit: "cover", cursor: "pointer" }} />
             ) : (
               <div style={{ width: "100%", height: "180px", background: BG_DARK, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#EBEBE6" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -3026,12 +3025,16 @@ function WishlistPage() {
           </div>
         </div>
       )}
+      {/* Lightbox */}
+      {lightboxPhoto && (
+        <div onClick={() => setLightboxPhoto(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.92)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <button onClick={() => setLightboxPhoto(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: "36px", height: "36px", cursor: "pointer", color: "#fff", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <img src={lightboxPhoto} alt="" onClick={e => e.stopPropagation()} style={{ maxWidth: "100%", maxHeight: "90vh", objectFit: "contain", borderRadius: "12px" }} />
+        </div>
+      )}
     </div>
   );
 }
-
-
-// ── App ───────────────────────────────────────────────────────────────────────
 // ── Gastzugang Page ───────────────────────────────────────────────────────────
 // ── Shareable Pages Config ───────────────────────────────────────────────────
 const SHAREABLE_PAGES = [
