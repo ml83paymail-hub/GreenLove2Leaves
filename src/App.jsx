@@ -545,11 +545,11 @@ function Tagebuch({ plantId, plantName }) {
                         {canEdit && <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>}
                         <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, top: "100%", marginTop: "4px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 100, overflow: "hidden" }}>
                           <button onClick={() => { setEditingEntry(entry.id); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>✎</span> Bearbeiten
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten
                           </button>
                           <div style={{ height: "1px", background: BG_DARK }} />
-                          <button onClick={() => handleDelete(entry.id)} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#222", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}>
-                            <span>✕</span> Löschen
+                          <button onClick={() => handleDelete(entry.id)} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen
                           </button>
                         </div>
                       </div>
