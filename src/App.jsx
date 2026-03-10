@@ -2932,8 +2932,8 @@ function WishlistPage() {
                 )}
               </div>
               {/* Name */}
-              <div onClick={() => setDetailEntry(e)} style={{ padding: "12px 14px", background: "rgba(255,255,255,0.3)", cursor: "pointer" }}>
-                <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</div>
+              <div onClick={() => setDetailEntry(e)} style={{ padding: "12px 14px", background: ACCENT, cursor: "pointer" }}>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#fff", fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</div>
               </div>
             </div>
           ))}
