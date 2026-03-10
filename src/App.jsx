@@ -2348,6 +2348,7 @@ function NotizbuchPage() {
   const [activeThema, setActiveThema] = useState(null);
   const [addNotiz, setAddNotiz] = useState(false);
   const [addThema, setAddThema] = useState(false);
+  const [suche, setSuche] = useState("");
 
   return (
     <div>
@@ -2355,6 +2356,13 @@ function NotizbuchPage() {
         <h1 style={{ margin: "0 0 16px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Notizbuch</h1>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
+
+      {/* Search */}
+      {!activeThema && (
+        <div style={{ marginBottom: "14px" }}>
+          <input value={suche} onChange={e => setSuche(e.target.value)} placeholder="Suche nach Schlagwort …" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", background: GLASS }} />
+        </div>
+      )}
 
       {/* Tabs + Button */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "26px", alignItems: "center" }}>
@@ -2370,14 +2378,14 @@ function NotizbuchPage() {
         )}
       </div>
 
-      {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} triggerAdd={addNotiz} onAddHandled={() => setAddNotiz(false)} />}
-      {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={setActiveThema} triggerAdd={addThema} onAddHandled={() => setAddThema(false)} />}
+      {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} triggerAdd={addNotiz} onAddHandled={() => setAddNotiz(false)} suche={suche} />}
+      {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={setActiveThema} triggerAdd={addThema} onAddHandled={() => setAddThema(false)} suche={suche} />}
       {tab === "themen" && activeThema && <ThemaDetail thema={activeThema} canEdit={canEdit} onBack={() => setActiveThema(null)} />}
     </div>
   );
 }
 
-function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
+function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled, suche }) {
   const [notizen, setNotizen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -2431,7 +2439,8 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
   };
 
   const formatDate = (d) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  const shown = notizen.slice(0, visible);
+  const filtered = suche?.trim() ? notizen.filter(n => n.text.toLowerCase().includes(suche.toLowerCase())) : notizen;
+  const shown = filtered.slice(0, visible);
 
   return (
     <div>
@@ -2441,6 +2450,8 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
         <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px" }}>
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Notizen vorhanden.</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div style={{ padding: "30px 0", color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Keine Notizen für „{suche}" gefunden.</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {shown.map(n => (
@@ -2464,9 +2475,9 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
               </div>
             </div>
           ))}
-          {visible < notizen.length && (
+          {visible < filtered.length && (
             <button onClick={() => setVisible(v => v + 10)} style={{ alignSelf: "center", marginTop: "4px", background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "9px 22px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>
-              {notizen.length - visible} weitere anzeigen
+              {filtered.length - visible} weitere anzeigen
             </button>
           )}
         </div>
@@ -2491,7 +2502,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled }) {
   );
 }
 
-function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
+function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
   const [themen, setThemen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -2559,8 +2570,28 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled }) {
     setOpenMenuId(null);
   };
 
-  const aktiv = themen.filter(t => t.status !== "abgeschlossen");
-  const abgeschlossen = themen.filter(t => t.status === "abgeschlossen");
+  const [matchingThemaIds, setMatchingThemaIds] = useState(null);
+
+  useEffect(() => {
+    const search = async () => {
+      if (!suche?.trim()) { setMatchingThemaIds(null); return; }
+      const { data } = await supabase.from("notizbuch_eintraege").select("thema_id, text");
+      if (data) {
+        const ids = data.filter(e => e.text?.toLowerCase().includes(suche.toLowerCase())).map(e => e.thema_id);
+        setMatchingThemaIds(ids);
+      }
+    };
+    search();
+  }, [suche]);
+
+  const suchFilter = (t) => {
+    if (!suche?.trim()) return true;
+    if (t.name.toLowerCase().includes(suche.toLowerCase())) return true;
+    if (matchingThemaIds && matchingThemaIds.includes(t.id)) return true;
+    return false;
+  };
+  const aktiv = themen.filter(t => t.status !== "abgeschlossen" && suchFilter(t));
+  const abgeschlossen = themen.filter(t => t.status === "abgeschlossen" && suchFilter(t));
 
   const renderGruppe = (liste, label) => (
     <div style={{ marginBottom: "16px" }}>
