@@ -2002,7 +2002,7 @@ function AblegerPage() {
   const [editEntry, setEditEntry] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [detailEntry, setDetailEntry] = useState(null);
-  const [gruppierung, setGruppierung] = useState("typ");
+  const [gruppierung, setGruppierung] = useState(() => localStorage.getItem("ablegerGruppierung") || "typ");
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
   const [selectMode, setSelectMode] = useState(false);
@@ -2191,7 +2191,7 @@ function AblegerPage() {
 
       {/* Gruppierung Toggle + Buttons */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "22px", alignItems: "center" }}>
-        <select value={gruppierung} onChange={e => setGruppierung(e.target.value)} style={{ background: ACCENT, border: `1px solid ${ACCENT}`, borderRadius: "8px", padding: "7px 8px", fontSize: "12px", color: "#fff", fontFamily: FONT, outline: "none", cursor: "pointer", appearance: "none", WebkitAppearance: "none", fontWeight: "600" }}>
+        <select value={gruppierung} onChange={e => { setGruppierung(e.target.value); localStorage.setItem("ablegerGruppierung", e.target.value); }} style={{ background: ACCENT, border: `1px solid ${ACCENT}`, borderRadius: "8px", padding: "7px 8px", fontSize: "12px", color: "#fff", fontFamily: FONT, outline: "none", cursor: "pointer", appearance: "none", WebkitAppearance: "none", fontWeight: "600" }}>
           <option value="typ">Typ</option>
           <option value="standort">Standort</option>
         </select>
