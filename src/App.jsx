@@ -1372,14 +1372,14 @@ function PostfachPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: "22px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Postfach</h1>
-          <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} unerledigte Nachricht{offen.length !== 1 ? "en" : ""} · automatische Löschung nach 3 Tagen</p>
-        </div>
-        {role !== "guest" && role !== "readonly" && <button data-quickadd-postfach onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Nachricht</button>}
+      <div style={{ marginBottom: "8px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Postfach</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{offen.length} unerledigte Nachricht{offen.length !== 1 ? "en" : ""} · automatische Löschung nach 3 Tagen</p>
       </div>
-      <div style={{ height: "1px", background: BG_DARK, marginBottom: "22px" }} />
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
+        {role !== "guest" && role !== "readonly" && <button data-quickadd-postfach onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Nachricht</button>}
+      </div>
 
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Nachrichten werden geladen …</div>
