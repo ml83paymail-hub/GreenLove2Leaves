@@ -3140,6 +3140,7 @@ function AktuelleAnzeigenPage() {
   const [collapsedGroups, setCollapsedGroups] = useState({ ableger: true, pflanze: true, zubehoer: true });
   const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
 
+  const KATEGORIEN = [
     { key: "ableger", label: "Unsere Ableger" },
     { key: "pflanze", label: "Unsere Pflanzen" },
     { key: "zubehoer", label: "Zubehör" },
