@@ -3075,7 +3075,7 @@ const SHAREABLE_PAGES = [
 
 // ── Aktuelle Anzeigen Page ───────────────────────────────────────────────────
 function AktuelleAnzeigenPage() {
-  const { role } = getSession();
+  const role = useRole();
   const canEdit = role !== "guest" && role !== "readonly";
 
   const [anzeigen, setAnzeigen] = useState([]);
