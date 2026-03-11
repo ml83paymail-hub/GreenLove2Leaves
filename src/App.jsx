@@ -3170,14 +3170,29 @@ function AktuelleAnzeigenPage() {
               <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "12px", fontWeight: "600" }}>{group.label}</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "12px" }}>
                 {group.items.map(a => (
-                  <div key={a.id} onClick={() => setDetail(a)} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, overflow: "hidden", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative" }}>
-                    {a.verkauft && <div style={{ position: "absolute", top: "8px", left: "8px", background: "#bc5d58", color: "#fff", fontSize: "10px", fontWeight: "700", padding: "2px 8px", borderRadius: "20px", fontFamily: FONT, zIndex: 2 }}>Verkauft</div>}
-                    <div style={{ width: "100%", aspectRatio: "1", background: BG_DARK, overflow: "hidden" }}>
-                      {a.foto_url ? <img src={a.foto_url} alt={a.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", opacity: 0.2 }}>📢</div>}
+                  <div key={a.id} onClick={() => setDetail(a)}
+                    style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", transition: "transform 0.15s, box-shadow 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(150,148,130,0.22)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = GLASS_SHADOW; }}
+                  >
+                    {/* Foto */}
+                    <div style={{ aspectRatio: "3/4", background: a.foto_url ? `url(${a.foto_url}) center/cover no-repeat` : BG_DARK, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                      {!a.foto_url && <span style={{ fontSize: "28px", opacity: 0.2 }}>📢</span>}
+                      {a.verkauft && <span style={{ position: "absolute", top: "8px", left: "8px", background: "#bc5d58", color: "#fff", fontSize: "9px", fontWeight: "700", padding: "2px 7px", borderRadius: "20px", fontFamily: FONT }}>Verkauft</span>}
+                      {a.kategorie && <span style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(255,255,255,0.88)", fontSize: "9px", padding: "2px 7px", borderRadius: "20px", color: TEXT_MID, fontFamily: FONT }}>{KATEGORIEN.find(k => k.key === a.kategorie)?.label?.split(" ")[1] || a.kategorie}</span>}
                     </div>
-                    <div style={{ padding: "10px 12px" }}>
-                      <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
-                      {a.preis != null && <div style={{ fontSize: "12px", color: ACCENT, fontWeight: "700", fontFamily: FONT }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</div>}
+                    {/* Info */}
+                    <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.3)" }}>
+                      <div style={{ fontSize: "12px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
+                      <div style={{ height: "1px", background: BG_DARK, marginBottom: "6px" }} />
+                      {a.verkauf_als && <div style={{ display: "flex", justifyContent: "space-between", gap: "6px", marginBottom: "2px" }}>
+                        <span style={{ fontSize: "9px", color: TEXT_LIGHT, fontFamily: FONT }}>Verkauf als</span>
+                        <span style={{ fontSize: "9px", color: TEXT_MID, fontFamily: FONT, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}>{a.verkauf_als}</span>
+                      </div>}
+                      {a.preis != null && <div style={{ display: "flex", justifyContent: "space-between", gap: "6px" }}>
+                        <span style={{ fontSize: "9px", color: TEXT_LIGHT, fontFamily: FONT }}>Preis</span>
+                        <span style={{ fontSize: "9px", fontWeight: "700", color: ACCENT, fontFamily: FONT }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+                      </div>}
                     </div>
                   </div>
                 ))}
