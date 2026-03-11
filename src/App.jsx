@@ -3243,21 +3243,18 @@ function AktuelleAnzeigenPage() {
                 </div>
               )}
 
-              {/* Anzeigen Bilder */}
-              {detail.anzeigen_bilder?.filter(Boolean).length > 0 && (
-                <div style={{ marginBottom: "16px" }}>
-                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "8px" }}>Anzeigenbilder</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
-                    {detail.anzeigen_bilder.filter(Boolean).map((url, i) => (
-                      <img key={i} src={url} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: "6px" }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {detail.anzeigen_text && (
-                <div style={{ marginBottom: "16px" }}>
-                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>Anzeigetext</div>
-                  <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{detail.anzeigen_text}</div>
+              {/* Anzeigen Bilder + Text */}
+              {(detail.anzeigen_bilder?.filter(Boolean).length > 0 || detail.anzeigen_text) && (
+                <div style={{ marginBottom: "16px", padding: "12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "#f9f9f7" }}>
+                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "10px" }}>Anzeige</div>
+                  {detail.anzeigen_bilder?.filter(Boolean).length > 0 && (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: detail.anzeigen_text ? "10px" : 0 }}>
+                      {detail.anzeigen_bilder.filter(Boolean).map((url, i) => (
+                        <img key={i} src={url} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: "6px" }} />
+                      ))}
+                    </div>
+                  )}
+                  {detail.anzeigen_text && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{detail.anzeigen_text}</div>}
                 </div>
               )}
 
