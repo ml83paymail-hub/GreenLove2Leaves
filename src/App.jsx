@@ -527,8 +527,8 @@ function Tagebuch({ plantId, plantName }) {
                 <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>Foto zuordnen (optional)</div>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                   {[
-                    { key: "fotoalbum", label: "📷 Fotoalbum", desc: "Wird als Kartenfoto verwendet" },
-                    { key: "bluetenbilder", label: "🌸 Blütenbilder", desc: "Erscheint in Blütenbilder" },
+                    { key: "fotoalbum", label: "Fotoalbum", desc: "Wird als Kartenfoto verwendet" },
+                    { key: "bluetenbilder", label: "Blütenbilder", desc: "Erscheint in Blütenbilder" },
                   ].map(opt => (
                     <button key={opt.key} onClick={() => setFotoKategorie(fotoKategorie === opt.key ? null : opt.key)}
                       title={opt.desc}
@@ -560,7 +560,7 @@ function Tagebuch({ plantId, plantName }) {
                   <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: "8px 8px 0 0" }} />
                   {entry.fotoKategorie && (
                     <span style={{ position: "absolute", top: "8px", left: "8px", background: ACCENT, color: WHITE, fontSize: "9px", fontWeight: "600", padding: "2px 8px", borderRadius: "20px", fontFamily: FONT }}>
-                      {entry.fotoKategorie === "fotoalbum" ? "📷 Fotoalbum" : "🌸 Blütenbilder"}
+                      {entry.fotoKategorie === "fotoalbum" ? "Fotoalbum" : "Blütenbilder"}
                     </span>
                   )}
                 </div>
