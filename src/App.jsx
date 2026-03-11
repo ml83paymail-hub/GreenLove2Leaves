@@ -3280,7 +3280,7 @@ function AktuelleAnzeigenPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
               {grouped.flatMap(g => g.items).map(a => (
                   <div key={a.id} onClick={() => setDetail(a)}
-                    style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", transition: "transform 0.15s, box-shadow 0.15s" }}
+                    style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${ACCENT}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", transition: "transform 0.15s, box-shadow 0.15s" }}
                     onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(150,148,130,0.22)"; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = GLASS_SHADOW; }}
                   >
@@ -3288,7 +3288,7 @@ function AktuelleAnzeigenPage() {
                       {!a.foto_url && <span style={{ fontSize: "28px", opacity: 0.2 }}>📢</span>}
                       {a.preis != null && <span style={{ position: "absolute", bottom: "8px", left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px", fontFamily: FONT, whiteSpace: "nowrap" }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>}
                     </div>
-                    <div style={{ padding: "8px 10px", background: "rgba(255,255,255,0.3)" }}>
+                    <div style={{ padding: "8px 10px", background: BG }}>
                       <div style={{ fontSize: "12px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
                     </div>
                   </div>
