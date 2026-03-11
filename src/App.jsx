@@ -3086,7 +3086,7 @@ function AktuelleAnzeigenPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const emptyForm = { name: "", foto_url: "", verkauf_als: "", preis: "", verkauft: false, ableger_id: "", kategorie: "ableger", anzeigen_bilder: [], anzeigen_text: "", social_bild_url: "", social_text: "✩ Pflanze / Zubehör: \n✩ Anmerkung: \n✩ Preis: \n✩ Versand: via DHL mit Sendungsnummer ab 7 €\n✩ Abholung: möglich in 282... Bremen", anzahl: 1 };
+  const emptyForm = { name: "", foto_url: "", verkauf_als: "", preis: "", verkauft: false, ableger_id: "", kategorie: "ableger", anzeigen_bilder: [], anzeigen_text: "Ich biete hier \n\nPrivatverkauf daher gebe ich keine Garantie oder Gewährleistung. Packe aber mit bestem Wissen und Gewissen.\nBei Fragen meldet euch doch gerne.\nVersand erfolgt Montags - Mittwochs.", social_bild_url: "", social_text: "✩ Pflanze / Zubehör: \n✩ Anmerkung: \n✩ Preis: \n✩ Versand: via DHL mit Sendungsnummer ab 7 €\n✩ Abholung: möglich in 282... Bremen", anzahl: 1 };
   const [form, setForm] = useState(emptyForm);
   const [fotoFile, setFotoFile] = useState(null);
   const [anzeigeFiles, setAnzeigeFiles] = useState([null, null, null, null]);
