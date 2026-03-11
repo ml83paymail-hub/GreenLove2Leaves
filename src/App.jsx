@@ -3135,6 +3135,7 @@ function AktuelleAnzeigenPage() {
   const [showVerkauftModal, setShowVerkauftModal] = useState(false);
   const [verkauftAnzeige, setVerkauftAnzeige] = useState(null);
   const [verkauftAnzahl, setVerkauftAnzahl] = useState("1");
+  const [detailMenuOpen, setDetailMenuOpen] = useState(false);
 
   const openVerkauftModal = (anzeige) => {
     // If already verkauft → just toggle back to aktiv
@@ -3300,11 +3301,30 @@ function AktuelleAnzeigenPage() {
       {/* Detail Modal */}
       {detail && (
         <div onClick={() => setDetail(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: BG, borderRadius: "16px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             {/* Foto */}
             <div style={{ position: "relative" }}>
               {detail.foto_url ? <img src={detail.foto_url} alt={detail.name} style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", borderRadius: "16px 16px 0 0" }} /> : <div style={{ width: "100%", aspectRatio: "4/3", background: BG_DARK, borderRadius: "16px 16px 0 0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", opacity: 0.2 }}>📢</div>}
-              <button onClick={() => setDetail(null)} style={{ position: "absolute", top: "12px", right: "12px", width: "32px", height: "32px", borderRadius: "50%", background: "rgba(0,0,0,0.45)", border: "none", color: "#fff", fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              {/* Top-right buttons */}
+              <div style={{ position: "absolute", top: "12px", right: "12px", display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
+                <button onClick={() => { setDetail(null); setDetailMenuOpen(false); }} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(0,0,0,0.45)", border: "none", color: "#fff", fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+                {canEdit && (
+                  <div style={{ position: "relative" }}>
+                    <button onClick={() => setDetailMenuOpen(o => !o)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(0,0,0,0.45)", border: "none", color: "#fff", fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>⋯</button>
+                    {detailMenuOpen && (
+                      <div style={{ position: "absolute", top: "36px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
+                        <button onClick={() => { setDetailMenuOpen(false); /* TODO: edit */ }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten
+                        </button>
+                        <div style={{ height: "1px", background: BG_DARK }} />
+                        <button onClick={() => { setDetailMenuOpen(false); handleDelete(detail); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div style={{ padding: "20px" }}>
@@ -3354,12 +3374,6 @@ function AktuelleAnzeigenPage() {
                 </div>
               )}
 
-              {/* Delete Button */}
-              {canEdit && (
-                <button onClick={() => handleDelete(detail)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "#f7eded", color: "#bc5d58", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginTop: "4px" }}>
-                  Anzeige löschen{detail.ableger_id ? " (+ verknüpfter Ableger)" : ""}
-                </button>
-              )}
             </div>
           </div>
         </div>
