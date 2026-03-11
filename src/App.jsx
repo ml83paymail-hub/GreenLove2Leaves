@@ -3275,6 +3275,24 @@ function AktuelleAnzeigenPage() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Guest: flat grid, no group headers */}
+          {!canEdit ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
+              {grouped.flatMap(g => g.items).map(a => (
+                  <div key={a.id} onClick={() => setDetail(a)}
+                    style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", transition: "transform 0.15s, box-shadow 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(150,148,130,0.22)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = GLASS_SHADOW; }}
+                  >
+                    <div style={{ aspectRatio: "3/4", background: a.foto_url ? `url(${a.foto_url}) center/cover no-repeat` : BG_DARK, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                      {!a.foto_url && <span style={{ fontSize: "28px", opacity: 0.2 }}>📢</span>}
+                      {a.preis != null && <span style={{ position: "absolute", bottom: "8px", left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px", fontFamily: FONT, whiteSpace: "nowrap" }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>}
+                    </div>
+                  </div>
+              ))}
+            </div>
+          ) : (
+          <>
           {grouped.map(group => (
             <div key={group.key}>
               <button onClick={() => toggleGroup(group.key)} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "14px", padding: 0, width: "100%", textAlign: "left" }}>
@@ -3351,6 +3369,8 @@ function AktuelleAnzeigenPage() {
                 </div>
               )}
             </div>
+          )}
+          </>
           )}
         </div>
       )}
@@ -3672,134 +3692,208 @@ function AktuelleAnzeigenPage() {
 
 // One single share entry: token + pages[] + active
 function GastzugangPage() {
-  const [shareData, setShareData] = useState(null); // { id, token, pages, active }
+  const [privateShare, setPrivateShare] = useState(null);
+  const [publicShare, setPublicShare] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState([]);
-  const [active, setActive] = useState(false);
-  const [copying, setCopying] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [privateSelected, setPrivateSelected] = useState([]);
+  const [savingPrivate, setSavingPrivate] = useState(false);
+  const [savingPublic, setSavingPublic] = useState(false);
+  const [activePrivate, setActivePrivate] = useState(false);
+  const [activePublic, setActivePublic] = useState(false);
+  const [copyingPrivate, setCopyingPrivate] = useState(false);
+  const [copyingPublic, setCopyingPublic] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.from("share_links").select("*").limit(1).maybeSingle();
+      const { data } = await supabase.from("share_links").select("*");
       if (data) {
-        setShareData(data);
-        setActive(data.active);
-        try { setSelected(JSON.parse(data.page_id)); } catch { setSelected([data.page_id]); }
+        const pub = data.find(d => { try { return JSON.parse(d.page_id).includes("anzeigen"); } catch { return d.page_id === "anzeigen"; } });
+        const priv = data.find(d => { try { const p = JSON.parse(d.page_id); return !p.includes("anzeigen"); } catch { return d.page_id !== "anzeigen"; } });
+        if (pub) { setPublicShare(pub); setActivePublic(pub.active); }
+        if (priv) { setPrivateShare(priv); setActivePrivate(priv.active); try { setPrivateSelected(JSON.parse(priv.page_id)); } catch { setPrivateSelected([priv.page_id]); } }
       }
       setLoading(false);
     };
     load();
   }, []);
 
-  const token = shareData?.token || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2));
-  const url = active && selected.length > 0 ? `${window.location.origin}${window.location.pathname}#share/${shareData?.token}` : null;
+  // Live countdown every 10s
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 10000);
+    return () => clearInterval(t);
+  }, []);
 
-  const togglePage = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  const PRIVATE_PAGES = SHAREABLE_PAGES.filter(p => p.id !== "anzeigen");
+  const togglePrivatePage = (id) => setPrivateSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
-  const handleSave = async () => {
-    if (selected.length === 0) return;
-    setSaving(true);
-    const pageJson = JSON.stringify(selected);
-    const newToken = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const formatRemaining = (ms) => {
+    if (ms <= 0) return "Abgelaufen";
+    const totalMin = Math.floor(ms / 60000);
+    if (totalMin < 60) return `${totalMin} Minute${totalMin !== 1 ? "n" : ""}`;
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return m > 0 ? `${h} Std. ${m} Min.` : `${h} Stunde${h !== 1 ? "n" : ""}`;
+  };
+
+  const genToken = () => Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+
+  // Generate or renew private link
+  const handlePrivateSave = async () => {
+    if (privateSelected.length === 0) return;
+    setSavingPrivate(true);
+    const pageJson = JSON.stringify(privateSelected);
+    const newToken = genToken();
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-    if (shareData) {
-      const { data } = await supabase.from("share_links").update({ page_id: pageJson, token: newToken, active: true, expires_at: expiresAt }).eq("id", shareData.id).select().single();
-      if (data) { setShareData(data); setActive(true); }
+    if (privateShare) {
+      const { data } = await supabase.from("share_links").update({ page_id: pageJson, token: newToken, active: true, expires_at: expiresAt }).eq("id", privateShare.id).select().single();
+      if (data) { setPrivateShare(data); setActivePrivate(true); }
     } else {
       const { data } = await supabase.from("share_links").insert({ page_id: pageJson, token: newToken, active: true, expires_at: expiresAt }).select().single();
-      if (data) { setShareData(data); setActive(true); }
+      if (data) { setPrivateShare(data); setActivePrivate(true); }
     }
-    setSaving(false);
+    setSavingPrivate(false);
   };
 
-  const handleToggleActive = async () => {
-    const newActive = !active;
-    setActive(newActive);
-    if (shareData) {
-      await supabase.from("share_links").update({ active: newActive }).eq("id", shareData.id);
+  // Generate or renew public link
+  const handlePublicSave = async () => {
+    setSavingPublic(true);
+    const pageJson = JSON.stringify(["anzeigen"]);
+    const newToken = genToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    if (publicShare) {
+      const { data } = await supabase.from("share_links").update({ page_id: pageJson, token: newToken, active: true, expires_at: expiresAt }).eq("id", publicShare.id).select().single();
+      if (data) { setPublicShare(data); setActivePublic(true); }
+    } else {
+      const { data } = await supabase.from("share_links").insert({ page_id: pageJson, token: newToken, active: true, expires_at: expiresAt }).select().single();
+      if (data) { setPublicShare(data); setActivePublic(true); }
+    }
+    setSavingPublic(false);
+  };
+
+  const handleTogglePrivate = async () => {
+    const v = !activePrivate;
+    if (v) {
+      // Einschalten → immer neuen Link generieren
+      await handlePrivateSave();
+    } else {
+      setActivePrivate(false);
+      if (privateShare) await supabase.from("share_links").update({ active: false }).eq("id", privateShare.id);
+    }
+  };
+  const handleTogglePublic = async () => {
+    const v = !activePublic;
+    if (v) {
+      // Einschalten → immer neuen Link generieren
+      await handlePublicSave();
+    } else {
+      setActivePublic(false);
+      if (publicShare) await supabase.from("share_links").update({ active: false }).eq("id", publicShare.id);
     }
   };
 
-  const handleCopy = async () => {
-    const u = shareData ? `${window.location.origin}${window.location.pathname}#share/${shareData.token}` : null;
-    if (!u) return;
-    await navigator.clipboard.writeText(u);
-    setCopying(true);
-    setTimeout(() => setCopying(false), 2000);
+  const copy = async (token, setCopying) => {
+    await navigator.clipboard.writeText(`${window.location.origin}${window.location.pathname}#share/${token}`);
+    setCopying(true); setTimeout(() => setCopying(false), 2000);
   };
 
-  const sharedUrl = shareData ? `${window.location.origin}${window.location.pathname}#share/${shareData.token}` : null;
+  const LinkBlock = ({ share, active, saving, copying, setCopying, onSave, onToggle, label, duration, btnLabel }) => {
+    const url = share ? `${window.location.origin}${window.location.pathname}#share/${share.token}` : null;
+    const exp = share?.expires_at ? new Date(share.expires_at) : null;
+    const remainMs = exp ? exp - now : null;
+    const expired = remainMs !== null && remainMs <= 0;
+    const effectiveActive = active && !expired;
+    const urgent = remainMs !== null && remainMs > 0 && remainMs < 5 * 60000;
+
+    return (
+      <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{label}</div>
+            <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>⏱ {duration}</div>
+          </div>
+          {share && (
+            <div onClick={onToggle} style={{ width: "44px", height: "24px", borderRadius: "12px", background: effectiveActive ? ACCENT : BG_DARK, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+              <div style={{ position: "absolute", top: "3px", left: effectiveActive ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+            </div>
+          )}
+        </div>
+
+        {/* Countdown */}
+        {share && effectiveActive && remainMs !== null && (
+          <div style={{ fontSize: "11px", fontFamily: FONT, color: urgent ? "#bc5d58" : ACCENT }}>
+            {`⏱ Noch ${formatRemaining(remainMs)} gültig`}
+          </div>
+        )}
+        {share && expired && active && (
+          <div style={{ fontSize: "11px", fontFamily: FONT, color: "#bc5d58" }}>⚠ Abgelaufen – Toggle einschalten für neuen Link</div>
+        )}
+
+        {/* URL row */}
+        {share && effectiveActive && url && (
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{ flex: 1, background: BG, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", color: TEXT_MID, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: `1px solid ${BG_DARK}` }}>{url}</div>
+            <button onClick={() => copy(share.token, setCopying)} style={{ background: copying ? ACCENT : BTN, border: "none", borderRadius: "6px", padding: "8px 14px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, whiteSpace: "nowrap" }}>
+              {copying ? "✓ Kopiert" : "Kopieren"}
+            </button>
+          </div>
+        )}
+
+        {/* Generate / Renew button */}
+        <button onClick={onSave} disabled={saving} style={{ alignSelf: "flex-start", background: ACCENT, border: "none", borderRadius: "6px", padding: "8px 18px", cursor: "pointer", fontSize: "12px", color: "#fff", fontFamily: FONT, fontWeight: "600", opacity: saving ? 0.7 : 1 }}>
+          {saving ? "Generiert …" : share ? (expired ? "Neu generieren" : "Neu generieren") : btnLabel}
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div>
       <div style={{ marginBottom: "22px" }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Gastzugang</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Einen Link generieren – nur Leseansicht, kein Login nötig.</p>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Links generieren – nur Leseansicht, kein Login nötig.</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
 
       {loading ? (
         <div style={{ padding: "40px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "560px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px", maxWidth: "560px" }}>
 
-          {/* Page selection */}
+          {/* Private Seiten */}
           <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-            <div style={{ fontSize: "12px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "14px" }}>Seiten auswählen</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {SHAREABLE_PAGES.map(page => (
-                <div key={page.id} onClick={() => togglePage(page.id)} style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
-                  <div style={{ width: "18px", height: "18px", border: `2px solid ${ACCENT}`, borderRadius: "3px", background: selected.includes(page.id) ? ACCENT : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    {selected.includes(page.id) && <span style={{ color: "white", fontSize: "12px", lineHeight: 1 }}>✓</span>}
+            <div style={{ fontSize: "12px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "14px" }}>Private Seiten</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+              {PRIVATE_PAGES.map(page => (
+                <div key={page.id} onClick={() => togglePrivatePage(page.id)} style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
+                  <div style={{ width: "18px", height: "18px", border: `2px solid ${ACCENT}`, borderRadius: "3px", background: privateSelected.includes(page.id) ? ACCENT : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {privateSelected.includes(page.id) && <span style={{ color: "white", fontSize: "12px", lineHeight: 1 }}>✓</span>}
                   </div>
                   <span style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT }}>{page.label}</span>
                 </div>
               ))}
             </div>
-            <button onClick={handleSave} disabled={saving || selected.length === 0} style={{ marginTop: "16px", background: selected.length > 0 ? ACCENT : BG_DARK, border: "none", borderRadius: "6px", padding: "9px 20px", cursor: selected.length > 0 ? "pointer" : "default", fontSize: "12px", color: "#fff", fontFamily: FONT }}>
-              {saving ? "Speichert …" : shareData ? "Auswahl speichern" : "Link generieren"}
-            </button>
+            <LinkBlock share={privateShare} active={activePrivate} saving={savingPrivate} copying={copyingPrivate} setCopying={setCopyingPrivate} onSave={handlePrivateSave} onToggle={handleTogglePrivate} label="Link" duration="30 Minuten gültig" btnLabel="Link generieren" />
           </div>
 
-          {/* Link + toggle */}
-          {shareData && (
-            <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-                <div>
-                  <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Link</div>
-                  <div style={{ fontSize: "11px", color: active ? ACCENT : TEXT_LIGHT, fontFamily: FONT, marginTop: "2px" }}>{active ? "Aktiv – Zugriff möglich" : "Deaktiviert – kein Zugriff"}</div>
-                </div>
-                <div onClick={handleToggleActive} style={{ width: "44px", height: "24px", borderRadius: "12px", background: active ? ACCENT : BG_DARK, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
-                  <div style={{ position: "absolute", top: "3px", left: active ? "23px" : "3px", width: "18px", height: "18px", borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
-                </div>
+          {/* Öffentliche Seiten */}
+          <div style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, padding: "18px 20px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+            <div style={{ fontSize: "12px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "14px" }}>Öffentliche Seiten</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+              <div style={{ width: "18px", height: "18px", border: `2px solid ${ACCENT}`, borderRadius: "3px", background: ACCENT, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: "white", fontSize: "12px", lineHeight: 1 }}>✓</span>
               </div>
-              {active && sharedUrl && (() => {
-                const exp = shareData?.expires_at ? new Date(shareData.expires_at) : null;
-                const remaining = exp ? Math.max(0, Math.round((exp - Date.now()) / 60000)) : null;
-                return (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {remaining !== null && (
-                      <div style={{ fontSize: "11px", color: remaining < 5 ? "#bc5d58" : ACCENT, fontFamily: FONT }}>
-                        ⏱ Läuft ab in {remaining} Minute{remaining !== 1 ? "n" : ""}
-                      </div>
-                    )}
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                      <div style={{ flex: 1, background: BG, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", color: TEXT_MID, fontFamily: FONT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: `1px solid ${BG_DARK}` }}>{sharedUrl}</div>
-                      <button onClick={handleCopy} style={{ background: copying ? ACCENT : BTN, border: "none", borderRadius: "6px", padding: "8px 14px", cursor: "pointer", fontSize: "11px", color: "#fff", fontFamily: FONT, whiteSpace: "nowrap", transition: "background 0.2s" }}>
-                        {copying ? "✓ Kopiert" : "Kopieren"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()}
+              <span style={{ fontSize: "14px", color: TEXT_DARK, fontFamily: FONT }}>Pflanzenliste</span>
             </div>
-          )}
+            <LinkBlock share={publicShare} active={activePublic} saving={savingPublic} copying={copyingPublic} setCopying={setCopyingPublic} onSave={handlePublicSave} onToggle={handleTogglePublic} label="Link" duration="24 Stunden gültig" btnLabel="Link generieren" />
+          </div>
+
         </div>
       )}
     </div>
   );
 }
+
 
 function SharedView({ token }) {
   const [status, setStatus] = useState("loading");
