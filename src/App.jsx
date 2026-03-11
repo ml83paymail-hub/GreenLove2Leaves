@@ -3137,8 +3137,8 @@ function AktuelleAnzeigenPage() {
     await handleUpdate(updated);
   };
 
-  const KATEGORIEN = [
-    { key: "ableger", label: "Unsere Ableger" },
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
     { key: "pflanze", label: "Unsere Pflanzen" },
     { key: "zubehoer", label: "Zubehör" },
   ];
@@ -3164,11 +3164,17 @@ function AktuelleAnzeigenPage() {
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Keine aktiven Anzeigen.</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {grouped.map(group => (
             <div key={group.key}>
-              <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "12px", fontWeight: "600" }}>{group.label}</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "12px" }}>
+              <button onClick={() => toggleGroup(group.key)} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "14px", padding: 0, width: "100%", textAlign: "left" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: ACCENT, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>{group.label}</span>
+                <span style={{ fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT }}>({group.items.length})</span>
+                <div style={{ flex: 1, height: "1px", background: BG_DARK }} />
+                <span style={{ fontSize: "13px", color: TEXT_LIGHT }}>{collapsedGroups[group.key] ? "▶" : "▼"}</span>
+              </button>
+              {!collapsedGroups[group.key] && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
                 {group.items.map(a => (
                   <div key={a.id} onClick={() => setDetail(a)}
                     style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", transition: "transform 0.15s, box-shadow 0.15s" }}
@@ -3197,6 +3203,7 @@ function AktuelleAnzeigenPage() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
           ))}
         </div>
