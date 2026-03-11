@@ -3279,8 +3279,13 @@ function AktuelleAnzeigenPage() {
               </div>
 
               {/* Foto */}
-              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Titelfoto</label>
-                <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0])} style={{ fontSize: "13px", fontFamily: FONT }} />
+              <div>
+                <label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Titelfoto</label>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 16px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID, background: "none" }}>
+                  📷 {fotoFile ? fotoFile.name.slice(0, 20) + "…" : "Foto auswählen"}
+                  <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0])} style={{ display: "none" }} />
+                </label>
+                {fotoFile && <div style={{ marginTop: "8px", fontSize: "12px", color: ACCENT, fontFamily: FONT }}>✓ Ausgewählt</div>}
               </div>
 
               {/* Verkauf als */}
@@ -3324,7 +3329,11 @@ function AktuelleAnzeigenPage() {
                 <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "10px" }}>Social Media</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Bild</label>
-                    <input type="file" accept="image/*" onChange={e => setSocialFile(e.target.files[0])} style={{ fontSize: "13px", fontFamily: FONT }} />
+                    <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 16px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID, background: "none" }}>
+                      📷 {socialFile ? socialFile.name.slice(0, 20) + "…" : "Foto auswählen"}
+                      <input type="file" accept="image/*" onChange={e => setSocialFile(e.target.files[0])} style={{ display: "none" }} />
+                    </label>
+                    {socialFile && <div style={{ marginTop: "6px", fontSize: "12px", color: ACCENT, fontFamily: FONT }}>✓ Ausgewählt</div>}
                   </div>
                   <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Text</label>
                     <textarea value={form.social_text} onChange={e => set("social_text", e.target.value)} rows={2} placeholder="Caption für Social Media …" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
