@@ -3082,6 +3082,7 @@ function AktuelleAnzeigenPage() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null); // opened anzeige
   const [showAdd, setShowAdd] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -3129,6 +3130,35 @@ function AktuelleAnzeigenPage() {
       const { data } = await supabase.from("anzeigen").insert(payload).select().single();
       if (data) setAnzeigen(prev => [data, ...prev]);
       setShowAdd(false);
+      setForm(emptyForm);
+      setFotoFile(null);
+      setAnzeigeFiles([null, null, null, null]);
+      setSocialFile(null);
+    } catch (e) { console.error(e); }
+    setSaving(false);
+  };
+
+  const handleEditSave = async () => {
+    setSaving(true);
+    try {
+      let foto_url = form.foto_url;
+      if (fotoFile) foto_url = await uploadPhoto(fotoFile, "anzeigen");
+
+      let anzeigen_bilder = [...(form.anzeigen_bilder || [null, null, null, null])];
+      for (let i = 0; i < 4; i++) {
+        if (anzeigeFiles[i]) anzeigen_bilder[i] = await uploadPhoto(anzeigeFiles[i], "anzeigen");
+      }
+
+      let social_bild_url = form.social_bild_url;
+      if (socialFile) social_bild_url = await uploadPhoto(socialFile, "anzeigen");
+
+      const payload = { name: form.name, foto_url, verkauf_als: form.verkauf_als, preis: form.preis ? parseFloat(form.preis) : null, ableger_id: form.ableger_id ? parseInt(form.ableger_id) : null, kategorie: form.kategorie, anzeigen_bilder, anzeigen_text: form.anzeigen_text, social_bild_url, social_text: form.social_text, anzahl: parseInt(form.anzahl) || 1 };
+      const { data } = await supabase.from("anzeigen").update(payload).eq("id", detail.id).select().single();
+      if (data) {
+        setAnzeigen(prev => prev.map(x => x.id === data.id ? data : x));
+        setDetail(data);
+      }
+      setShowEdit(false);
       setForm(emptyForm);
       setFotoFile(null);
       setAnzeigeFiles([null, null, null, null]);
@@ -3339,7 +3369,7 @@ function AktuelleAnzeigenPage() {
                       <>
                         <div onClick={() => setDetailMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                         <div style={{ position: "absolute", top: "36px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
-                        <button onClick={() => { setDetailMenuOpen(false); /* TODO: edit */ }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                        <button onClick={() => { setDetailMenuOpen(false); setForm({ name: detail.name, foto_url: detail.foto_url || "", verkauf_als: detail.verkauf_als || "", preis: detail.preis ?? "", ableger_id: detail.ableger_id || "", kategorie: detail.kategorie || "ableger", anzeigen_bilder: detail.anzeigen_bilder || [], anzeigen_text: detail.anzeigen_text || "", social_bild_url: detail.social_bild_url || "", social_text: detail.social_text || "", anzahl: detail.anzahl || 1 }); setFotoFile(null); setAnzeigeFiles([null,null,null,null]); setSocialFile(null); setShowEdit(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten
                         </button>
                         <div style={{ height: "1px", background: BG_DARK }} />
@@ -3504,6 +3534,106 @@ function AktuelleAnzeigenPage() {
           </div>
         </div>
       )}
+      {/* Edit Modal */}
+      {showEdit && (
+        <div onClick={() => { setShowEdit(false); setForm(emptyForm); }} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 18px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Anzeige bearbeiten</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+              {/* Kategorie */}
+              <div>
+                <label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Kategorie</label>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {KATEGORIEN.map(k => (
+                    <button key={k.key} onClick={() => set("kategorie", k.key)} style={{ padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: form.kategorie === k.key ? "700" : "400", background: form.kategorie === k.key ? ACCENT : BG_DARK, color: form.kategorie === k.key ? "#fff" : TEXT_MID }}>{k.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Name */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
+                <input value={form.name} onChange={e => set("name", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Foto */}
+              <div>
+                <label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Titelfoto</label>
+                {form.foto_url && !fotoFile && <img src={form.foto_url} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", marginBottom: "6px", display: "block" }} />}
+                <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 16px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID, background: "none" }}>
+                  📷 {fotoFile ? fotoFile.name.slice(0, 20) + "…" : "Foto ersetzen"}
+                  <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0])} style={{ display: "none" }} />
+                </label>
+              </div>
+
+              {/* Verkauf als */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Verkauf als</label>
+                <input value={form.verkauf_als} onChange={e => set("verkauf_als", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Preis */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Preis (€)</label>
+                <input type="number" step="0.01" value={form.preis} onChange={e => set("preis", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Anzahl */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Anzahl</label>
+                <input type="number" min="1" value={form.anzahl} onChange={e => set("anzahl", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Ableger Verknüpfung */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Ableger verknüpfen</label>
+                <select value={form.ableger_id} onChange={e => set("ableger_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", background: "#fff", boxSizing: "border-box" }}>
+                  <option value="">– kein Ableger –</option>
+                  {ablegerList.map(ab => <option key={ab.id} value={ab.id}>{ab.name}{ab.mutterpflanze ? ` (${ab.mutterpflanze})` : ""}</option>)}
+                </select>
+              </div>
+
+              {/* Anzeigen Bilder */}
+              <div>
+                <label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Anzeigenbilder (max. 4)</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
+                  {[0, 1, 2, 3].map(i => (
+                    <label key={i} style={{ aspectRatio: "1", borderRadius: "8px", border: `1px dashed ${BG_DARK}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: anzeigeFiles[i] ? "#f0f4f0" : "#fafaf8", overflow: "hidden", position: "relative" }}>
+                      {form.anzeigen_bilder?.[i] && !anzeigeFiles[i] ? <img src={form.anzeigen_bilder[i]} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : anzeigeFiles[i] ? <span style={{ fontSize: "20px" }}>✓</span> : <span style={{ fontSize: "20px", opacity: 0.3 }}>+</span>}
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = [...anzeigeFiles]; f[i] = e.target.files[0]; setAnzeigeFiles(f); }} />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Anzeigen Text */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Anzeigetext</label>
+                <textarea value={form.anzeigen_text} onChange={e => set("anzeigen_text", e.target.value)} rows={3} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Social Media */}
+              <div style={{ padding: "12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "#f9f9f7" }}>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "10px" }}>Social Media</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Bild</label>
+                    {form.social_bild_url && !socialFile && <img src={form.social_bild_url} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", marginBottom: "6px", display: "block" }} />}
+                    <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "9px 16px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID, background: "none" }}>
+                      📷 {socialFile ? socialFile.name.slice(0, 20) + "…" : "Foto ersetzen"}
+                      <input type="file" accept="image/*" onChange={e => setSocialFile(e.target.files[0])} style={{ display: "none" }} />
+                    </label>
+                  </div>
+                  <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Text</label>
+                    <textarea value={form.social_text} onChange={e => set("social_text", e.target.value)} rows={2} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+              <button onClick={() => { setShowEdit(false); setForm(emptyForm); setFotoFile(null); setAnzeigeFiles([null,null,null,null]); setSocialFile(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleEditSave} disabled={saving || !form.name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Verkauft Anzahl Modal */}
       {showVerkauftModal && verkauftAnzeige && (
         <div onClick={() => setShowVerkauftModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
