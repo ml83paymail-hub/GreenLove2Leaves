@@ -3061,7 +3061,7 @@ function AktuelleAnzeigenPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const emptyForm = { name: "", foto_url: "", verkauf_als: "", preis: "", verkauft: false, ableger_id: "", kategorie: "ableger", anzeigen_bilder: [], anzeigen_text: "", social_bild_url: "", social_text: "✩ Pflanze / Zubehör: \n✩ Anmerkung: \n✩ Preis: \n✩ Versand: via DHL mit Sendungsnummer ab 7 €\n✩ Abholung: möglich in 282... Bremen" };
+  const emptyForm = { name: "", foto_url: "", verkauf_als: "", preis: "", verkauft: false, ableger_id: "", kategorie: "ableger", anzeigen_bilder: [], anzeigen_text: "", social_bild_url: "", social_text: "✩ Pflanze / Zubehör: \n✩ Anmerkung: \n✩ Preis: \n✩ Versand: via DHL mit Sendungsnummer ab 7 €\n✩ Abholung: möglich in 282... Bremen", anzahl: 1 };
   const [form, setForm] = useState(emptyForm);
   const [fotoFile, setFotoFile] = useState(null);
   const [anzeigeFiles, setAnzeigeFiles] = useState([null, null, null, null]);
@@ -3101,7 +3101,7 @@ function AktuelleAnzeigenPage() {
       let social_bild_url = form.social_bild_url;
       if (socialFile) social_bild_url = await uploadPhoto(socialFile, "anzeigen");
 
-      const payload = { name: form.name, foto_url, verkauf_als: form.verkauf_als, preis: form.preis ? parseFloat(form.preis) : null, verkauft: false, ableger_id: form.ableger_id ? parseInt(form.ableger_id) : null, kategorie: form.kategorie, anzeigen_bilder, anzeigen_text: form.anzeigen_text, social_bild_url, social_text: form.social_text };
+      const payload = { name: form.name, foto_url, verkauf_als: form.verkauf_als, preis: form.preis ? parseFloat(form.preis) : null, verkauft: false, ableger_id: form.ableger_id ? parseInt(form.ableger_id) : null, kategorie: form.kategorie, anzeigen_bilder, anzeigen_text: form.anzeigen_text, social_bild_url, social_text: form.social_text, anzahl: parseInt(form.anzahl) || 1 };
       const { data } = await supabase.from("anzeigen").insert(payload).select().single();
       if (data) setAnzeigen(prev => [data, ...prev]);
       setShowAdd(false);
@@ -3132,9 +3132,50 @@ function AktuelleAnzeigenPage() {
     setDetail(null);
   };
 
-  const toggleVerkauft = async (anzeige) => {
-    const updated = { ...anzeige, verkauft: !anzeige.verkauft };
-    await handleUpdate(updated);
+  const [showVerkauftModal, setShowVerkauftModal] = useState(false);
+  const [verkauftAnzeige, setVerkauftAnzeige] = useState(null);
+  const [verkauftAnzahl, setVerkauftAnzahl] = useState("1");
+
+  const openVerkauftModal = (anzeige) => {
+    // If already verkauft → just toggle back to aktiv
+    if (anzeige.verkauft) {
+      handleUpdate({ ...anzeige, verkauft: false });
+      return;
+    }
+    const anzahl = anzeige.anzahl || 1;
+    if (anzahl <= 1) {
+      // Only 1 item → directly mark as verkauft
+      handleUpdate({ ...anzeige, verkauft: true });
+    } else {
+      setVerkauftAnzeige(anzeige);
+      setVerkauftAnzahl("1");
+      setShowVerkauftModal(true);
+    }
+  };
+
+  const confirmVerkauft = async () => {
+    const a = verkauftAnzeige;
+    const anzahlVerkauft = parseInt(verkauftAnzahl) || 1;
+    const anzahlGesamt = a.anzahl || 1;
+
+    if (anzahlVerkauft >= anzahlGesamt) {
+      // Alle verkauft → direkt in Verkauft verschieben
+      await handleUpdate({ ...a, verkauft: true, anzahl: anzahlGesamt });
+    } else {
+      // Teilverkauf → Duplikat erstellen mit verkaufter Anzahl, Original reduzieren
+      const { data: duplikat } = await supabase.from("anzeigen").insert({
+        name: a.name, foto_url: a.foto_url, verkauf_als: a.verkauf_als, preis: a.preis,
+        verkauft: true, ableger_id: null, kategorie: a.kategorie,
+        anzeigen_bilder: a.anzeigen_bilder, anzeigen_text: a.anzeigen_text,
+        social_bild_url: a.social_bild_url, social_text: a.social_text,
+        anzahl: anzahlVerkauft
+      }).select().single();
+      if (duplikat) setAnzeigen(prev => [duplikat, ...prev]);
+      // Original-Anzahl reduzieren
+      await handleUpdate({ ...a, anzahl: anzahlGesamt - anzahlVerkauft });
+    }
+    setShowVerkauftModal(false);
+    setVerkauftAnzeige(null);
   };
 
   const [collapsedGroups, setCollapsedGroups] = useState({ ableger: true, pflanze: true, zubehoer: true, verkauft: true });
@@ -3198,6 +3239,7 @@ function AktuelleAnzeigenPage() {
                     <div style={{ aspectRatio: "3/4", background: a.foto_url ? `url(${a.foto_url}) center/cover no-repeat` : BG_DARK, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                       {!a.foto_url && <span style={{ fontSize: "28px", opacity: 0.2 }}>📢</span>}
                       {a.verkauft && <span style={{ position: "absolute", top: "8px", left: "8px", background: "#bc5d58", color: "#fff", fontSize: "9px", fontWeight: "700", padding: "2px 7px", borderRadius: "20px", fontFamily: FONT }}>Verkauft</span>}
+                      {a.anzahl > 1 && <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "10px", fontWeight: "700", padding: "2px 8px", borderRadius: "20px", fontFamily: FONT }}>{a.anzahl} Stk.</span>}
                       {a.kategorie && <span style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(255,255,255,0.88)", fontSize: "9px", padding: "2px 7px", borderRadius: "20px", color: TEXT_MID, fontFamily: FONT }}>{KATEGORIEN.find(k => k.key === a.kategorie)?.label?.split(" ")[1] || a.kategorie}</span>}
                     </div>
                     {/* Info */}
@@ -3273,16 +3315,18 @@ function AktuelleAnzeigenPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                 {detail.verkauf_als && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}><span style={{ color: TEXT_LIGHT }}>Verkauf als:</span> {detail.verkauf_als}</div>}
                 {detail.preis != null && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}><span style={{ color: TEXT_LIGHT }}>Preis:</span> <span style={{ color: ACCENT, fontWeight: "700" }}>{parseFloat(detail.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span></div>}
+                {detail.anzahl > 1 && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}><span style={{ color: TEXT_LIGHT }}>Anzahl:</span> <span style={{ fontWeight: "700" }}>{detail.anzahl} Stk.</span></div>}
                 {detail.ableger_id && (() => { const ab = ablegerList.find(x => x.id === detail.ableger_id); return ab ? <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}><span style={{ color: TEXT_LIGHT }}>Ableger:</span> {ab.name}</div> : null; })()}
               </div>
 
               {/* Verkauft Checkbox */}
               {canEdit && (
-                <div onClick={() => toggleVerkauft(detail)} style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: detail.verkauft ? "#f7eded" : "#f0f4f0", border: `1px solid ${detail.verkauft ? "#bc5d58" : ACCENT}` }}>
+                <div onClick={() => openVerkauftModal(detail)} style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: detail.verkauft ? "#f7eded" : "#f0f4f0", border: `1px solid ${detail.verkauft ? "#bc5d58" : ACCENT}` }}>
                   <div style={{ width: "20px", height: "20px", borderRadius: "4px", border: `2px solid ${detail.verkauft ? "#bc5d58" : ACCENT}`, background: detail.verkauft ? "#bc5d58" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {detail.verkauft && <span style={{ color: "white", fontSize: "13px", lineHeight: 1 }}>✓</span>}
                   </div>
                   <span style={{ fontSize: "13px", fontWeight: "600", color: detail.verkauft ? "#bc5d58" : ACCENT, fontFamily: FONT }}>Verkauft</span>
+                  {!detail.verkauft && detail.anzahl > 1 && <span style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginLeft: "4px" }}>(Anzahl eingeben)</span>}
                 </div>
               )}
 
@@ -3363,6 +3407,11 @@ function AktuelleAnzeigenPage() {
                 <input type="number" step="0.01" value={form.preis} onChange={e => set("preis", e.target.value)} placeholder="0,00" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
               </div>
 
+              {/* Anzahl */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Anzahl</label>
+                <input type="number" min="1" value={form.anzahl} onChange={e => set("anzahl", e.target.value)} placeholder="1" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
               {/* Ableger Verknüpfung */}
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Ableger verknüpfen</label>
                 <select value={form.ableger_id} onChange={e => set("ableger_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", background: "#fff", boxSizing: "border-box" }}>
@@ -3410,6 +3459,20 @@ function AktuelleAnzeigenPage() {
             <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
               <button onClick={() => { setShowAdd(false); setForm(emptyForm); setFotoFile(null); setAnzeigeFiles([null,null,null,null]); setSocialFile(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
               <button onClick={handleAdd} disabled={saving || !form.name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Verkauft Anzahl Modal */}
+      {showVerkauftModal && verkauftAnzeige && (
+        <div onClick={() => setShowVerkauftModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "24px", width: "100%", maxWidth: "340px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 8px 0", fontSize: "17px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Wie viele wurden verkauft?</h2>
+            <p style={{ margin: "0 0 18px 0", fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT }}>Verfügbar: {verkauftAnzeige.anzahl} Stk.</p>
+            <input type="number" min="1" max={verkauftAnzeige.anzahl} value={verkauftAnzahl} onChange={e => setVerkauftAnzahl(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "16px", fontFamily: FONT, outline: "none", boxSizing: "border-box", marginBottom: "18px", textAlign: "center" }} />
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setShowVerkauftModal(false)} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={confirmVerkauft} disabled={!verkauftAnzahl || parseInt(verkauftAnzahl) < 1} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: !verkauftAnzahl || parseInt(verkauftAnzahl) < 1 ? 0.6 : 1 }}>Bestätigen</button>
             </div>
           </div>
         </div>
