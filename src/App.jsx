@@ -3061,7 +3061,7 @@ function AktuelleAnzeigenPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const emptyForm = { name: "", foto_url: "", verkauf_als: "", preis: "", verkauft: false, ableger_id: "", kategorie: "ableger", anzeigen_bilder: [], anzeigen_text: "", social_bild_url: "", social_text: "" };
+  const emptyForm = { name: "", foto_url: "", verkauf_als: "", preis: "", verkauft: false, ableger_id: "", kategorie: "ableger", anzeigen_bilder: [], anzeigen_text: "", social_bild_url: "", social_text: "✩ Pflanze / Zubehör: \n✩ Anmerkung: \n✩ Preis: \n✩ Versand: via DHL mit Sendungsnummer ab 7 €\n✩ Abholung: möglich in 282... Bremen" };
   const [form, setForm] = useState(emptyForm);
   const [fotoFile, setFotoFile] = useState(null);
   const [anzeigeFiles, setAnzeigeFiles] = useState([null, null, null, null]);
