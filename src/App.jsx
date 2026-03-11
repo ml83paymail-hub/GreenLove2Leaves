@@ -894,7 +894,7 @@ function GiessplanWidget({ plants, activeTag, onTagClick, onClose }) {
   const max = Math.max(...counts, 1);
 
   return (
-    <div style={{ position: "absolute", top: "54px", right: "48px", zIndex: 50, background: "rgba(245,244,238,0.97)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${GLASS_BORDER}`, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", padding: "18px 20px", minWidth: "340px" }}>
+    <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 200, background: "rgba(245,244,238,0.97)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.24)", border: `1px solid ${GLASS_BORDER}`, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", padding: "18px 20px", width: "min(360px, 90vw)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
         <span style={{ fontSize: "11px", color: TEXT_MID, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "600" }}>Gießtage – Wochenübersicht</span>
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: TEXT_LIGHT }}>✕</button>
@@ -931,7 +931,7 @@ const GROUP_OPTIONS = [
   
 ];
 
-function PflanzenPage({ initialPlantId, onPlantOpened }) {
+function PflanzenPage() {
   const role = useRole();
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -946,16 +946,9 @@ function PflanzenPage({ initialPlantId, onPlantOpened }) {
   const loadPlants = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase.from("pflanzen").select("*").order("created_at", { ascending: false });
-    if (data) {
-      const mapped = data.map(dbToPlant);
-      setPlants(mapped);
-      if (initialPlantId) {
-        const plant = mapped.find(p => p.id === initialPlantId);
-        if (plant) { setSelected(plant); if (onPlantOpened) onPlantOpened(); }
-      }
-    }
+    if (data) setPlants(data.map(dbToPlant));
     setLoading(false);
-  }, [initialPlantId]);
+  }, []);
 
   useEffect(() => { loadPlants(); }, [loadPlants]);
 
@@ -1257,7 +1250,7 @@ function GenericPage({ page }) {
 
 
 // ── Fotoalbum Page ────────────────────────────────────────────────────────────
-function FotoalbumPage({ onOpenPlant }) {
+function FotoalbumPage() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(null);
@@ -1326,12 +1319,10 @@ function FotoalbumPage({ onOpenPlant }) {
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: "500px", width: "100%", background: WHITE, borderRadius: "12px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
             <img src={lightbox.foto_url} alt="" style={{ width: "100%", height: "auto", display: "block" }} />
             <div style={{ padding: "14px 16px" }}>
-              <div
-                onClick={() => onOpenPlant && lightbox.pflanze_id && (setLightbox(null), onOpenPlant(lightbox.pflanze_id))}
-                style={{ fontSize: "14px", fontWeight: "600", color: onOpenPlant ? ACCENT : TEXT_DARK, fontFamily: FONT, marginBottom: "4px", cursor: onOpenPlant ? "pointer" : "default", textDecoration: onOpenPlant ? "underline" : "none", display: "inline-block" }}
-              >{lightbox.pflanzen?.name}</div>
+              <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "4px" }}>{lightbox.pflanzen?.name}</div>
               {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
               <div style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{new Date(lightbox.created_at).toLocaleDateString("de-DE")}</div>
+
             </div>
             <button onClick={() => setLightbox(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "#fff", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
@@ -1342,7 +1333,7 @@ function FotoalbumPage({ onOpenPlant }) {
 }
 
 // ── Blütenbilder Page ─────────────────────────────────────────────────────────
-function BluetenbilderPage({ onOpenPlant }) {
+function BluetenbilderPage() {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(null);
@@ -1410,10 +1401,7 @@ function BluetenbilderPage({ onOpenPlant }) {
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: "500px", width: "100%", background: WHITE, borderRadius: "12px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
             <img src={lightbox.foto_url} alt="" style={{ width: "100%", height: "auto", display: "block" }} />
             <div style={{ padding: "14px 16px" }}>
-              <div
-                onClick={() => onOpenPlant && lightbox.pflanze_id && (setLightbox(null), onOpenPlant(lightbox.pflanze_id))}
-                style={{ fontSize: "14px", fontWeight: "600", color: onOpenPlant ? ACCENT : TEXT_DARK, fontFamily: FONT, marginBottom: "4px", cursor: onOpenPlant ? "pointer" : "default", textDecoration: onOpenPlant ? "underline" : "none", display: "inline-block" }}
-              >{lightbox.pflanzen?.name}</div>
+              <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "4px" }}>{lightbox.pflanzen?.name}</div>
               {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
               <div style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{new Date(lightbox.created_at).toLocaleDateString("de-DE")}</div>
             </div>
@@ -4086,7 +4074,7 @@ function SharedView({ token }) {
           <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT }}>Leseansicht</span>
         </header>
         <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-          {activePage === "fotoalbum" ? <FotoalbumPage onOpenPlant={handleOpenPlant} /> : activePage === "bluetenbilder" ? <BluetenbilderPage onOpenPlant={handleOpenPlant} /> : activePage === "unsere-pflanzen" ? <PflanzenPage initialPlantId={openPlantId} onPlantOpened={() => setOpenPlantId(null)} /> : activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : null}
+          {activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "bluetenbilder" ? <BluetenbilderPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : null}
         </main>
       </div>
     </RoleContext.Provider>
@@ -4138,14 +4126,6 @@ function AppInner({ onLogout }) {
   const openQuickAdd = () => setQuickAdd(true);
   const closeQuickAdd = () => setQuickAdd(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [openPlantId, setOpenPlantId] = useState(null);
-
-  const handleOpenPlant = (pflanze_id) => {
-    setOpenPlantId(pflanze_id);
-    setActivePage("unsere-pflanzen");
-    sessionStorage.setItem("activePage", "unsere-pflanzen");
-    history.replaceState(null, "", "#unsere-pflanzen");
-  };
   const [toasts, setToasts] = useState([]);
 
   const addToast = (title, msg) => {
@@ -4283,7 +4263,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage initialPlantId={openPlantId} onPlantOpened={() => setOpenPlantId(null)} /> : activePage === "fotoalbum" ? <FotoalbumPage onOpenPlant={handleOpenPlant} /> : activePage === "bluetenbilder" ? <BluetenbilderPage onOpenPlant={handleOpenPlant} /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "bluetenbilder" ? <BluetenbilderPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
