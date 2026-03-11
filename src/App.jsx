@@ -453,7 +453,7 @@ function Tagebuch({ plantId, plantName }) {
         setEntries(prev => [dbToEntry(data), ...prev]);
         // Wenn "fotoalbum" gewählt → Pflanzenkarte-Foto automatisch aktualisieren
         if (foto_url && fotoKategorie === "fotoalbum") {
-          await supabase.from("pflanzen").update({ foto: foto_url }).eq("id", plantId);
+          await supabase.from("pflanzen").update({ foto_url: foto_url }).eq("id", plantId);
         }
       }
       setNewNote(""); setPhotoFile(null); setPhotoPreview(null); setShowForm(false);
