@@ -418,6 +418,7 @@ function Tagebuch({ plantId, plantName }) {
   const [fotoKategorie, setFotoKategorie] = useState(null);
   const [saving, setSaving] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
+  const [editingFotoKategorie, setEditingFotoKategorie] = useState(null);
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
@@ -473,9 +474,11 @@ function Tagebuch({ plantId, plantName }) {
     const { data } = await supabase.from("tagebuch").update({
       notiz: note || null,
       created_at: new Date(date).toISOString(),
+      foto_kategorie: editingFotoKategorie,
     }).eq("id", entryId).select().single();
     if (data) setEntries(prev => prev.map(e => e.id === entryId ? dbToEntry(data) : e));
     setEditingEntry(null);
+    setEditingFotoKategorie(null);
   };
 
   const formatEntryDate = (iso) => {
@@ -570,8 +573,21 @@ function Tagebuch({ plantId, plantName }) {
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     <textarea defaultValue={entry.note} id={"edit-note-"+entry.id} rows={3} style={{ width: "100%", background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 10px", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
                     <input type="date" defaultValue={entry.date.slice(0,10)} id={"edit-date-"+entry.id} style={{ background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px 10px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none" }} />
+                    {entry.photo && (
+                      <div>
+                        <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Foto zuordnen (optional)</div>
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          {[{ key: "fotoalbum", label: "Fotoalbum" }, { key: "bluetenbilder", label: "Blütenbilder" }].map(opt => (
+                            <button key={opt.key} onClick={() => setEditingFotoKategorie(editingFotoKategorie === opt.key ? null : opt.key)}
+                              style={{ padding: "5px 12px", borderRadius: "20px", border: `1px solid ${editingFotoKategorie === opt.key ? ACCENT : BG_DARK}`, background: editingFotoKategorie === opt.key ? ACCENT : WHITE, color: editingFotoKategorie === opt.key ? WHITE : TEXT_MID, fontSize: "11px", cursor: "pointer", fontFamily: FONT, transition: "all 0.15s" }}>
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div style={{ display: "flex", gap: "8px" }}>
-                      <button onClick={() => setEditingEntry(null)} style={{ flex: 1, background: BG_DARK, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Abbrechen</button>
+                      <button onClick={() => { setEditingEntry(null); setEditingFotoKategorie(null); }} style={{ flex: 1, background: BG_DARK, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Abbrechen</button>
                       <button onClick={() => handleUpdate(entry.id, document.getElementById("edit-note-"+entry.id).value, document.getElementById("edit-date-"+entry.id).value)} style={{ flex: 2, background: BTN, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>Speichern</button>
                     </div>
                   </div>
@@ -583,7 +599,7 @@ function Tagebuch({ plantId, plantName }) {
                       <div style={{ position: "relative" }}>
                         {canEdit && <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>}
                         <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, top: "100%", marginTop: "4px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 100, overflow: "hidden" }}>
-                          <button onClick={() => { setEditingEntry(entry.id); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                          <button onClick={() => { setEditingEntry(entry.id); setEditingFotoKategorie(entry.fotoKategorie || null); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten
                           </button>
                           <div style={{ height: "1px", background: BG_DARK }} />
@@ -894,7 +910,7 @@ function GiessplanWidget({ plants, activeTag, onTagClick, onClose }) {
   const max = Math.max(...counts, 1);
 
   return (
-    <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 200, background: "rgba(245,244,238,0.97)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.24)", border: `1px solid ${GLASS_BORDER}`, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", padding: "18px 20px", width: "min(360px, 90vw)" }}>
+    <div style={{ position: "absolute", top: "54px", right: "48px", zIndex: 50, background: "rgba(245,244,238,0.97)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${GLASS_BORDER}`, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", padding: "18px 20px", minWidth: "340px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
         <span style={{ fontSize: "11px", color: TEXT_MID, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "600" }}>Gießtage – Wochenübersicht</span>
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: TEXT_LIGHT }}>✕</button>
