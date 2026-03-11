@@ -3048,6 +3048,302 @@ const SHAREABLE_PAGES = [
   { id: "unsere-pflanzen", label: "Unsere Pflanzen" },
 ];
 
+// ── Aktuelle Anzeigen Page ───────────────────────────────────────────────────
+function AktuelleAnzeigenPage() {
+  const { role } = getSession();
+  const canEdit = role !== "guest" && role !== "readonly";
+
+  const [anzeigen, setAnzeigen] = useState([]);
+  const [ablegerList, setAblegerList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [detail, setDetail] = useState(null); // opened anzeige
+  const [showAdd, setShowAdd] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const emptyForm = { name: "", foto_url: "", verkauf_als: "", preis: "", verkauft: false, ableger_id: "", kategorie: "ableger", anzeigen_bilder: [], anzeigen_text: "", social_bild_url: "", social_text: "" };
+  const [form, setForm] = useState(emptyForm);
+  const [fotoFile, setFotoFile] = useState(null);
+  const [anzeigeFiles, setAnzeigeFiles] = useState([null, null, null, null]);
+  const [socialFile, setSocialFile] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const [{ data: a }, { data: ab }] = await Promise.all([
+        supabase.from("anzeigen").select("*").order("created_at", { ascending: false }),
+        supabase.from("ableger").select("id, name, mutterpflanze").order("name")
+      ]);
+      if (a) setAnzeigen(a);
+      if (ab) setAblegerList(ab);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleAdd = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    try {
+      let foto_url = form.foto_url;
+      if (fotoFile) foto_url = await uploadPhoto(fotoFile, "anzeigen");
+
+      // Upload anzeigen bilder
+      let anzeigen_bilder = [...form.anzeigen_bilder];
+      for (let i = 0; i < 4; i++) {
+        if (anzeigeFiles[i]) {
+          const url = await uploadPhoto(anzeigeFiles[i], "anzeigen");
+          anzeigen_bilder[i] = url;
+        }
+      }
+
+      let social_bild_url = form.social_bild_url;
+      if (socialFile) social_bild_url = await uploadPhoto(socialFile, "anzeigen");
+
+      const payload = { name: form.name, foto_url, verkauf_als: form.verkauf_als, preis: form.preis ? parseFloat(form.preis) : null, verkauft: false, ableger_id: form.ableger_id ? parseInt(form.ableger_id) : null, kategorie: form.kategorie, anzeigen_bilder, anzeigen_text: form.anzeigen_text, social_bild_url, social_text: form.social_text };
+      const { data } = await supabase.from("anzeigen").insert(payload).select().single();
+      if (data) setAnzeigen(prev => [data, ...prev]);
+      setShowAdd(false);
+      setForm(emptyForm);
+      setFotoFile(null);
+      setAnzeigeFiles([null, null, null, null]);
+      setSocialFile(null);
+    } catch (e) { console.error(e); }
+    setSaving(false);
+  };
+
+  const handleUpdate = async (updated) => {
+    const { data } = await supabase.from("anzeigen").update(updated).eq("id", updated.id).select().single();
+    if (data) {
+      setAnzeigen(prev => prev.map(x => x.id === data.id ? data : x));
+      setDetail(data);
+    }
+  };
+
+  const handleDelete = async (anzeige) => {
+    if (!window.confirm(`„${anzeige.name}" löschen?`)) return;
+    await supabase.from("anzeigen").delete().eq("id", anzeige.id);
+    // Delete linked ableger (but not mutterpflanze)
+    if (anzeige.ableger_id) {
+      await supabase.from("ableger").delete().eq("id", anzeige.ableger_id);
+    }
+    setAnzeigen(prev => prev.filter(x => x.id !== anzeige.id));
+    setDetail(null);
+  };
+
+  const toggleVerkauft = async (anzeige) => {
+    const updated = { ...anzeige, verkauft: !anzeige.verkauft };
+    await handleUpdate(updated);
+  };
+
+  const KATEGORIEN = [
+    { key: "ableger", label: "Unsere Ableger" },
+    { key: "pflanze", label: "Unsere Pflanzen" },
+    { key: "zubehoer", label: "Zubehör" },
+  ];
+
+  const grouped = KATEGORIEN.map(k => ({ ...k, items: anzeigen.filter(a => a.kategorie === k.key) })).filter(g => g.items.length > 0);
+
+  return (
+    <div>
+      <div style={{ marginBottom: "8px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Aktuelle Anzeigen</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{anzeigen.length} Anzeige{anzeigen.length !== 1 ? "n" : ""}</p>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
+      {canEdit && <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
+        <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Anzeige</button>
+      </div>}
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
+      ) : anzeigen.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>📢</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Keine aktiven Anzeigen.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+          {grouped.map(group => (
+            <div key={group.key}>
+              <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "12px", fontWeight: "600" }}>{group.label}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "12px" }}>
+                {group.items.map(a => (
+                  <div key={a.id} onClick={() => setDetail(a)} style={{ background: GLASS, borderRadius: "12px", border: `1px solid ${ACCENT}`, overflow: "hidden", cursor: "pointer", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", position: "relative" }}>
+                    {a.verkauft && <div style={{ position: "absolute", top: "8px", left: "8px", background: "#bc5d58", color: "#fff", fontSize: "10px", fontWeight: "700", padding: "2px 8px", borderRadius: "20px", fontFamily: FONT, zIndex: 2 }}>Verkauft</div>}
+                    <div style={{ width: "100%", aspectRatio: "1", background: BG_DARK, overflow: "hidden" }}>
+                      {a.foto_url ? <img src={a.foto_url} alt={a.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", opacity: 0.2 }}>📢</div>}
+                    </div>
+                    <div style={{ padding: "10px 12px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
+                      {a.preis != null && <div style={{ fontSize: "12px", color: ACCENT, fontWeight: "700", fontFamily: FONT }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {detail && (
+        <div onClick={() => setDetail(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "16px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            {/* Foto */}
+            <div style={{ position: "relative" }}>
+              {detail.foto_url ? <img src={detail.foto_url} alt={detail.name} style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", borderRadius: "16px 16px 0 0" }} /> : <div style={{ width: "100%", aspectRatio: "4/3", background: BG_DARK, borderRadius: "16px 16px 0 0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", opacity: 0.2 }}>📢</div>}
+              <button onClick={() => setDetail(null)} style={{ position: "absolute", top: "12px", right: "12px", width: "32px", height: "32px", borderRadius: "50%", background: "rgba(0,0,0,0.45)", border: "none", color: "#fff", fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            </div>
+
+            <div style={{ padding: "20px" }}>
+              {/* Name */}
+              <div style={{ fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, marginBottom: "14px" }}>{detail.name}</div>
+
+              {/* Info rows */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+                {detail.verkauf_als && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}><span style={{ color: TEXT_LIGHT }}>Verkauf als:</span> {detail.verkauf_als}</div>}
+                {detail.preis != null && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}><span style={{ color: TEXT_LIGHT }}>Preis:</span> <span style={{ color: ACCENT, fontWeight: "700" }}>{parseFloat(detail.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span></div>}
+                {detail.ableger_id && (() => { const ab = ablegerList.find(x => x.id === detail.ableger_id); return ab ? <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT }}><span style={{ color: TEXT_LIGHT }}>Ableger:</span> {ab.name}</div> : null; })()}
+              </div>
+
+              {/* Verkauft Checkbox */}
+              {canEdit && (
+                <div onClick={() => toggleVerkauft(detail)} style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", marginBottom: "16px", padding: "10px 12px", borderRadius: "8px", background: detail.verkauft ? "#f7eded" : "#f0f4f0", border: `1px solid ${detail.verkauft ? "#bc5d58" : ACCENT}` }}>
+                  <div style={{ width: "20px", height: "20px", borderRadius: "4px", border: `2px solid ${detail.verkauft ? "#bc5d58" : ACCENT}`, background: detail.verkauft ? "#bc5d58" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {detail.verkauft && <span style={{ color: "white", fontSize: "13px", lineHeight: 1 }}>✓</span>}
+                  </div>
+                  <span style={{ fontSize: "13px", fontWeight: "600", color: detail.verkauft ? "#bc5d58" : ACCENT, fontFamily: FONT }}>Verkauft</span>
+                </div>
+              )}
+
+              {/* Anzeigen Bilder */}
+              {detail.anzeigen_bilder?.filter(Boolean).length > 0 && (
+                <div style={{ marginBottom: "16px" }}>
+                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "8px" }}>Anzeigenbilder</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
+                    {detail.anzeigen_bilder.filter(Boolean).map((url, i) => (
+                      <img key={i} src={url} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: "6px" }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {detail.anzeigen_text && (
+                <div style={{ marginBottom: "16px" }}>
+                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>Anzeigetext</div>
+                  <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{detail.anzeigen_text}</div>
+                </div>
+              )}
+
+              {/* Social Media */}
+              {(detail.social_bild_url || detail.social_text) && (
+                <div style={{ marginBottom: "16px", padding: "12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "#f9f9f7" }}>
+                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "8px" }}>Social Media</div>
+                  {detail.social_bild_url && <img src={detail.social_bild_url} alt="" style={{ width: "100%", borderRadius: "8px", marginBottom: "8px" }} />}
+                  {detail.social_text && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{detail.social_text}</div>}
+                </div>
+              )}
+
+              {/* Delete Button */}
+              {canEdit && (
+                <button onClick={() => handleDelete(detail)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: "#f7eded", color: "#bc5d58", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginTop: "4px" }}>
+                  Anzeige löschen{detail.ableger_id ? " (+ verknüpfter Ableger)" : ""}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Modal */}
+      {showAdd && (
+        <div onClick={() => setShowAdd(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 18px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neue Anzeige</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
+              {/* Kategorie */}
+              <div>
+                <label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Kategorie</label>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  {KATEGORIEN.map(k => (
+                    <button key={k.key} onClick={() => set("kategorie", k.key)} style={{ padding: "6px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: form.kategorie === k.key ? "700" : "400", background: form.kategorie === k.key ? ACCENT : BG_DARK, color: form.kategorie === k.key ? "#fff" : TEXT_MID }}>{k.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Name */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Name *</label>
+                <input value={form.name} onChange={e => set("name", e.target.value)} placeholder="z.B. Monstera Ableger" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Foto */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Titelfoto</label>
+                <input type="file" accept="image/*" onChange={e => setFotoFile(e.target.files[0])} style={{ fontSize: "13px", fontFamily: FONT }} />
+              </div>
+
+              {/* Verkauf als */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Verkauf als</label>
+                <input value={form.verkauf_als} onChange={e => set("verkauf_als", e.target.value)} placeholder="z.B. Bewurzelter Ableger" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Preis */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Preis (€)</label>
+                <input type="number" step="0.01" value={form.preis} onChange={e => set("preis", e.target.value)} placeholder="0,00" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Ableger Verknüpfung */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Ableger verknüpfen</label>
+                <select value={form.ableger_id} onChange={e => set("ableger_id", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", background: "#fff", boxSizing: "border-box" }}>
+                  <option value="">– kein Ableger –</option>
+                  {ablegerList.map(ab => <option key={ab.id} value={ab.id}>{ab.name}{ab.mutterpflanze ? ` (${ab.mutterpflanze})` : ""}</option>)}
+                </select>
+              </div>
+
+              {/* Anzeigen Bilder */}
+              <div>
+                <label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Anzeigenbilder (max. 4)</label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px" }}>
+                  {[0, 1, 2, 3].map(i => (
+                    <label key={i} style={{ aspectRatio: "1", borderRadius: "8px", border: `1px dashed ${BG_DARK}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", background: anzeigeFiles[i] ? "#f0f4f0" : "#fafaf8", overflow: "hidden" }}>
+                      {anzeigeFiles[i] ? <span style={{ fontSize: "20px" }}>✓</span> : <span style={{ fontSize: "20px", opacity: 0.3 }}>+</span>}
+                      <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = [...anzeigeFiles]; f[i] = e.target.files[0]; setAnzeigeFiles(f); }} />
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Anzeigen Text */}
+              <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Anzeigetext</label>
+                <textarea value={form.anzeigen_text} onChange={e => set("anzeigen_text", e.target.value)} rows={3} placeholder="Text für die Anzeige …" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+              </div>
+
+              {/* Social Media Bild */}
+              <div style={{ padding: "12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "#f9f9f7" }}>
+                <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "10px" }}>Social Media</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Bild</label>
+                    <input type="file" accept="image/*" onChange={e => setSocialFile(e.target.files[0])} style={{ fontSize: "13px", fontFamily: FONT }} />
+                  </div>
+                  <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Text</label>
+                    <textarea value={form.social_text} onChange={e => set("social_text", e.target.value)} rows={2} placeholder="Caption für Social Media …" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+              <button onClick={() => { setShowAdd(false); setForm(emptyForm); setFotoFile(null); setAnzeigeFiles([null,null,null,null]); setSocialFile(null); }} style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleAdd} disabled={saving || !form.name.trim()} style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: saving || !form.name.trim() ? 0.6 : 1 }}>{saving ? "Speichert …" : "Speichern"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // One single share entry: token + pages[] + active
 function GastzugangPage() {
   const [shareData, setShareData] = useState(null); // { id, token, pages, active }
@@ -3330,7 +3626,7 @@ function AppInner({ onLogout }) {
     history.replaceState(null, "", "#" + id);
   };
 
-  const pageTitle = activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : activePage === "fotoalbum" ? "Fotoalbum" : activePage === "ableger" ? "Unsere Ableger" : activePage === "wishlist" ? "Wishlist" : activePage === "notizbuch" ? "Notizbuch" : activePage === "todo" ? "To Do Liste" : activePage === "pflanzenkasse" ? "Pflanzenkasse" : activePage === "bestellungen" ? "Bestellungen & Käufe" : activePage === "postfach" ? "Postfach" : activePage === "gastzugang" ? "Gastzugang" : activePage === "archiv" ? "Archiv" : pages[activePage]?.title;
+  const pageTitle = activePage === "anzeigen" ? "Aktuelle Anzeigen" : activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : activePage === "fotoalbum" ? "Fotoalbum" : activePage === "ableger" ? "Unsere Ableger" : activePage === "wishlist" ? "Wishlist" : activePage === "notizbuch" ? "Notizbuch" : activePage === "todo" ? "To Do Liste" : activePage === "pflanzenkasse" ? "Pflanzenkasse" : activePage === "bestellungen" ? "Bestellungen & Käufe" : activePage === "postfach" ? "Postfach" : activePage === "gastzugang" ? "Gastzugang" : activePage === "archiv" ? "Archiv" : pages[activePage]?.title;
 
   const Sidebar = ({ mobile }) => (
     <aside style={{
@@ -3423,7 +3719,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
