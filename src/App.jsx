@@ -3070,6 +3070,7 @@ function WishlistPage() {
 const SHAREABLE_PAGES = [
   { id: "fotoalbum", label: "Fotoalbum" },
   { id: "unsere-pflanzen", label: "Unsere Pflanzen" },
+  { id: "anzeigen", label: "Aktuelle Anzeigen" },
 ];
 
 // ── Aktuelle Anzeigen Page ───────────────────────────────────────────────────
@@ -3257,8 +3258,8 @@ function AktuelleAnzeigenPage() {
   return (
     <div>
       <div style={{ marginBottom: "8px" }}>
-        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Aktuelle Anzeigen</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{anzeigen.length} Anzeige{anzeigen.length !== 1 ? "n" : ""} · <span style={{ color: TEXT_DARK, fontWeight: "600" }}>Summe: {anzeigen.reduce((s, a) => s + (parseFloat(a.preis) || 0) * (parseInt(a.anzahl) || 1), 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span></p>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>{canEdit ? "Aktuelle Anzeigen" : "Pflanzenliste"}</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{anzeigen.filter(a => !a.verkauft).length} Anzeige{anzeigen.filter(a => !a.verkauft).length !== 1 ? "n" : ""}{canEdit && <> · <span style={{ color: TEXT_DARK, fontWeight: "600" }}>Summe: {anzeigen.reduce((s, a) => s + (parseFloat(a.preis) || 0) * (parseInt(a.anzahl) || 1), 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span></>}</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
       {canEdit && <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
@@ -3293,12 +3294,14 @@ function AktuelleAnzeigenPage() {
                     {/* Foto */}
                     <div style={{ aspectRatio: "3/4", background: a.foto_url ? `url(${a.foto_url}) center/cover no-repeat` : BG_DARK, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
                       {!a.foto_url && <span style={{ fontSize: "28px", opacity: 0.2 }}>📢</span>}
-                      {a.verkauft && <span style={{ position: "absolute", top: "8px", left: "8px", background: "#bc5d58", color: "#fff", fontSize: "9px", fontWeight: "700", padding: "2px 7px", borderRadius: "20px", fontFamily: FONT }}>Verkauft</span>}
-                      {a.anzahl > 1 && <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "10px", fontWeight: "700", padding: "2px 8px", borderRadius: "20px", fontFamily: FONT }}>{a.anzahl} Stk.</span>}
-                      {a.kategorie && <span style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(255,255,255,0.88)", fontSize: "9px", padding: "2px 7px", borderRadius: "20px", color: TEXT_MID, fontFamily: FONT }}>{KATEGORIEN.find(k => k.key === a.kategorie)?.label?.split(" ")[1] || a.kategorie}</span>}
+                      {a.verkauft && canEdit && <span style={{ position: "absolute", top: "8px", left: "8px", background: "#bc5d58", color: "#fff", fontSize: "9px", fontWeight: "700", padding: "2px 7px", borderRadius: "20px", fontFamily: FONT }}>Verkauft</span>}
+                      {a.anzahl > 1 && canEdit && <span style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.55)", color: "#fff", fontSize: "10px", fontWeight: "700", padding: "2px 8px", borderRadius: "20px", fontFamily: FONT }}>{a.anzahl} Stk.</span>}
+                      {a.kategorie && canEdit && <span style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(255,255,255,0.88)", fontSize: "9px", padding: "2px 7px", borderRadius: "20px", color: TEXT_MID, fontFamily: FONT }}>{KATEGORIEN.find(k => k.key === a.kategorie)?.label?.split(" ")[1] || a.kategorie}</span>}
+                      {/* Guest: price badge directly on photo */}
+                      {!canEdit && a.preis != null && <span style={{ position: "absolute", bottom: "8px", left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px", fontFamily: FONT, whiteSpace: "nowrap" }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>}
                     </div>
-                    {/* Info */}
-                    <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.3)" }}>
+                    {/* Info - only shown for editors */}
+                    {canEdit && <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.3)" }}>
                       <div style={{ fontSize: "12px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
                       <div style={{ height: "1px", background: BG_DARK, marginBottom: "6px" }} />
                       {a.verkauf_als && <div style={{ display: "flex", justifyContent: "space-between", gap: "6px", marginBottom: "2px" }}>
@@ -3309,7 +3312,7 @@ function AktuelleAnzeigenPage() {
                         <span style={{ fontSize: "9px", color: TEXT_LIGHT, fontFamily: FONT }}>Preis</span>
                         <span style={{ fontSize: "9px", fontWeight: "700", color: ACCENT, fontFamily: FONT }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
                       </div>}
-                    </div>
+                    </div>}
                   </div>
                 ))}
               </div>
@@ -3317,8 +3320,8 @@ function AktuelleAnzeigenPage() {
             </div>
           ))}
 
-          {/* Verkauft Gruppe */}
-          {verkauftItems.length > 0 && (
+          {/* Verkauft Gruppe - nur für Admins */}
+          {canEdit && verkauftItems.length > 0 && (
             <div>
               <button onClick={() => toggleGroup("verkauft")} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "14px", padding: 0, width: "100%", textAlign: "left" }}>
                 <span style={{ fontSize: "13px", fontWeight: "600", color: "#bc5d58", letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>Verkauft</span>
@@ -3385,6 +3388,20 @@ function AktuelleAnzeigenPage() {
             </div>
 
             <div style={{ padding: "20px" }}>
+              {/* Guest view: only price + anzeigenbilder */}
+              {!canEdit ? (
+                <>
+                  {detail.preis != null && <div style={{ fontSize: "22px", fontWeight: "700", color: ACCENT, fontFamily: FONT, marginBottom: "14px", textAlign: "center" }}>{parseFloat(detail.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</div>}
+                  {detail.anzeigen_bilder?.filter(Boolean).length > 0 && (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
+                      {detail.anzeigen_bilder.filter(Boolean).map((url, i) => (
+                        <img key={i} src={url} alt="" style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: "8px" }} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
               {/* Name */}
               <div style={{ fontSize: "20px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT, marginBottom: "14px" }}>{detail.name}</div>
 
@@ -3430,7 +3447,8 @@ function AktuelleAnzeigenPage() {
                   {detail.social_text && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{detail.social_text}</div>}
                 </div>
               )}
-
+              </>
+              )}
             </div>
           </div>
         </div>
@@ -3819,7 +3837,7 @@ function SharedView({ token }) {
     </div>
   );
 
-  const pageLabels = { "fotoalbum": "Fotoalbum", "unsere-pflanzen": "Unsere Pflanzen" };
+  const pageLabels = { "fotoalbum": "Fotoalbum", "unsere-pflanzen": "Unsere Pflanzen", "anzeigen": "Pflanzenliste" };
 
   return (
     <RoleContext.Provider value="readonly">
@@ -3838,7 +3856,7 @@ function SharedView({ token }) {
           <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT }}>Leseansicht</span>
         </header>
         <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-          {activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : null}
+          {activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : null}
         </main>
       </div>
     </RoleContext.Provider>
