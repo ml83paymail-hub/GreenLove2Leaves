@@ -3137,7 +3137,7 @@ function AktuelleAnzeigenPage() {
     await handleUpdate(updated);
   };
 
-  const [collapsedGroups, setCollapsedGroups] = useState({ ableger: true, pflanze: true, zubehoer: true });
+  const [collapsedGroups, setCollapsedGroups] = useState({ ableger: true, pflanze: true, zubehoer: true, verkauft: true });
   const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }));
 
   const KATEGORIEN = [
@@ -3146,7 +3146,17 @@ function AktuelleAnzeigenPage() {
     { key: "zubehoer", label: "Zubehör" },
   ];
 
-  const grouped = KATEGORIEN.map(k => ({ ...k, items: anzeigen.filter(a => a.kategorie === k.key) })).filter(g => g.items.length > 0);
+  const grouped = KATEGORIEN.map(k => ({ ...k, items: anzeigen.filter(a => a.kategorie === k.key && !a.verkauft) })).filter(g => g.items.length > 0);
+  const verkauftItems = anzeigen.filter(a => a.verkauft);
+
+  const handleDeleteVerkauft = async () => {
+    if (!window.confirm("Alle verkauften Anzeigen löschen?")) return;
+    for (const a of verkauftItems) {
+      await supabase.from("anzeigen").delete().eq("id", a.id);
+      if (a.ableger_id) await supabase.from("ableger").delete().eq("id", a.ableger_id);
+    }
+    setAnzeigen(prev => prev.filter(a => !a.verkauft));
+  };
 
   return (
     <div>
@@ -3209,6 +3219,39 @@ function AktuelleAnzeigenPage() {
               )}
             </div>
           ))}
+
+          {/* Verkauft Gruppe */}
+          {verkauftItems.length > 0 && (
+            <div>
+              <button onClick={() => toggleGroup("verkauft")} style={{ display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", cursor: "pointer", marginBottom: "14px", padding: 0, width: "100%", textAlign: "left" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: "#bc5d58", letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT }}>Verkauft</span>
+                <span style={{ fontSize: "13px", color: TEXT_LIGHT, fontFamily: FONT }}>({verkauftItems.length})</span>
+                <div style={{ flex: 1, height: "1px", background: BG_DARK }} />
+                {canEdit && !collapsedGroups["verkauft"] && <button onClick={e => { e.stopPropagation(); handleDeleteVerkauft(); }} style={{ fontSize: "11px", color: "#bc5d58", background: "none", border: `1px solid #bc5d58`, borderRadius: "6px", padding: "3px 10px", cursor: "pointer", fontFamily: FONT, marginRight: "8px" }}>Alle löschen</button>}
+                <span style={{ fontSize: "13px", color: TEXT_LIGHT }}>{collapsedGroups["verkauft"] ? "▶" : "▼"}</span>
+              </button>
+              {!collapsedGroups["verkauft"] && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
+                  {verkauftItems.map(a => (
+                    <div key={a.id} onClick={() => setDetail(a)} style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", opacity: 0.7 }}>
+                      <div style={{ aspectRatio: "3/4", background: a.foto_url ? `url(${a.foto_url}) center/cover no-repeat` : BG_DARK, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                        {!a.foto_url && <span style={{ fontSize: "28px", opacity: 0.2 }}>📢</span>}
+                        <span style={{ position: "absolute", top: "8px", left: "8px", background: "#bc5d58", color: "#fff", fontSize: "9px", fontWeight: "700", padding: "2px 7px", borderRadius: "20px", fontFamily: FONT }}>Verkauft</span>
+                      </div>
+                      <div style={{ padding: "10px 12px", background: "rgba(255,255,255,0.3)" }}>
+                        <div style={{ fontSize: "12px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
+                        <div style={{ height: "1px", background: BG_DARK, marginBottom: "6px" }} />
+                        {a.preis != null && <div style={{ display: "flex", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "9px", color: TEXT_LIGHT, fontFamily: FONT }}>Preis</span>
+                          <span style={{ fontSize: "9px", fontWeight: "700", color: "#bc5d58", fontFamily: FONT }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+                        </div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
