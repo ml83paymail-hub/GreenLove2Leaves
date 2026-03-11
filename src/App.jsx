@@ -3246,7 +3246,7 @@ function AktuelleAnzeigenPage() {
               {/* Anzeigen Bilder + Text */}
               {(detail.anzeigen_bilder?.filter(Boolean).length > 0 || detail.anzeigen_text) && (
                 <div style={{ marginBottom: "16px", padding: "12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "#f9f9f7" }}>
-                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "10px" }}>Anzeige</div>
+                  <div style={{ fontSize: "12px", color: TEXT_DARK, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "10px", fontWeight: "600" }}>Anzeige</div>
                   {detail.anzeigen_bilder?.filter(Boolean).length > 0 && (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: detail.anzeigen_text ? "10px" : 0 }}>
                       {detail.anzeigen_bilder.filter(Boolean).map((url, i) => (
@@ -3261,7 +3261,7 @@ function AktuelleAnzeigenPage() {
               {/* Social Media */}
               {(detail.social_bild_url || detail.social_text) && (
                 <div style={{ marginBottom: "16px", padding: "12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, background: "#f9f9f7" }}>
-                  <div style={{ fontSize: "11px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "8px" }}>Social Media</div>
+                  <div style={{ fontSize: "12px", color: TEXT_DARK, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "8px", fontWeight: "600" }}>Social Media</div>
                   {detail.social_bild_url && <img src={detail.social_bild_url} alt="" style={{ width: "100%", borderRadius: "8px", marginBottom: "8px" }} />}
                   {detail.social_text && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.6", whiteSpace: "pre-wrap" }}>{detail.social_text}</div>}
                 </div>
