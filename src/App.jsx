@@ -1600,11 +1600,14 @@ function PflanzenkassePage() {
                           <div style={{ position: "relative", flexShrink: 0 }}>
                             <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                             {openMenuId === e.id && (
+                              <>
+                              <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                               <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                                 <button onClick={() => openEdit(e)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                                 <div style={{ height: "1px", background: BG_DARK }} />
                                 <button onClick={() => { handleDelete(e.id); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                               </div>
+                            </>
                             )}
                           </div>
                         )}
@@ -1916,9 +1919,12 @@ function BestellungenPage() {
                     <div style={{ position: "relative" }}>
                       <button onClick={() => setOpenMenuId(openMenuId === b.id ? null : b.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                       {openMenuId === b.id && (
+                        <>
+                        <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                         <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                           <button onClick={() => openEdit(b)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                         </div>
+                      </>
                       )}
                     </div>
                   </div>
@@ -2235,11 +2241,14 @@ function AblegerPage() {
                       <div style={{ position: "relative", flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                         <button onClick={() => setOpenMenuId(openMenuId === a.id ? null : a.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                         {openMenuId === a.id && (
+                          <>
+                          <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                           <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "8px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "130px", zIndex: 20 }}>
                             <button onClick={() => openEdit(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                             <button onClick={() => handleDuplicate(a)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>⧉ Duplizieren</button>
                             <button onClick={() => handleDelete(a.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                           </div>
+                        </>
                         )}
                       </div>
                     )}
@@ -2463,11 +2472,14 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled, suche }) {
                   <div style={{ position: "relative", flexShrink: 0 }}>
                     <button onClick={() => setOpenMenuId(openMenuId === n.id ? null : n.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                     {openMenuId === n.id && (
+                      <>
+                      <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                       <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(n); setText(n.text); setDatum(n.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                         <div style={{ height: "1px", background: BG_DARK }} />
                         <button onClick={() => handleDelete(n.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                       </div>
+                    </>
                     )}
                   </div>
                 )}
@@ -2618,6 +2630,8 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
                 <div style={{ position: "relative", flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                   <button onClick={() => setOpenMenuId(openMenuId === t.id ? null : t.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                   {openMenuId === t.id && (
+                    <>
+                    <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                     <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "160px", zIndex: 20 }}>
                       <button onClick={(e) => handleToggleStatus(t, e)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>{t.status === "abgeschlossen" ? "Reaktivieren" : "Abschließen"}</button>
                       <div style={{ height: "1px", background: BG_DARK }} />
@@ -2625,6 +2639,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
                       <div style={{ height: "1px", background: BG_DARK }} />
                       <button onClick={() => handleDelete(t.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                     </div>
+                  </>
                   )}
                 </div>
               )}
@@ -2767,11 +2782,14 @@ function ThemaDetail({ thema, canEdit, onBack }) {
                   <div style={{ position: "relative", flexShrink: 0 }}>
                     <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "18px", color: TEXT_LIGHT, padding: "2px 6px", lineHeight: 1 }}>⋯</button>
                     {openMenuId === e.id && (
+                      <>
+                      <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                       <div style={{ position: "absolute", top: "28px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(e); setText(e.text); setDatum(e.created_at?.split("T")[0] || new Date().toISOString().split("T")[0]); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                         <div style={{ height: "1px", background: BG_DARK }} />
                         <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                       </div>
+                    </>
                     )}
                   </div>
                 )}
@@ -2934,11 +2952,14 @@ function WishlistPage() {
                   <div style={{ position: "absolute", top: "8px", right: "8px" }} onClick={ev => ev.stopPropagation()}>
                     <button onClick={() => setOpenMenuId(openMenuId === e.id ? null : e.id)} style={{ background: "rgba(255,255,255,0.85)", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "0", width: "28px", height: "28px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>⋯</button>
                     {openMenuId === e.id && (
+                      <>
+                      <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                       <div style={{ position: "absolute", top: "32px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                         <button onClick={() => { setEditEntry(e); setForm({ name: e.name, beschreibung: e.beschreibung || "", kategorie: e.kategorie, foto_url: e.foto_url || "" }); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                         <div style={{ height: "1px", background: BG_DARK }} />
                         <button onClick={() => handleDelete(e.id)} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                       </div>
+                    </>
                     )}
                   </div>
                 )}
@@ -2962,11 +2983,14 @@ function WishlistPage() {
               {canEdit && <div style={{ position: "relative" }}>
                 <button onClick={() => setOpenMenuId(openMenuId === "detail" ? null : "detail")} style={{ background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "16px", color: TEXT_MID, display: "flex", alignItems: "center", justifyContent: "center" }}>⋯</button>
                 {openMenuId === "detail" && (
+                  <>
+                  <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
                   <div style={{ position: "absolute", top: "34px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                     <button onClick={() => { setEditEntry(detailEntry); setForm({ name: detailEntry.name, beschreibung: detailEntry.beschreibung || "", kategorie: detailEntry.kategorie, foto_url: detailEntry.foto_url || "" }); setDetailEntry(null); setOpenMenuId(null); setShowAdd(true); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten</button>
                     <div style={{ height: "1px", background: BG_DARK }} />
                     <button onClick={() => { handleDelete(detailEntry.id); setDetailEntry(null); setOpenMenuId(null); }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen</button>
                   </div>
+                </>
                 )}
               </div>}
             </div>
@@ -3312,7 +3336,9 @@ function AktuelleAnzeigenPage() {
                   <div style={{ position: "relative" }}>
                     <button onClick={() => setDetailMenuOpen(o => !o)} style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(255,255,255,0.82)", border: "none", color: TEXT_DARK, fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>⋯</button>
                     {detailMenuOpen && (
-                      <div style={{ position: "absolute", top: "36px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
+                      <>
+                        <div onClick={() => setDetailMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 19 }} />
+                        <div style={{ position: "absolute", top: "36px", right: 0, background: "#fff", borderRadius: "12px", boxShadow: "0 8px 24px rgba(0,0,0,0.15)", border: `1px solid ${BG_DARK}`, overflow: "hidden", minWidth: "140px", zIndex: 20 }}>
                         <button onClick={() => { setDetailMenuOpen(false); /* TODO: edit */ }} style={{ width: "100%", background: "none", border: "none", padding: "11px 16px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: "#000", fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten
                         </button>
@@ -3321,6 +3347,7 @@ function AktuelleAnzeigenPage() {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></svg> Löschen
                         </button>
                       </div>
+                      </>
                     )}
                   </div>
                 )}
