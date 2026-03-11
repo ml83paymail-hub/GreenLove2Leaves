@@ -3070,7 +3070,7 @@ function WishlistPage() {
 const SHAREABLE_PAGES = [
   { id: "fotoalbum", label: "Fotoalbum" },
   { id: "unsere-pflanzen", label: "Unsere Pflanzen" },
-  { id: "anzeigen", label: "Aktuelle Anzeigen" },
+  { id: "anzeigen", label: "Pflanzenliste" },
 ];
 
 // ── Aktuelle Anzeigen Page ───────────────────────────────────────────────────
