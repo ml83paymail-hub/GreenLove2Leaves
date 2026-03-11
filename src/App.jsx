@@ -3258,7 +3258,7 @@ function AktuelleAnzeigenPage() {
     <div>
       <div style={{ marginBottom: "8px" }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Aktuelle Anzeigen</h1>
-        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{anzeigen.length} Anzeige{anzeigen.length !== 1 ? "n" : ""} · <span style={{ color: TEXT_DARK, fontWeight: "600" }}>Summe: {anzeigen.reduce((s, a) => s + (parseFloat(a.preis) || 0), 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span></p>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{anzeigen.length} Anzeige{anzeigen.length !== 1 ? "n" : ""} · <span style={{ color: TEXT_DARK, fontWeight: "600" }}>Summe: {anzeigen.reduce((s, a) => s + (parseFloat(a.preis) || 0) * (parseInt(a.anzahl) || 1), 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span></p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
       {canEdit && <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
