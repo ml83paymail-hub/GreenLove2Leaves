@@ -265,6 +265,7 @@ function dbToEntry(row) {
     date: row.created_at,
     note: row.notiz || "",
     photo: row.foto_url || "",
+    fotoKategorie: row.foto_kategorie || null,
   };
 }
 
@@ -300,7 +301,7 @@ async function uploadPhoto(file, folder = "pflanzen") {
 
 // ── Menu ──────────────────────────────────────────────────────────────────────
 const menu = [
-  { id: "updates", label: "Updates", emoji: "»", sub: [{ id: "fotoalbum", label: "Fotoalbum", emoji: "»" }] },
+  { id: "updates", label: "Updates", emoji: "»", sub: [{ id: "fotoalbum", label: "Fotoalbum", emoji: "»" }, { id: "bluetenbilder", label: "Blütenbilder", emoji: "»" }] },
   { id: "content", label: "Content", emoji: "»", sub: [{ id: "social-media", label: "Social Media", emoji: "»" }] },
   { id: "pflanzen", label: "Pflanzen", emoji: "»", sub: [
     { id: "unsere-pflanzen", label: "Unsere Pflanzen", emoji: "»" },
@@ -414,6 +415,7 @@ function Tagebuch({ plantId, plantName }) {
   const [newNote, setNewNote] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [fotoKategorie, setFotoKategorie] = useState(null);
   const [saving, setSaving] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
@@ -445,9 +447,17 @@ function Tagebuch({ plantId, plantName }) {
       const { data, error } = await supabase.from("tagebuch").insert({
         pflanze_id: plantId, notiz: newNote.trim() || null, foto_url,
         created_at: new Date(entryDate).toISOString(),
+        foto_kategorie: foto_url ? fotoKategorie : null,
       }).select().single();
-      if (!error && data) setEntries(prev => [...prev, dbToEntry(data)]);
+      if (!error && data) {
+        setEntries(prev => [dbToEntry(data), ...prev]);
+        // Wenn "fotoalbum" gewählt → Pflanzenkarte-Foto automatisch aktualisieren
+        if (foto_url && fotoKategorie === "fotoalbum") {
+          await supabase.from("pflanzen").update({ foto: foto_url }).eq("id", plantId);
+        }
+      }
       setNewNote(""); setPhotoFile(null); setPhotoPreview(null); setShowForm(false);
+      setFotoKategorie(null);
       setEntryDate(new Date().toISOString().slice(0, 10));
       // Discord Benachrichtigung
       if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url);
@@ -509,7 +519,27 @@ function Tagebuch({ plantId, plantName }) {
             {photoPreview && (
               <div style={{ marginTop: "8px", position: "relative", display: "inline-block" }}>
                 <img src={photoPreview} alt="Vorschau" style={{ width: "100%", maxHeight: "280px", objectFit: "cover", borderRadius: "6px", border: `1px solid ${BG_DARK}` }} />
-                <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); }} style={{ position: "absolute", top: "6px", right: "6px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", fontSize: "11px", color: WHITE }}>✕</button>
+                <button onClick={() => { setPhotoPreview(null); setPhotoFile(null); setFotoKategorie(null); }} style={{ position: "absolute", top: "6px", right: "6px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", fontSize: "11px", color: WHITE }}>✕</button>
+              </div>
+            )}
+            {photoPreview && (
+              <div style={{ marginTop: "8px" }}>
+                <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>Foto zuordnen (optional)</div>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {[
+                    { key: "fotoalbum", label: "📷 Fotoalbum", desc: "Wird als Kartenfoto verwendet" },
+                    { key: "bluetenbilder", label: "🌸 Blütenbilder", desc: "Erscheint in Blütenbilder" },
+                  ].map(opt => (
+                    <button key={opt.key} onClick={() => setFotoKategorie(fotoKategorie === opt.key ? null : opt.key)}
+                      title={opt.desc}
+                      style={{ padding: "5px 12px", borderRadius: "20px", border: `1px solid ${fotoKategorie === opt.key ? ACCENT : BG_DARK}`, background: fotoKategorie === opt.key ? ACCENT : WHITE, color: fotoKategorie === opt.key ? WHITE : TEXT_MID, fontSize: "11px", cursor: "pointer", fontFamily: FONT, transition: "all 0.15s" }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {fotoKategorie === "fotoalbum" && (
+                  <div style={{ marginTop: "5px", fontSize: "10px", color: ACCENT, fontFamily: FONT }}>✓ Kartenfoto wird automatisch aktualisiert</div>
+                )}
               </div>
             )}
           </div>
@@ -525,7 +555,16 @@ function Tagebuch({ plantId, plantName }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {visible.map(entry => (
             <div key={entry.id} style={{ background: BG, borderRadius: "8px", border: `1px solid ${BG_DARK}`, overflow: "visible", position: "relative" }}>
-              {entry.photo && <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: "8px 8px 0 0" }} />}
+              {entry.photo && (
+                <div style={{ position: "relative" }}>
+                  <img src={entry.photo} alt="" style={{ width: "100%", height: "auto", display: "block", borderRadius: "8px 8px 0 0" }} />
+                  {entry.fotoKategorie && (
+                    <span style={{ position: "absolute", top: "8px", left: "8px", background: ACCENT, color: WHITE, fontSize: "9px", fontWeight: "600", padding: "2px 8px", borderRadius: "20px", fontFamily: FONT }}>
+                      {entry.fotoKategorie === "fotoalbum" ? "📷 Fotoalbum" : "🌸 Blütenbilder"}
+                    </span>
+                  )}
+                </div>
+              )}
               <div style={{ padding: "10px 12px" }}>
                 {editingEntry === entry.id ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -1223,7 +1262,8 @@ function FotoalbumPage() {
       setLoading(true);
       const { data } = await supabase
         .from("tagebuch")
-        .select("id, foto_url, created_at, notiz, pflanze_id, pflanzen(name)")
+        .select("id, foto_url, created_at, notiz, pflanze_id, foto_kategorie, pflanzen(name)")
+        .eq("foto_kategorie", "fotoalbum")
         .not("foto_url", "is", null)
         .order("created_at", { ascending: false });
       if (data) setPhotos(data);
@@ -1283,6 +1323,87 @@ function FotoalbumPage() {
               {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
               <div style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{new Date(lightbox.created_at).toLocaleDateString("de-DE")}</div>
 
+            </div>
+            <button onClick={() => setLightbox(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "#fff", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Blütenbilder Page ─────────────────────────────────────────────────────────
+function BluetenbilderPage() {
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [lightbox, setLightbox] = useState(null);
+  const LIMIT = 20;
+  const [visibleCount, setVisibleCount] = useState(LIMIT);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("tagebuch")
+        .select("id, foto_url, created_at, notiz, pflanze_id, foto_kategorie, pflanzen(name)")
+        .eq("foto_kategorie", "bluetenbilder")
+        .not("foto_url", "is", null)
+        .order("created_at", { ascending: false });
+      if (data) setPhotos(data);
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  return (
+    <div>
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: "0 0 4px 0", fontSize: "26px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT }}>Blütenbilder</h1>
+        <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{photos.length} Blütenfoto{photos.length !== 1 ? "s" : ""}</p>
+      </div>
+      <div style={{ height: "1px", background: BG_DARK, marginBottom: "26px" }} />
+
+      {loading ? (
+        <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Fotos werden geladen …</div>
+      ) : photos.length === 0 ? (
+        <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <span style={{ fontSize: "30px", opacity: 0.3 }}>🌸</span>
+          <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>Noch keine Blütenbilder vorhanden.</p>
+        </div>
+      ) : (
+        <div>
+          <div className="foto-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
+            {photos.slice(0, visibleCount).map(photo => (
+              <div key={photo.id} onClick={() => setLightbox(photo)}
+                style={{ cursor: "pointer", borderRadius: "8px", overflow: "hidden", background: BTN, aspectRatio: "3/4", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+                <img src={photo.foto_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.2s" }}
+                  onMouseEnter={e => e.target.style.transform = "scale(1.03)"}
+                  onMouseLeave={e => e.target.style.transform = "scale(1)"} />
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.6))", padding: "20px 8px 8px" }}>
+                  <div style={{ fontSize: "11px", color: "#fff", fontFamily: FONT, fontWeight: "600", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{photo.pflanzen?.name || ""}</div>
+                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.7)", fontFamily: FONT }}>{new Date(photo.created_at).toLocaleDateString("de-DE")}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {visibleCount < photos.length && (
+            <div style={{ textAlign: "center", marginTop: "24px" }}>
+              <button onClick={() => setVisibleCount(v => v + LIMIT)} style={{ background: BTN, border: "none", borderRadius: "8px", padding: "10px 28px", cursor: "pointer", fontSize: "13px", color: "#fff", fontFamily: FONT }}>
+                {Math.min(LIMIT, photos.length - visibleCount)} weitere Fotos laden
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {lightbox && (
+        <div onClick={() => setLightbox(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ maxWidth: "500px", width: "100%", background: WHITE, borderRadius: "12px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+            <img src={lightbox.foto_url} alt="" style={{ width: "100%", height: "auto", display: "block" }} />
+            <div style={{ padding: "14px 16px" }}>
+              <div style={{ fontSize: "14px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, marginBottom: "4px" }}>{lightbox.pflanzen?.name}</div>
+              {lightbox.notiz && <div style={{ fontSize: "13px", color: TEXT_MID, fontFamily: FONT, marginBottom: "6px" }}>{lightbox.notiz}</div>}
+              <div style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{new Date(lightbox.created_at).toLocaleDateString("de-DE")}</div>
             </div>
             <button onClick={() => setLightbox(null)} style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(0,0,0,0.5)", border: "none", borderRadius: "50%", width: "32px", height: "32px", cursor: "pointer", color: "#fff", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
@@ -3280,7 +3401,7 @@ function AktuelleAnzeigenPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "14px" }}>
               {grouped.flatMap(g => g.items).map(a => (
                   <div key={a.id} onClick={() => setDetail(a)}
-                    style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${ACCENT}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", transition: "transform 0.15s, box-shadow 0.15s" }}
+                    style={{ background: GLASS, borderRadius: "10px", overflow: "hidden", border: `1px solid ${GLASS_BORDER}`, cursor: "pointer", boxShadow: GLASS_SHADOW, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", transition: "transform 0.15s, box-shadow 0.15s" }}
                     onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(150,148,130,0.22)"; }}
                     onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = GLASS_SHADOW; }}
                   >
@@ -3288,7 +3409,7 @@ function AktuelleAnzeigenPage() {
                       {!a.foto_url && <span style={{ fontSize: "28px", opacity: 0.2 }}>📢</span>}
                       {a.preis != null && <span style={{ position: "absolute", bottom: "8px", left: "50%", transform: "translateX(-50%)", background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "11px", fontWeight: "700", padding: "3px 10px", borderRadius: "20px", fontFamily: FONT, whiteSpace: "nowrap" }}>{parseFloat(a.preis).toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>}
                     </div>
-                    <div style={{ padding: "8px 10px", background: BG }}>
+                    <div style={{ padding: "8px 10px", background: "rgba(255,255,255,0.3)" }}>
                       <div style={{ fontSize: "12px", fontWeight: "600", color: TEXT_DARK, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.name}</div>
                     </div>
                   </div>
@@ -3934,7 +4055,7 @@ function SharedView({ token }) {
     </div>
   );
 
-  const pageLabels = { "fotoalbum": "Fotoalbum", "unsere-pflanzen": "Unsere Pflanzen", "anzeigen": "Pflanzenliste" };
+  const pageLabels = { "fotoalbum": "Fotoalbum", "bluetenbilder": "Blütenbilder", "unsere-pflanzen": "Unsere Pflanzen", "anzeigen": "Pflanzenliste" };
 
   return (
     <RoleContext.Provider value="readonly">
@@ -3953,7 +4074,7 @@ function SharedView({ token }) {
           <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT }}>Leseansicht</span>
         </header>
         <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-          {activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : null}
+          {activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "bluetenbilder" ? <BluetenbilderPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : null}
         </main>
       </div>
     </RoleContext.Provider>
@@ -4049,7 +4170,7 @@ function AppInner({ onLogout }) {
     history.replaceState(null, "", "#" + id);
   };
 
-  const pageTitle = activePage === "anzeigen" ? "Aktuelle Anzeigen" : activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : activePage === "fotoalbum" ? "Fotoalbum" : activePage === "ableger" ? "Unsere Ableger" : activePage === "wishlist" ? "Wishlist" : activePage === "notizbuch" ? "Notizbuch" : activePage === "todo" ? "To Do Liste" : activePage === "pflanzenkasse" ? "Pflanzenkasse" : activePage === "bestellungen" ? "Bestellungen & Käufe" : activePage === "postfach" ? "Postfach" : activePage === "gastzugang" ? "Gastzugang" : activePage === "archiv" ? "Archiv" : pages[activePage]?.title;
+  const pageTitle = activePage === "anzeigen" ? "Aktuelle Anzeigen" : activePage === "unsere-pflanzen" ? "Unsere Pflanzen" : activePage === "fotoalbum" ? "Fotoalbum" : activePage === "bluetenbilder" ? "Blütenbilder" : activePage === "ableger" ? "Unsere Ableger" : activePage === "wishlist" ? "Wishlist" : activePage === "notizbuch" ? "Notizbuch" : activePage === "todo" ? "To Do Liste" : activePage === "pflanzenkasse" ? "Pflanzenkasse" : activePage === "bestellungen" ? "Bestellungen & Käufe" : activePage === "postfach" ? "Postfach" : activePage === "gastzugang" ? "Gastzugang" : activePage === "archiv" ? "Archiv" : pages[activePage]?.title;
 
   const Sidebar = ({ mobile }) => (
     <aside style={{
@@ -4142,7 +4263,7 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "bluetenbilder" ? <BluetenbilderPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
