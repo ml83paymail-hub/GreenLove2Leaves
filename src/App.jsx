@@ -3361,6 +3361,7 @@ function WishlistPage() {
 // ── Shareable Pages Config ───────────────────────────────────────────────────
 const SHAREABLE_PAGES = [
   { id: "fotoalbum", label: "Fotoalbum" },
+  { id: "bluetenbilder", label: "Blütenbilder" },
   { id: "unsere-pflanzen", label: "Unsere Pflanzen" },
   { id: "anzeigen", label: "Pflanzenliste" },
 ];
