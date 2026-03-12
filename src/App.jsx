@@ -107,12 +107,16 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── Discord ───────────────────────────────────────────────────────────────────
 const DISCORD_WEBHOOK = import.meta.env.VITE_DISCORD_WEBHOOK;
 
-async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
+async function sendDiscordNotification(pflanzenname, notiz, hatFoto, fotoKategorie) {
   const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
   const d = new Date();
   const datum = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
 
-  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\nEin neues Foto wurde hinzugefügt`;
+  let fotoText = "Ein neues Foto in Notizen wurde hochgeladen";
+  if (fotoKategorie === "fotoalbum") fotoText = "Ein neues Foto wurde in die Fotogalerie hochgeladen";
+  else if (fotoKategorie === "bluetenbilder") fotoText = "Ein neues Foto wurde in Blütenbilder hochgeladen";
+
+  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\n${fotoText}`;
 
   const payload = {
     embeds: [{
@@ -409,7 +413,7 @@ function Tagebuch({ plantId, plantName }) {
   const canEdit = role !== "readonly" && role !== "guest";
   const [entries, setEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
   const [discordOn, setDiscordOn] = useState(() => localStorage.getItem("discordOn") !== "false");
   const toggleDiscord = () => setDiscordOn(v => { localStorage.setItem("discordOn", !v); return !v; });
   const [newNote, setNewNote] = useState("");
@@ -427,8 +431,8 @@ function Tagebuch({ plantId, plantName }) {
   }, [plantId]);
 
   const allEntries = entries;
-  const visible = showAll ? allEntries : allEntries.slice(0, 5);
-  const hidden = allEntries.length - 5;
+  const visible = allEntries.slice(0, visibleCount);
+  const hidden = allEntries.length - visibleCount;
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
@@ -460,8 +464,9 @@ function Tagebuch({ plantId, plantName }) {
       setNewNote(""); setPhotoFile(null); setPhotoPreview(null); setShowForm(false);
       setFotoKategorie(null);
       setEntryDate(new Date().toISOString().slice(0, 10));
+      setVisibleCount(5);
       // Discord Benachrichtigung
-      if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url);
+      if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url, fotoKategorie);
     } finally { setSaving(false); }
   };
 
@@ -614,14 +619,9 @@ function Tagebuch({ plantId, plantName }) {
               </div>
             </div>
           ))}
-          {!showAll && hidden > 0 && (
-            <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
-              ▼ {hidden} weitere Einträge anzeigen
-            </button>
-          )}
-          {showAll && (
-            <button onClick={() => setShowAll(false)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
-              ▲ Weniger anzeigen
+          {hidden > 0 && (
+            <button onClick={() => setVisibleCount(c => c + 5)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
+              ▼ 5 weitere Einträge anzeigen
             </button>
           )}
         </div>
@@ -692,7 +692,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}
       onClick={() => { setMenuOpen(false); onClose(); }}>
       <div style={{ background: "rgba(245,244,238,0.88)", borderRadius: "14px", width: "100%", maxWidth: "440px", overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.18)", maxHeight: "90vh", overflowY: "auto", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: `1px solid ${GLASS_BORDER}` }}
-        onClick={e => e.stopPropagation()}>
+        onClick={e => { e.stopPropagation(); setMenuOpen(false); }}>
 
         {/* Photo area */}
         <div style={{ height: "280px", background: form.foto ? `url(${form.foto}) center/cover` : BTN, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
