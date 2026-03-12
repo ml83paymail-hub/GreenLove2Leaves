@@ -95,7 +95,6 @@ function ToastContainer({ toasts, onRemove }) {
         </div>
       ))}
       <style>{`@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
-      <style>{`:root { color-scheme: light; } input[type="date"], input[type="datetime-local"] { color-scheme: light; }`}</style>
     </div>
   );
 }
@@ -226,6 +225,92 @@ function getWochentag(dateStr) {
 function formatDate(dateStr) {
   if (!dateStr) return "–";
   return new Date(dateStr).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+// ── Custom DatePicker (replaces native input type=date) ───────────────────────
+const MONATE_LANG = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+
+function DatePicker({ value, onChange, style = {} }) {
+  const [open, setOpen] = useState(false);
+  const parsed = value ? new Date(value + "T12:00:00") : new Date();
+  const [viewYear, setViewYear] = useState(parsed.getFullYear());
+  const [viewMonth, setViewMonth] = useState(parsed.getMonth());
+  const ref = useState(() => ({ current: null }))[0];
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("touchstart", handler); };
+  }, [open]);
+
+  const displayVal = value ? new Date(value + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) : "Datum wählen";
+
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  // Monday-first: shift so Mon=0
+  const startOffset = (firstDay + 6) % 7;
+  const cells = [];
+  for (let i = 0; i < startOffset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const selectDay = (d) => {
+    const mm = String(viewMonth + 1).padStart(2, "0");
+    const dd = String(d).padStart(2, "0");
+    onChange(`${viewYear}-${mm}-${dd}`);
+    setOpen(false);
+  };
+
+  const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
+  const nextMonth = () => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); } else setViewMonth(m => m + 1); };
+
+  const selDay = value ? new Date(value + "T12:00:00").getDate() : -1;
+  const selMonth = value ? new Date(value + "T12:00:00").getMonth() : -1;
+  const selYear = value ? new Date(value + "T12:00:00").getFullYear() : -1;
+  const today = new Date();
+
+  return (
+    <div ref={el => ref.current = el} style={{ position: "relative", ...style }}>
+      <button type="button" onClick={() => { setViewYear(parsed.getFullYear()); setViewMonth(parsed.getMonth()); setOpen(o => !o); }}
+        style={{ width: "100%", background: style.background || BG, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 12px", fontSize: style.fontSize || "12px", color: value ? TEXT_DARK : TEXT_LIGHT, fontFamily: FONT, outline: "none", boxSizing: "border-box", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+        <span>{displayVal}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_LIGHT} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", zIndex: 9999, top: "calc(100% + 4px)", left: 0, background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "10px", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", padding: "14px", minWidth: "260px", fontFamily: FONT }}>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>‹</button>
+            <span style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK }}>{MONATE_LANG[viewMonth]} {viewYear}</span>
+            <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>›</button>
+          </div>
+          {/* Weekday headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
+            {["Mo","Di","Mi","Do","Fr","Sa","So"].map(d => (
+              <div key={d} style={{ textAlign: "center", fontSize: "10px", color: TEXT_LIGHT, fontWeight: "600", padding: "2px 0" }}>{d}</div>
+            ))}
+          </div>
+          {/* Days grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
+            {cells.map((d, i) => {
+              if (!d) return <div key={"e"+i} />;
+              const isSelected = d === selDay && viewMonth === selMonth && viewYear === selYear;
+              const isToday = d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+              return (
+                <button key={d} type="button" onClick={() => selectDay(d)} style={{ background: isSelected ? ACCENT : "none", color: isSelected ? WHITE : isToday ? ACCENT : TEXT_DARK, border: isToday && !isSelected ? `1px solid ${ACCENT}` : "1px solid transparent", borderRadius: "6px", padding: "5px 2px", fontSize: "12px", cursor: "pointer", fontFamily: FONT, fontWeight: isSelected ? "600" : "400", textAlign: "center" }}>
+                  {d}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // DB row → app object
@@ -420,6 +505,8 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
   const [saving, setSaving] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [editingFotoKategorie, setEditingFotoKategorie] = useState(null);
+  const [editingNote, setEditingNote] = useState("");
+  const [editingDate, setEditingDate] = useState("");
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
@@ -511,9 +598,8 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
           <textarea placeholder="Notiz schreiben …" value={newNote} onChange={e => setNewNote(e.target.value)} rows={3} style={{ width: "100%", background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 10px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
           {/* Date picker */}
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT }}>Datum & Uhrzeit</label>
-            <input type="date" value={entryDate} onChange={e => setEntryDate(e.target.value)}
-              style={{ background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px 10px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none" }} />
+            <label style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT }}>Datum</label>
+            <DatePicker value={entryDate} onChange={setEntryDate} style={{ background: WHITE }} />
           </div>
 
           <div>
@@ -573,8 +659,8 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
               <div style={{ padding: "10px 12px" }}>
                 {editingEntry === entry.id ? (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <textarea defaultValue={entry.note} id={"edit-note-"+entry.id} rows={3} style={{ width: "100%", background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 10px", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
-                    <input type="date" defaultValue={entry.date.slice(0,10)} id={"edit-date-"+entry.id} style={{ background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px 10px", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, outline: "none" }} />
+                    <textarea value={editingNote} onChange={e => setEditingNote(e.target.value)} rows={3} style={{ width: "100%", background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 10px", fontSize: "14px", color: TEXT_DARK, fontFamily: FONT, outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+                    <DatePicker value={editingDate} onChange={setEditingDate} style={{ background: WHITE }} />
                     {entry.photo && (
                       <div>
                         <div style={{ fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Foto zuordnen (optional)</div>
@@ -590,7 +676,7 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
                     )}
                     <div style={{ display: "flex", gap: "8px" }}>
                       <button onClick={() => { setEditingEntry(null); setEditingFotoKategorie(null); }} style={{ flex: 1, background: BG_DARK, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: TEXT_MID, fontFamily: FONT }}>Abbrechen</button>
-                      <button onClick={() => handleUpdate(entry.id, document.getElementById("edit-note-"+entry.id).value, document.getElementById("edit-date-"+entry.id).value)} style={{ flex: 2, background: BTN, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>Speichern</button>
+                      <button onClick={() => handleUpdate(entry.id, editingNote, editingDate)} style={{ flex: 2, background: BTN, border: "none", borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>Speichern</button>
                     </div>
                   </div>
                 ) : (
@@ -601,7 +687,7 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
                       <div style={{ position: "relative" }}>
                         {canEdit && <button onClick={e => { e.stopPropagation(); const m = document.getElementById("menu-"+entry.id); m.style.display = m.style.display === "block" ? "none" : "block"; }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_LIGHT, fontFamily: FONT, padding: "2px 6px", letterSpacing: "1px" }}>⋯</button>}
                         <div id={"menu-"+entry.id} style={{ display: "none", position: "absolute", right: 0, top: "100%", marginTop: "4px", background: WHITE, borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", border: `1px solid ${BG_DARK}`, minWidth: "130px", zIndex: 100, overflow: "hidden" }}>
-                          <button onClick={() => { setEditingEntry(entry.id); setEditingFotoKategorie(entry.fotoKategorie || null); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
+                          <button onClick={() => { setEditingEntry(entry.id); setEditingFotoKategorie(entry.fotoKategorie || null); setEditingNote(entry.note || ""); setEditingDate(entry.date.slice(0,10)); document.getElementById("menu-"+entry.id).style.display = "none"; }} style={{ width: "100%", background: "none", border: "none", padding: "10px 14px", textAlign: "left", cursor: "pointer", fontSize: "12px", color: TEXT_DARK, fontFamily: FONT, display: "flex", alignItems: "center", gap: "8px" }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Bearbeiten
                           </button>
                           <div style={{ height: "1px", background: BG_DARK }} />
@@ -757,7 +843,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                 </div>
               </div>
               <div><label style={labelStyle}>Vollständiger Name</label><input style={inputStyle} value={form.vollstaendigerName} onChange={e => set("vollstaendigerName", e.target.value)} /></div>
-              <div><label style={labelStyle}>Datum (Einzug)</label><input type="date" style={inputStyle} value={form.datum} onChange={e => set("datum", e.target.value)} /></div>
+              <div><label style={labelStyle}>Datum (Einzug)</label><DatePicker value={form.datum} onChange={v => set("datum", v)} style={{ background: BG }} /></div>
               {form.datum && (
                 <div style={{ background: BG, borderRadius: "8px", padding: "10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", border: `1px solid ${BG_DARK}` }}>
                   <div><div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT }}>Wochentag</div><div style={{ fontSize: "12px", color: ACCENT, fontFamily: FONT, marginTop: "3px", fontWeight: "600" }}>{getWochentag(form.datum)}</div></div>
@@ -860,7 +946,7 @@ function AddPlantModal({ onClose, onSave }) {
           </div>
 
           <div><label style={labelStyle}>Vollständiger Name</label><input style={inputStyle} placeholder="Botanischer Name" value={form.vollstaendigerName} onChange={e => set("vollstaendigerName", e.target.value)} /></div>
-          <div><label style={labelStyle}>Datum (Einzug)</label><input type="date" style={inputStyle} value={form.datum} onChange={e => set("datum", e.target.value)} /></div>
+          <div><label style={labelStyle}>Datum (Einzug)</label><DatePicker value={form.datum} onChange={v => set("datum", v)} style={{ background: BG }} /></div>
 
           {form.datum && (
             <div style={{ background: BG, borderRadius: "8px", padding: "10px 14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", border: `1px solid ${BG_DARK}` }}>
@@ -1232,7 +1318,7 @@ function TodoPage() {
               </div>
               <div>
                 <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, display: "block", marginBottom: "5px" }}>Datum (optional)</label>
-                <input type="date" value={form.datum} onChange={e => setForm(f => ({ ...f, datum: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+                <DatePicker value={form.datum} onChange={v => setForm(f => ({ ...f, datum: v }))} />
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "22px", justifyContent: "flex-end" }}>
@@ -1790,7 +1876,7 @@ function PflanzenkassePage() {
                 </select>
               </div>
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-                <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+                <DatePicker value={form.datum} onChange={v => set("datum", v)} />
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
@@ -2090,7 +2176,7 @@ function BestellungenPage() {
                 <input value={editForm.auf_im} onChange={e => setE("auf_im", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
               </div>
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-                <input type="date" value={editForm.datum} onChange={e => setE("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+                <DatePicker value={editForm.datum} onChange={v => setE("datum", v)} />
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
@@ -2119,7 +2205,7 @@ function BestellungenPage() {
                 <input value={form.auf_im} onChange={e => set("auf_im", e.target.value)} placeholder="optional" style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
               </div>
               <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-                <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+                <DatePicker value={form.datum} onChange={v => set("datum", v)} />
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
@@ -2299,7 +2385,7 @@ function AblegerPage() {
         </div>
       </div>
       <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Datum</label>
-        <input type="date" value={form.datum} onChange={e => set("datum", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} />
+        <DatePicker value={form.datum} onChange={v => set("datum", v)} />
       </div>
       <div><label style={{ display: "block", fontSize: "10px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", marginBottom: "5px", fontFamily: FONT }}>Typ</label>
         <select value={form.typ} onChange={e => set("typ", e.target.value)} style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
@@ -2641,7 +2727,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled, suche }) {
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{editEntry ? "Notiz bearbeiten" : "Neue Notiz"}</h2>
             <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Datum</label>
-            <input type="date" value={datum} onChange={e => setDatum(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "12px", marginTop: "4px" }} />
+            <DatePicker value={datum} onChange={setDatum} style={{ marginBottom: "12px", marginTop: "4px" }} />
             <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Notiz</label>
             <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginTop: "4px" }} />
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
@@ -2951,7 +3037,7 @@ function ThemaDetail({ thema, canEdit, onBack }) {
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <h2 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>{editEntry ? "Eintrag bearbeiten" : "Neuer Eintrag"}</h2>
             <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Datum</label>
-            <input type="date" value={datum} onChange={e => setDatum(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box", marginBottom: "12px", marginTop: "4px" }} />
+            <DatePicker value={datum} onChange={setDatum} style={{ marginBottom: "12px", marginTop: "4px" }} />
             <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>Notiz</label>
             <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Notiz schreiben …" rows={6} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${BG_DARK}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box", marginTop: "4px" }} />
             <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
@@ -4100,18 +4186,6 @@ function SharedView({ token }) {
 }
 
 export default function App() {
-  // Force light color-scheme for Android native date picker
-  useEffect(() => {
-    let meta = document.querySelector('meta[name="color-scheme"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "color-scheme";
-      document.head.appendChild(meta);
-    }
-    meta.content = "light";
-    document.documentElement.style.colorScheme = "light";
-  }, []);
-
   const shareToken = (() => {
     const hash = window.location.hash.replace("#", "");
     if (hash.startsWith("share/")) return hash.replace("share/", "");
