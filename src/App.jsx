@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, createContext, useContext } from "react";
 import { createClient } from "@supabase/supabase-js";
+import seitenLogo from "./Seitenlogo.png";
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 const MAIN_PW = import.meta.env.VITE_PASSWORD_MAIN;
@@ -52,7 +53,7 @@ function LoginScreen({ onLogin }) {
       <style>{`@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }`}</style>
       <div style={{ background: "rgba(255,255,255,0.6)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderRadius: "16px", padding: "40px 36px", width: "100%", maxWidth: "340px", boxShadow: "0 8px 40px rgba(0,0,0,0.12)", border: "1px solid rgba(255,255,255,0.7)", animation: shake ? "shake 0.5s ease" : "none" }}>
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{ fontSize: "32px", marginBottom: "10px" }}>🌿</div>
+          <div style={{ marginBottom: "10px" }}><img src={seitenLogo} alt="GreenLove2Leaves Logo" style={{ width: "52px", height: "52px", objectFit: "contain", borderRadius: "50%" }} /></div>
           <div style={{ fontSize: "20px", fontWeight: "700", color: "#1e2218", letterSpacing: "0.5px" }}>GreenLove2Leaves</div>
           <div style={{ fontSize: "12px", color: "#8a9080", marginTop: "4px" }}>Bitte Passwort eingeben</div>
         </div>
@@ -4233,7 +4234,7 @@ function SharedView({ token }) {
     <RoleContext.Provider value="readonly">
       <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden", flexDirection: "column" }}>
         <header style={{ height: "54px", background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, display: "flex", alignItems: "center", padding: "0 20px", gap: "10px", flexShrink: 0 }}>
-          <span style={{ fontSize: "15px", color: TEXT_DARK, fontWeight: "600", fontFamily: FONT }}>🌿 GreenLove2Leaves</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px", color: TEXT_DARK, fontWeight: "600", fontFamily: FONT }}><img src={seitenLogo} alt="Logo" style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "50%" }} /> GreenLove2Leaves</span>
           {pages.length > 1 && (
             <div style={{ display: "flex", gap: "6px", marginLeft: "16px" }}>
               {pages.map(p => (
