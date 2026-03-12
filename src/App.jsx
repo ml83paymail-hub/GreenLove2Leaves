@@ -107,12 +107,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── Discord ───────────────────────────────────────────────────────────────────
 const DISCORD_WEBHOOK = import.meta.env.VITE_DISCORD_WEBHOOK;
 
-async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
+async function sendDiscordNotification(pflanzenname, notiz, hatFoto, fotoKategorie) {
   const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
   const d = new Date();
   const datum = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
 
-  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\nEin neues Foto wurde hinzugefügt`;
+  let fotoText = "Es gibt ein neues Foto in Notizen";
+  if (fotoKategorie === "fotoalbum") fotoText = "Es wurde ein neues Foto in Fotoalbum hochgeladen";
+  else if (fotoKategorie === "bluetenbilder") fotoText = "Es wurde ein neues Foto in Blütenbilder hochgeladen";
+  let beschreibung;
+  if (!hatFoto) {
+    beschreibung = `**${pflanzenname}**\n\u200B\n${notiz}`;
+  } else if (notiz) {
+    beschreibung = `**${pflanzenname}**\n\u200B\n${fotoText}\n\u200B\n${notiz}`;
+  } else {
+    beschreibung = `**${pflanzenname}**\n\u200B\n${fotoText}`;
+  }
 
   const payload = {
     embeds: [{
@@ -593,7 +603,7 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
       setFotoKategorie(null);
       setEntryDate(new Date().toISOString().slice(0, 10));
       // Discord Benachrichtigung
-      if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url);
+      if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url, fotoKategorie);
     } finally { setSaving(false); }
   };
 
