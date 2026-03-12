@@ -4233,18 +4233,20 @@ function SharedView({ token }) {
   return (
     <RoleContext.Provider value="readonly">
       <div style={{ display: "flex", height: "100vh", fontFamily: FONT, background: BG, overflow: "hidden", flexDirection: "column" }}>
-        <header style={{ height: "54px", background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, display: "flex", alignItems: "center", padding: "0 20px", gap: "10px", flexShrink: 0 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px", color: TEXT_DARK, fontWeight: "600", fontFamily: FONT }}><img src={seitenLogo} alt="Logo" style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "50%" }} /> GreenLove2Leaves</span>
+        <header style={{ background: "rgba(235,235,230,0.75)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: `1px solid ${GLASS_BORDER}`, flexShrink: 0 }}>
+          <div style={{ height: "54px", display: "flex", alignItems: "center", padding: "0 20px", gap: "10px" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "15px", color: TEXT_DARK, fontWeight: "600", fontFamily: FONT }}><img src={seitenLogo} alt="Logo" style={{ width: "28px", height: "28px", objectFit: "contain", borderRadius: "50%" }} /> GreenLove2Leaves</span>
+            <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT, whiteSpace: "nowrap" }}>Leseansicht</span>
+          </div>
           {pages.length > 1 && (
-            <div style={{ display: "flex", gap: "6px", marginLeft: "16px" }}>
+            <div style={{ display: "flex", gap: "6px", padding: "0 20px 10px", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
               {pages.map(p => (
-                <button key={p} onClick={() => setActivePage(p)} style={{ padding: "5px 12px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "12px", fontFamily: FONT, background: activePage === p ? ACCENT : GLASS, color: activePage === p ? "#fff" : TEXT_MID }}>
+                <button key={p} onClick={() => setActivePage(p)} style={{ padding: "6px 14px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, background: activePage === p ? ACCENT : GLASS, color: activePage === p ? "#fff" : TEXT_MID, whiteSpace: "nowrap", flexShrink: 0 }}>
                   {pageLabels[p] || p}
                 </button>
               ))}
             </div>
           )}
-          <span style={{ fontSize: "11px", color: TEXT_LIGHT, marginLeft: "auto", fontFamily: FONT }}>Leseansicht</span>
         </header>
         <main style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
           {activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "bluetenbilder" ? <BluetenbilderPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : null}
