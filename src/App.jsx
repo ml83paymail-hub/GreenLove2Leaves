@@ -1051,7 +1051,20 @@ function GiessplanWidget({ plants, activeTag, onTagClick, onClose }) {
   const max = Math.max(...counts, 1);
 
   return (
-    <div style={{ position: "absolute", top: "54px", right: "48px", zIndex: 50, background: "rgba(245,244,238,0.97)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${GLASS_BORDER}`, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", padding: "18px 20px", minWidth: "340px" }}>
+    <>
+      <style>{`
+        @media (max-width: 767px) {
+          .giess-widget {
+            position: fixed !important;
+            top: 54px !important;
+            left: 12px !important;
+            right: 12px !important;
+            width: auto !important;
+            min-width: unset !important;
+          }
+        }
+      `}</style>
+      <div className="giess-widget" style={{ position: "absolute", top: "54px", right: "48px", zIndex: 50, background: "rgba(245,244,238,0.97)", borderRadius: "14px", boxShadow: "0 8px 32px rgba(0,0,0,0.14)", border: `1px solid ${GLASS_BORDER}`, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", padding: "18px 20px", minWidth: "340px", maxWidth: "calc(100vw - 24px)", boxSizing: "border-box" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
         <span style={{ fontSize: "11px", color: TEXT_MID, letterSpacing: "1.5px", textTransform: "uppercase", fontFamily: FONT, fontWeight: "600" }}>Gießtage – Wochenübersicht</span>
         <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", color: TEXT_LIGHT }}>✕</button>
@@ -1077,6 +1090,7 @@ function GiessplanWidget({ plants, activeTag, onTagClick, onClose }) {
         </div>
       )}
     </div>
+    </>
   );
 }
 
