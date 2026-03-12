@@ -95,7 +95,7 @@ function ToastContainer({ toasts, onRemove }) {
         </div>
       ))}
       <style>{`@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
-      <style>{`:root { color-scheme: light; } input[type="date"] { color-scheme: light; }`}</style>
+      <style>{`:root { color-scheme: light; } input[type="date"], input[type="datetime-local"] { color-scheme: light; }`}</style>
     </div>
   );
 }
@@ -4100,6 +4100,18 @@ function SharedView({ token }) {
 }
 
 export default function App() {
+  // Force light color-scheme for Android native date picker
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="color-scheme"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "color-scheme";
+      document.head.appendChild(meta);
+    }
+    meta.content = "light";
+    document.documentElement.style.colorScheme = "light";
+  }, []);
+
   const shareToken = (() => {
     const hash = window.location.hash.replace("#", "");
     if (hash.startsWith("share/")) return hash.replace("share/", "");
