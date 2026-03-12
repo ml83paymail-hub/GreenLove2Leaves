@@ -95,10 +95,7 @@ function ToastContainer({ toasts, onRemove }) {
         </div>
       ))}
       <style>{`@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
-      <style>{`
-        input[type="date"] { color-scheme: light; }
-        ::-webkit-calendar-picker-indicator { filter: none; }
-      `}</style>
+      <style>{`:root { color-scheme: light; } input[type="date"] { color-scheme: light; }`}</style>
     </div>
   );
 }
@@ -458,7 +455,7 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
         setEntries(prev => [dbToEntry(data), ...prev]);
         // Wenn "fotoalbum" gewählt → Pflanzenkarte-Foto automatisch aktualisieren
         if (foto_url && fotoKategorie === "fotoalbum") {
-          await supabase.from("pflanzen").update({ foto: foto_url }).eq("id", plantId);
+          await supabase.from("pflanzen").update({ foto_url: foto_url }).eq("id", plantId);
           if (onFotoUpdate) onFotoUpdate(foto_url);
         }
       }
@@ -4247,8 +4244,6 @@ function AppInner({ onLogout }) {
   return (
     <>
       <style>{`
-        :root { color-scheme: light; }
-        input[type="date"] { color-scheme: light; }
         @media (max-width: 767px) {
           .gl-desktop-sidebar { display: none !important; }
           .gl-hamburger { display: flex !important; }
