@@ -95,6 +95,10 @@ function ToastContainer({ toasts, onRemove }) {
         </div>
       ))}
       <style>{`@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
+      <style>{`
+        input[type="date"] { color-scheme: light; }
+        ::-webkit-calendar-picker-indicator { filter: none; }
+      `}</style>
     </div>
   );
 }
@@ -107,16 +111,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── Discord ───────────────────────────────────────────────────────────────────
 const DISCORD_WEBHOOK = import.meta.env.VITE_DISCORD_WEBHOOK;
 
-async function sendDiscordNotification(pflanzenname, notiz, hatFoto, fotoKategorie) {
+async function sendDiscordNotification(pflanzenname, notiz, hatFoto) {
   const monate = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
   const d = new Date();
   const datum = d.getDate() + ". " + monate[d.getMonth()] + " " + d.getFullYear();
 
-  let fotoText = "Ein neues Foto in Notizen wurde hochgeladen";
-  if (fotoKategorie === "fotoalbum") fotoText = "Ein neues Foto wurde in die Fotogalerie hochgeladen";
-  else if (fotoKategorie === "bluetenbilder") fotoText = "Ein neues Foto wurde in Blütenbilder hochgeladen";
-
-  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\n${fotoText}`;
+  const beschreibung = notiz ? `**${pflanzenname}**\n\u200B\n${notiz}` : `**${pflanzenname}**\n\u200B\nEin neues Foto wurde hinzugefügt`;
 
   const payload = {
     embeds: [{
@@ -408,12 +408,12 @@ function PlantCard({ plant, onClick }) {
 }
 
 // ── Tagebuch ─────────────────────────────────────────────────────────────────
-function Tagebuch({ plantId, plantName }) {
+function Tagebuch({ plantId, plantName, onFotoUpdate }) {
   const role = useRole();
   const canEdit = role !== "readonly" && role !== "guest";
   const [entries, setEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [showAll, setShowAll] = useState(false);
   const [discordOn, setDiscordOn] = useState(() => localStorage.getItem("discordOn") !== "false");
   const toggleDiscord = () => setDiscordOn(v => { localStorage.setItem("discordOn", !v); return !v; });
   const [newNote, setNewNote] = useState("");
@@ -431,8 +431,8 @@ function Tagebuch({ plantId, plantName }) {
   }, [plantId]);
 
   const allEntries = entries;
-  const visible = allEntries.slice(0, visibleCount);
-  const hidden = allEntries.length - visibleCount;
+  const visible = showAll ? allEntries : allEntries.slice(0, 5);
+  const hidden = allEntries.length - 5;
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
@@ -459,14 +459,14 @@ function Tagebuch({ plantId, plantName }) {
         // Wenn "fotoalbum" gewählt → Pflanzenkarte-Foto automatisch aktualisieren
         if (foto_url && fotoKategorie === "fotoalbum") {
           await supabase.from("pflanzen").update({ foto: foto_url }).eq("id", plantId);
+          if (onFotoUpdate) onFotoUpdate(foto_url);
         }
       }
       setNewNote(""); setPhotoFile(null); setPhotoPreview(null); setShowForm(false);
       setFotoKategorie(null);
       setEntryDate(new Date().toISOString().slice(0, 10));
-      setVisibleCount(5);
       // Discord Benachrichtigung
-      if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url, fotoKategorie);
+      if (discordOn) sendDiscordNotification(plantName, newNote.trim() || null, !!foto_url);
     } finally { setSaving(false); }
   };
 
@@ -619,9 +619,14 @@ function Tagebuch({ plantId, plantName }) {
               </div>
             </div>
           ))}
-          {hidden > 0 && (
-            <button onClick={() => setVisibleCount(c => c + 5)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
-              ▼ 5 weitere Einträge anzeigen
+          {!showAll && hidden > 0 && (
+            <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
+              ▼ {hidden} weitere Einträge anzeigen
+            </button>
+          )}
+          {showAll && (
+            <button onClick={() => setShowAll(false)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
+              ▲ Weniger anzeigen
             </button>
           )}
         </div>
@@ -692,7 +697,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}
       onClick={() => { setMenuOpen(false); onClose(); }}>
       <div style={{ background: "rgba(245,244,238,0.88)", borderRadius: "14px", width: "100%", maxWidth: "440px", overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.18)", maxHeight: "90vh", overflowY: "auto", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: `1px solid ${GLASS_BORDER}` }}
-        onClick={e => { e.stopPropagation(); setMenuOpen(false); }}>
+        onClick={e => e.stopPropagation()}>
 
         {/* Photo area */}
         <div style={{ height: "280px", background: form.foto ? `url(${form.foto}) center/cover` : BTN, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
@@ -741,7 +746,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
                   </div>
                 ))}
               </div>
-              <Tagebuch plantId={plant.id} plantName={plant.name} />
+              <Tagebuch plantId={plant.id} plantName={plant.name} onFotoUpdate={url => set("foto", url)} />
             </>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
@@ -4242,6 +4247,8 @@ function AppInner({ onLogout }) {
   return (
     <>
       <style>{`
+        :root { color-scheme: light; }
+        input[type="date"] { color-scheme: light; }
         @media (max-width: 767px) {
           .gl-desktop-sidebar { display: none !important; }
           .gl-hamburger { display: flex !important; }
