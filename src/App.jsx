@@ -232,6 +232,7 @@ const MONATE_LANG = ["Januar","Februar","März","April","Mai","Juni","Juli","Aug
 
 function DatePicker({ value, onChange, style = {} }) {
   const [open, setOpen] = useState(false);
+  const [pickMode, setPickMode] = useState("days"); // "days" | "yearmonth"
   const parsed = value ? new Date(value + "T12:00:00") : new Date();
   const [viewYear, setViewYear] = useState(parsed.getFullYear());
   const [viewMonth, setViewMonth] = useState(parsed.getMonth());
@@ -241,7 +242,7 @@ function DatePicker({ value, onChange, style = {} }) {
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setPickMode("days"); }
     };
     document.addEventListener("mousedown", handler);
     document.addEventListener("touchstart", handler);
@@ -263,6 +264,7 @@ function DatePicker({ value, onChange, style = {} }) {
     const dd = String(d).padStart(2, "0");
     onChange(`${viewYear}-${mm}-${dd}`);
     setOpen(false);
+    setPickMode("days");
   };
 
   const prevMonth = () => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); } else setViewMonth(m => m - 1); };
@@ -273,40 +275,81 @@ function DatePicker({ value, onChange, style = {} }) {
   const selYear = value ? new Date(value + "T12:00:00").getFullYear() : -1;
   const today = new Date();
 
+  // Year/month picker: show years around viewYear
+  const yearStart = viewYear - 6;
+  const years = Array.from({ length: 13 }, (_, i) => yearStart + i);
+
   return (
     <div ref={el => ref.current = el} style={{ position: "relative", ...style }}>
-      <button type="button" onClick={() => { setViewYear(parsed.getFullYear()); setViewMonth(parsed.getMonth()); setOpen(o => !o); }}
+      <button type="button" onClick={() => { setViewYear(parsed.getFullYear()); setViewMonth(parsed.getMonth()); setOpen(o => !o); setPickMode("days"); }}
         style={{ width: "100%", background: style.background || BG, border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "8px 12px", fontSize: style.fontSize || "12px", color: value ? TEXT_DARK : TEXT_LIGHT, fontFamily: FONT, outline: "none", boxSizing: "border-box", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
         <span>{displayVal}</span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TEXT_LIGHT} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </button>
       {open && (
         <div style={{ position: "absolute", zIndex: 9999, top: "calc(100% + 4px)", left: 0, background: WHITE, border: `1px solid ${BG_DARK}`, borderRadius: "10px", boxShadow: "0 8px 32px rgba(0,0,0,0.15)", padding: "14px", minWidth: "260px", fontFamily: FONT }}>
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-            <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>‹</button>
-            <span style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK }}>{MONATE_LANG[viewMonth]} {viewYear}</span>
-            <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>›</button>
-          </div>
-          {/* Weekday headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
-            {["Mo","Di","Mi","Do","Fr","Sa","So"].map(d => (
-              <div key={d} style={{ textAlign: "center", fontSize: "10px", color: TEXT_LIGHT, fontWeight: "600", padding: "2px 0" }}>{d}</div>
-            ))}
-          </div>
-          {/* Days grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
-            {cells.map((d, i) => {
-              if (!d) return <div key={"e"+i} />;
-              const isSelected = d === selDay && viewMonth === selMonth && viewYear === selYear;
-              const isToday = d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
-              return (
-                <button key={d} type="button" onClick={() => selectDay(d)} style={{ background: isSelected ? ACCENT : "none", color: isSelected ? WHITE : isToday ? ACCENT : TEXT_DARK, border: isToday && !isSelected ? `1px solid ${ACCENT}` : "1px solid transparent", borderRadius: "6px", padding: "5px 2px", fontSize: "12px", cursor: "pointer", fontFamily: FONT, fontWeight: isSelected ? "600" : "400", textAlign: "center" }}>
-                  {d}
+          {pickMode === "days" ? (
+            <>
+              {/* Header – click on month/year label to switch to year/month picker */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>‹</button>
+                <button type="button" onClick={() => setPickMode("yearmonth")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: "600", color: TEXT_DARK, borderRadius: "4px", padding: "2px 8px", textDecoration: "underline dotted", textUnderlineOffset: "3px" }}>
+                  {MONATE_LANG[viewMonth]} {viewYear}
                 </button>
-              );
-            })}
-          </div>
+                <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>›</button>
+              </div>
+              {/* Weekday headers */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "4px" }}>
+                {["Mo","Di","Mi","Do","Fr","Sa","So"].map(d => (
+                  <div key={d} style={{ textAlign: "center", fontSize: "10px", color: TEXT_LIGHT, fontWeight: "600", padding: "2px 0" }}>{d}</div>
+                ))}
+              </div>
+              {/* Days grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
+                {cells.map((d, i) => {
+                  if (!d) return <div key={"e"+i} />;
+                  const isSelected = d === selDay && viewMonth === selMonth && viewYear === selYear;
+                  const isToday = d === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
+                  return (
+                    <button key={d} type="button" onClick={() => selectDay(d)} style={{ background: isSelected ? ACCENT : "none", color: isSelected ? WHITE : isToday ? ACCENT : TEXT_DARK, border: isToday && !isSelected ? `1px solid ${ACCENT}` : "1px solid transparent", borderRadius: "6px", padding: "5px 2px", fontSize: "12px", cursor: "pointer", fontFamily: FONT, fontWeight: isSelected ? "600" : "400", textAlign: "center" }}>
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Year/Month picker */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                <button type="button" onClick={() => setViewYear(y => y - 10)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>‹</button>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: TEXT_DARK }}>{viewYear}</span>
+                <button type="button" onClick={() => setViewYear(y => y + 10)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "16px", color: TEXT_MID, padding: "2px 8px" }}>›</button>
+              </div>
+              {/* Year grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px", marginBottom: "10px" }}>
+                {years.map(y => (
+                  <button key={y} type="button" onClick={() => setViewYear(y)}
+                    style={{ background: y === viewYear ? ACCENT : "none", color: y === viewYear ? WHITE : y === today.getFullYear() ? ACCENT : TEXT_DARK, border: y === today.getFullYear() && y !== viewYear ? `1px solid ${ACCENT}` : "1px solid transparent", borderRadius: "6px", padding: "5px 2px", fontSize: "11px", cursor: "pointer", fontFamily: FONT, fontWeight: y === viewYear ? "600" : "400", textAlign: "center" }}>
+                    {y}
+                  </button>
+                ))}
+              </div>
+              <div style={{ height: "1px", background: BG_DARK, marginBottom: "10px" }} />
+              {/* Month grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px", marginBottom: "10px" }}>
+                {MONATE_LANG.map((m, i) => (
+                  <button key={m} type="button" onClick={() => { setViewMonth(i); setPickMode("days"); }}
+                    style={{ background: i === viewMonth ? ACCENT : "none", color: i === viewMonth ? WHITE : i === today.getMonth() && viewYear === today.getFullYear() ? ACCENT : TEXT_DARK, border: i === today.getMonth() && viewYear === today.getFullYear() && i !== viewMonth ? `1px solid ${ACCENT}` : "1px solid transparent", borderRadius: "6px", padding: "5px 2px", fontSize: "10px", cursor: "pointer", fontFamily: FONT, fontWeight: i === viewMonth ? "600" : "400", textAlign: "center" }}>
+                    {m.slice(0, 3)}
+                  </button>
+                ))}
+              </div>
+              <button type="button" onClick={() => setPickMode("days")} style={{ width: "100%", background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "6px", fontSize: "11px", color: TEXT_MID, cursor: "pointer", fontFamily: FONT }}>
+                ← Zurück zum Kalender
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -495,7 +538,7 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
   const canEdit = role !== "readonly" && role !== "guest";
   const [entries, setEntries] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [showCount, setShowCount] = useState(5);
   const [discordOn, setDiscordOn] = useState(() => localStorage.getItem("discordOn") !== "false");
   const toggleDiscord = () => setDiscordOn(v => { localStorage.setItem("discordOn", !v); return !v; });
   const [newNote, setNewNote] = useState("");
@@ -515,8 +558,8 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
   }, [plantId]);
 
   const allEntries = entries;
-  const visible = showAll ? allEntries : allEntries.slice(0, 5);
-  const hidden = allEntries.length - 5;
+  const visible = allEntries.slice(0, showCount);
+  const remaining = allEntries.length - showCount;
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
@@ -618,7 +661,7 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
                 <div style={{ fontSize: "9px", color: TEXT_LIGHT, letterSpacing: "1px", textTransform: "uppercase", fontFamily: FONT, marginBottom: "6px" }}>Foto zuordnen (optional)</div>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                   {[
-                    { key: "fotoalbum", label: "Fotoalbum", desc: "Wird als Kartenfoto verwendet" },
+                    { key: "fotoalbum", label: "Fotoalbum", desc: "Profilbild wird aktualisiert" },
                     { key: "bluetenbilder", label: "Blütenbilder", desc: "Erscheint in Blütenbilder" },
                   ].map(opt => (
                     <button key={opt.key} onClick={() => setFotoKategorie(fotoKategorie === opt.key ? null : opt.key)}
@@ -629,7 +672,7 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
                   ))}
                 </div>
                 {fotoKategorie === "fotoalbum" && (
-                  <div style={{ marginTop: "5px", fontSize: "10px", color: ACCENT, fontFamily: FONT }}>✓ Kartenfoto wird automatisch aktualisiert</div>
+                  <div style={{ marginTop: "5px", fontSize: "10px", color: ACCENT, fontFamily: FONT }}>✓ Profilbild wird aktualisiert</div>
                 )}
               </div>
             )}
@@ -702,13 +745,13 @@ function Tagebuch({ plantId, plantName, onFotoUpdate }) {
               </div>
             </div>
           ))}
-          {!showAll && hidden > 0 && (
-            <button onClick={() => setShowAll(true)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
-              ▼ {hidden} weitere Einträge anzeigen
+          {remaining > 0 && (
+            <button onClick={() => setShowCount(c => c + 5)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
+              ▼ {Math.min(remaining, 5)} weitere Einträge anzeigen
             </button>
           )}
-          {showAll && (
-            <button onClick={() => setShowAll(false)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
+          {showCount > 5 && (
+            <button onClick={() => setShowCount(5)} style={{ background: "none", border: `1px solid ${BG_DARK}`, borderRadius: "6px", padding: "7px", cursor: "pointer", fontSize: "11px", color: TEXT_LIGHT, fontFamily: FONT, width: "100%" }}>
               ▲ Weniger anzeigen
             </button>
           )}
@@ -780,7 +823,7 @@ function PlantModal({ plant, onClose, onDelete, onSave }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "24px" }}
       onClick={() => { setMenuOpen(false); onClose(); }}>
       <div style={{ background: "rgba(245,244,238,0.88)", borderRadius: "14px", width: "100%", maxWidth: "440px", overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.18)", maxHeight: "90vh", overflowY: "auto", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", border: `1px solid ${GLASS_BORDER}` }}
-        onClick={e => e.stopPropagation()}>
+        onClick={e => { e.stopPropagation(); if (menuOpen) setMenuOpen(false); }}>
 
         {/* Photo area */}
         <div style={{ height: "280px", background: form.foto ? `url(${form.foto}) center/cover` : BTN, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
