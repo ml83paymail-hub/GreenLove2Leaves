@@ -4469,22 +4469,17 @@ function AppInner({ onLogout }) {
         <div style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
           {/* QuickAdd FAB – Notizbuch-Icon in beige */}
           <button onClick={openQuickAdd} title="Mitteilung oder To-Do" style={{ width: "50px", height: "50px", borderRadius: "50%", background: BTN, border: "none", cursor: "pointer", boxShadow: "0 4px 18px rgba(0,0,0,0.20)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-            <svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Rounded square – open gap top-right where pencil overlaps */}
+              <path d="M14 3.5 Q16 3.5 17 3.5" stroke="#EBEBE6" strokeWidth="2" strokeLinecap="round" fill="none"/>
+              <path d="M3.5 6 Q3.5 3.5 6 3.5 L12 3.5" stroke="#EBEBE6" strokeWidth="2" strokeLinecap="round" fill="none"/>
+              <path d="M3.5 6 L3.5 18 Q3.5 20.5 6 20.5 L18 20.5 Q20.5 20.5 20.5 18 L20.5 10" stroke="#EBEBE6" strokeWidth="2" strokeLinecap="round" fill="none"/>
               {/* Pencil body */}
-              <g transform="rotate(45, 50, 50)">
-                {/* Eraser cap top */}
-                <rect x="38" y="5" width="24" height="10" rx="5" stroke="#EBEBE6" strokeWidth="3.5" fill="none"/>
-                {/* Eraser band */}
-                <rect x="38" y="15" width="24" height="7" stroke="#EBEBE6" strokeWidth="3.5" fill="none"/>
-                {/* Main body */}
-                <rect x="38" y="22" width="24" height="48" stroke="#EBEBE6" strokeWidth="3.5" fill="none"/>
-                {/* Center line on body */}
-                <line x1="50" y1="22" x2="50" y2="70" stroke="#EBEBE6" strokeWidth="2"/>
-                {/* Wooden tip section */}
-                <path d="M38 70 L50 92 L62 70 Z" stroke="#EBEBE6" strokeWidth="3.5" fill="none" strokeLinejoin="round"/>
-                {/* Graphite tip */}
-                <path d="M44 80 L50 92 L56 80 Z" fill="#EBEBE6"/>
-              </g>
+              <rect x="14.5" y="2" width="5" height="9" rx="1.5" transform="rotate(45 14.5 2)" fill="#EBEBE6"/>
+              {/* Pencil tip */}
+              <path d="M10.5 13.5 L12.8 11.2 L14.5 12.9 L12.2 15.2 Z" fill="#EBEBE6"/>
+              {/* Tip point */}
+              <path d="M10.5 13.5 L9.8 15.8 L12.2 15.2 Z" fill="#EBEBE6"/>
             </svg>
           </button>
           {/* Context FAB – beiges + für Seiten-Aktion */}
