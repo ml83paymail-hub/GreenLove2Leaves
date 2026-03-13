@@ -32,6 +32,16 @@ function clearSession() {
 // Context for role
 const RoleContext = createContext("guest");
 const useRole = () => useContext(RoleContext);
+// Fires callback only when triggerAdd rises to a new non-zero value
+const useFabTrigger = (triggerAdd, callback) => {
+  const lastActed = useRef(0);
+  useEffect(() => {
+    if (triggerAdd > 0 && triggerAdd !== lastActed.current) {
+      lastActed.current = triggerAdd;
+      callback();
+    }
+  }, [triggerAdd]);
+};
 
 function LoginScreen({ onLogin }) {
   const [pw, setPw] = useState("");
@@ -1109,7 +1119,7 @@ function PflanzenPage({ triggerAdd = 0 }) {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && role !== "guest" && role !== "readonly") setShowAdd(true); }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (role !== "guest" && role !== "readonly") setShowAdd(true); });
   const [search, setSearch] = useState("");
   const [groupBy, setGroupBy] = useState(() => localStorage.getItem("groupBy") || "none");
   const [collapsedGroups, setCollapsedGroups] = useState({});
@@ -1249,7 +1259,7 @@ function TodoPage({ triggerAdd = 0 }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && role !== "guest" && role !== "readonly") setShowAdd(true); }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (role !== "guest" && role !== "readonly") setShowAdd(true); });
   const [gruppeFilter, setGruppeFilter] = useState("Alle");
   const [form, setForm] = useState({ titel: "", kategorie: "Label", datum: new Date().toISOString().split('T')[0] });
   const [saving, setSaving] = useState(false);
@@ -1624,7 +1634,7 @@ function PostfachPage({ triggerAdd = 0 }) {
   const [nachrichten, setNachrichten] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && role !== "guest" && role !== "readonly") setShowAdd(true); }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (role !== "guest" && role !== "readonly") setShowAdd(true); });
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -1740,7 +1750,7 @@ function PflanzenkassePage({ triggerAdd = 0 }) {
   const [eintraege, setEintraege] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && canEdit) setShowAdd(true); }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (canEdit) setShowAdd(true); });
   const [filterTyp, setFilterTyp] = useState(() => localStorage.getItem("kasseFilter") || "alle");
   const [form, setForm] = useState({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzen", datum: new Date().toISOString().split("T")[0] });
   const [editEntry, setEditEntry] = useState(null);
@@ -2106,7 +2116,7 @@ function BestellungenPage({ triggerAdd = 0 }) {
   const [bestellungen, setBestellungen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && canEdit) setShowAdd(true); }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (canEdit) setShowAdd(true); });
   const [saving, setSaving] = useState(false);
   const [erhalten, setErhalten] = useState(null); // id being processed
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -2296,7 +2306,7 @@ function AblegerPage({ triggerAdd = 0 }) {
   const [pflanzen, setPflanzen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && canEdit) { setForm(emptyForm); setShowAdd(true); } }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (canEdit) { setForm(emptyForm); setShowAdd(true); } });
   const [editEntry, setEditEntry] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [detailEntry, setDetailEntry] = useState(null);
@@ -2646,7 +2656,7 @@ function NotizbuchPage({ triggerAdd = 0 }) {
   const [addNotiz, setAddNotiz] = useState(false);
   const [addThema, setAddThema] = useState(false);
   const [suche, setSuche] = useState("");
-  useEffect(() => { if (triggerAdd && canEdit && !activeThema) { tab === "notizen" ? setAddNotiz(true) : setAddThema(true); } }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (canEdit && !activeThema) { tab === "notizen" ? setAddNotiz(true) : setAddThema(true); } });
 
   return (
     <div>
@@ -2689,7 +2699,7 @@ function AllgemeineNotizen({ canEdit, triggerAdd, onAddHandled, suche }) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [datum, setDatum] = useState(new Date().toISOString().split("T")[0]);
 
-  useEffect(() => { if (triggerAdd) { setText(""); setShowAdd(true); onAddHandled(); } }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { setText(""); setShowAdd(true); onAddHandled(); });
 
   useEffect(() => {
     const load = async () => {
@@ -2811,7 +2821,7 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
   const [editBeschreibung, setEditBeschreibung] = useState("");
   const [beschreibung, setBeschreibung] = useState("");
 
-  useEffect(() => { if (triggerAdd) { setShowAdd(true); onAddHandled(); } }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { setShowAdd(true); onAddHandled(); });
 
   useEffect(() => {
     const load = async () => {
@@ -3117,7 +3127,7 @@ function WishlistPage({ triggerAdd = 0 }) {
   const [eintraege, setEintraege] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && canEdit) { setForm({ name: "", beschreibung: "", kategorie: "wishlist", foto_url: "" }); setShowAdd(true); } }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (canEdit) { setForm({ name: "", beschreibung: "", kategorie: "wishlist", foto_url: "" }); setShowAdd(true); } });
   const [detailEntry, setDetailEntry] = useState(null);
   const [editEntry, setEditEntry] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -3365,7 +3375,7 @@ function AktuelleAnzeigenPage({ triggerAdd = 0 }) {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
-  useEffect(() => { if (triggerAdd && canEdit) setShowAdd(true); }, [triggerAdd]);
+  useFabTrigger(triggerAdd, () => { if (canEdit) setShowAdd(true); });
   const [showEdit, setShowEdit] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -4288,7 +4298,7 @@ function AppInner({ onLogout }) {
   const openQuickAdd = () => setQuickAdd(true);
   const closeQuickAdd = () => setQuickAdd(false);
   const [fabTrigger, setFabTrigger] = useState(0);
-  const triggerPageFab = () => setFabTrigger(n => n + 1);
+  const triggerPageFab = () => { setFabTrigger(n => n + 1); setTimeout(() => setFabTrigger(0), 50); };
   const FAB_PAGES = ["unsere-pflanzen","todo","postfach","pflanzenkasse","bestellungen","ableger","notizbuch","wishlist","anzeigen"];
   // Reset trigger on every page change so newly mounted pages don't fire the add-modal on load
   useEffect(() => { setFabTrigger(0); }, [activePage]);
