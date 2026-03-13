@@ -4297,6 +4297,26 @@ function AppInner({ onLogout }) {
   const [quickAdd, setQuickAdd] = useState(false);
   const openQuickAdd = () => setQuickAdd(true);
   const closeQuickAdd = () => setQuickAdd(false);
+  const [quickTodo, setQuickTodo] = useState(false);
+  const [quickTodoForm, setQuickTodoForm] = useState({ titel: "", kategorie: "Label", datum: new Date().toISOString().split("T")[0] });
+  const [quickTodoSaving, setQuickTodoSaving] = useState(false);
+  const handleQuickTodoSave = async () => {
+    if (!quickTodoForm.titel.trim()) return;
+    setQuickTodoSaving(true);
+    await supabase.from("todos").insert({ titel: quickTodoForm.titel.trim(), kategorie: quickTodoForm.kategorie, datum: quickTodoForm.datum || null, erledigt: false });
+    setQuickTodoForm({ titel: "", kategorie: "Label", datum: new Date().toISOString().split("T")[0] });
+    setQuickTodo(false); setQuickTodoSaving(false);
+  };
+  const [quickPostfach, setQuickPostfach] = useState(false);
+  const [quickPostfachText, setQuickPostfachText] = useState("");
+  const [quickPostfachSaving, setQuickPostfachSaving] = useState(false);
+  const handleQuickPostfachSave = async () => {
+    if (!quickPostfachText.trim()) return;
+    setQuickPostfachSaving(true);
+    await supabase.from("postfach").insert({ text: quickPostfachText.trim(), erledigt: false });
+    await sendPostfachDiscord(quickPostfachText.trim());
+    setQuickPostfachText(""); setQuickPostfach(false); setQuickPostfachSaving(false);
+  };
   const [fabTrigger, setFabTrigger] = useState(0);
   const triggerPageFab = () => { setFabTrigger(n => n + 1); };
   const FAB_PAGES = ["unsere-pflanzen","todo","postfach","pflanzenkasse","bestellungen","ableger","notizbuch","wishlist","anzeigen"];
@@ -4484,19 +4504,66 @@ function AppInner({ onLogout }) {
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "22px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", marginBottom: "20px" }}>
             <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Schnell hinzufügen</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <button onClick={() => { closeQuickAdd(); setActiveMenu("updates"); setActivePage("postfach"); sessionStorage.setItem("activePage", "postfach"); sessionStorage.setItem("activeMenu", "updates"); history.replaceState(null, "", "#postfach"); setTimeout(() => setFabTrigger(n => n + 1), 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
+              <button onClick={() => { closeQuickAdd(); setQuickPostfach(true); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "32px", fontWeight: "700", color: "#5c6c56" }}>»</span>
                 <div>
                   <div style={{ fontWeight: "600" }}>Nachricht</div>
                   <div style={{ fontSize: "11px", color: TEXT_LIGHT, marginTop: "2px" }}>Neue Nachricht ins Postfach</div>
                 </div>
               </button>
-              <button onClick={() => { closeQuickAdd(); setActivePage("todo"); sessionStorage.setItem("activePage", "todo"); history.replaceState(null, "", "#todo"); setTimeout(() => setFabTrigger(n => n + 1), 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
+              <button onClick={() => { closeQuickAdd(); setQuickTodo(true); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "32px", fontWeight: "700", color: "#5c6c56" }}>»</span>
                 <div>
                   <div style={{ fontWeight: "600" }}>To Do Aufgabe</div>
                   <div style={{ fontSize: "11px", color: TEXT_LIGHT, marginTop: "2px" }}>Neue Aufgabe in der To Do Liste</div>
                 </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Quick-Todo Modal */}
+      {quickTodo && (
+        <div onClick={() => setQuickTodo(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Aufgabe hinzufügen</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div>
+                <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, display: "block", marginBottom: "5px" }}>Aufgabe *</label>
+                <input value={quickTodoForm.titel} onChange={e => setQuickTodoForm(f => ({ ...f, titel: e.target.value }))} onKeyDown={e => e.key === "Enter" && handleQuickTodoSave()} placeholder="Was muss erledigt werden?" style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", boxSizing: "border-box" }} autoFocus />
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, display: "block", marginBottom: "5px" }}>Kategorie</label>
+                <select value={quickTodoForm.kategorie} onChange={e => setQuickTodoForm(f => ({ ...f, kategorie: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, background: "#fff", outline: "none" }}>
+                  {TODO_KATEGORIEN.map(k => <option key={k} value={k}>{k}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT, display: "block", marginBottom: "5px" }}>Datum (optional)</label>
+                <DatePicker value={quickTodoForm.datum} onChange={v => setQuickTodoForm(f => ({ ...f, datum: v }))} />
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px", marginTop: "22px", justifyContent: "flex-end" }}>
+              <button onClick={() => setQuickTodo(false)} style={{ padding: "10px 20px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleQuickTodoSave} disabled={quickTodoSaving || !quickTodoForm.titel.trim()} style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: quickTodoSaving || !quickTodoForm.titel.trim() ? 0.6 : 1 }}>
+                {quickTodoSaving ? "Speichern..." : "Hinzufügen"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Quick-Postfach Modal */}
+      {quickPostfach && (
+        <div onClick={() => setQuickPostfach(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "28px", width: "100%", maxWidth: "420px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h2 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Neue Nachricht</h2>
+            <textarea value={quickPostfachText} onChange={e => setQuickPostfachText(e.target.value)} placeholder="Nachricht schreiben …" rows={4} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, fontSize: "13px", fontFamily: FONT, color: TEXT_DARK, outline: "none", resize: "vertical", boxSizing: "border-box" }} autoFocus />
+            <div style={{ display: "flex", gap: "10px", marginTop: "18px", justifyContent: "flex-end" }}>
+              <button onClick={() => { setQuickPostfach(false); setQuickPostfachText(""); }} style={{ padding: "10px 20px", borderRadius: "8px", border: `1px solid ${GLASS_BORDER}`, background: "none", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>Abbrechen</button>
+              <button onClick={handleQuickPostfachSave} disabled={quickPostfachSaving || !quickPostfachText.trim()} style={{ padding: "10px 20px", borderRadius: "8px", border: "none", background: ACCENT, color: "#fff", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", opacity: quickPostfachSaving || !quickPostfachText.trim() ? 0.6 : 1 }}>
+                {quickPostfachSaving ? "Senden …" : "Senden"}
               </button>
             </div>
           </div>
