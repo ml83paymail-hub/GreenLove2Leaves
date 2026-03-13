@@ -1103,12 +1103,13 @@ const GROUP_OPTIONS = [
   
 ];
 
-function PflanzenPage() {
+function PflanzenPage({ triggerAdd = 0 }) {
   const role = useRole();
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && role !== "guest" && role !== "readonly") setShowAdd(true); }, [triggerAdd]);
   const [search, setSearch] = useState("");
   const [groupBy, setGroupBy] = useState(() => localStorage.getItem("groupBy") || "none");
   const [collapsedGroups, setCollapsedGroups] = useState({});
@@ -1196,8 +1197,7 @@ function PflanzenPage() {
           <select value={groupBy} onChange={e => { setGroupBy(e.target.value); localStorage.setItem("groupBy", e.target.value); setCollapsedGroups({}); }} style={{ background: BTN, border: `1px solid ${BTN}`, borderRadius: "6px", padding: "7px 8px", fontSize: "12px", color: WHITE, fontFamily: FONT, outline: "none", cursor: "pointer", appearance: "none", WebkitAppearance: "none" }}>
             {GROUP_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <button onClick={() => setShowGiessplan(v => !v)} style={{ background: BTN, border: `1px solid ${BTN}`, borderRadius: "6px", padding: "7px 14px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap" }}>Gießtage</button>
-          {role !== "guest" && role !== "readonly" && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "7px 18px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap", marginLeft: "auto" }}>+ Neue Pflanze</button>}
+          {role !== "guest" && role !== "readonly" && <button onClick={() => setShowGiessplan(v => !v)} style={{ background: BTN, border: `1px solid ${BTN}`, borderRadius: "6px", padding: "7px 14px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT, whiteSpace: "nowrap" }}>Gießtage</button>}
         </div>
       </div>
 
@@ -1209,7 +1209,7 @@ function PflanzenPage() {
         <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: GLASS, borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, gap: "14px", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", boxShadow: GLASS_SHADOW }}>
           <span style={{ fontSize: "30px", opacity: 0.3 }}>🌿</span>
           <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", fontFamily: FONT }}>{search ? "Keine Pflanzen gefunden." : "Noch keine Pflanzen eingetragen."}</p>
-          {!search && <button onClick={() => setShowAdd(true)} style={{ background: BTN, border: "none", borderRadius: "6px", padding: "9px 22px", cursor: "pointer", fontSize: "12px", color: WHITE, fontFamily: FONT }}>+ Neue Pflanze</button>}
+          {!search && <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "12px", fontFamily: FONT }}>Nutze den + Button unten rechts um eine Pflanze hinzuzufügen.</p>}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
@@ -1243,12 +1243,13 @@ function PflanzenPage() {
 // ── Todo Page ─────────────────────────────────────────────────────────────────
 const TODO_KATEGORIEN = ["Bestellungen", "Label", "Organisation", "Ableger"];
 
-function TodoPage() {
+function TodoPage({ triggerAdd = 0 }) {
   const role = useRole();
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && role !== "guest" && role !== "readonly") setShowAdd(true); }, [triggerAdd]);
   const [gruppeFilter, setGruppeFilter] = useState("Alle");
   const [form, setForm] = useState({ titel: "", kategorie: "Label", datum: new Date().toISOString().split('T')[0] });
   const [saving, setSaving] = useState(false);
@@ -1318,7 +1319,7 @@ function TodoPage() {
               {k}
             </button>
           ))}
-          {role !== "guest" && role !== "readonly" && <button data-quickadd-todo onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", whiteSpace: "nowrap", flexShrink: 0, marginLeft: "auto" }}>+ Aufgabe</button>}
+
         </div>
       </div>
 
@@ -1414,7 +1415,6 @@ function GenericPage({ page }) {
       <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "52px 72px", background: BG_LIGHT, borderRadius: "10px", border: `1px solid ${BG_DARK}`, gap: "14px" }}>
         <span style={{ fontSize: "30px", opacity: 0.3 }}>🌿</span>
         <p style={{ margin: 0, color: TEXT_LIGHT, fontSize: "13px", textAlign: "center", fontFamily: FONT }}>{page.empty}</p>
-        <button style={{ background: ACCENT, border: "none", color: WHITE, padding: "9px 24px", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontFamily: FONT }}>+ Hinzufügen</button>
       </div>
     </div>
   );
@@ -1619,11 +1619,12 @@ async function sendPostfachDiscord(text) {
   } catch(e) { console.error("Postfach Discord Fehler:", e); }
 }
 
-function PostfachPage() {
+function PostfachPage({ triggerAdd = 0 }) {
   const role = useRole();
   const [nachrichten, setNachrichten] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && role !== "guest" && role !== "readonly") setShowAdd(true); }, [triggerAdd]);
   const [text, setText] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -1670,9 +1671,7 @@ function PostfachPage() {
         <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{nachrichten.length} Nachricht{nachrichten.length !== 1 ? "en" : ""}</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
-        {role !== "guest" && role !== "readonly" && <button data-quickadd-postfach onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Nachricht</button>}
-      </div>
+
 
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Nachrichten werden geladen …</div>
@@ -1735,12 +1734,13 @@ function PostfachPage() {
 // ── Pflanzenkasse Page ────────────────────────────────────────────────────────
 const KASSE_KATEGORIEN = ["Pflanzen", "Dünger", "Töpfe", "Zubehör", "Sonstiges"];
 
-function PflanzenkassePage() {
+function PflanzenkassePage({ triggerAdd = 0 }) {
   const role = useRole();
   const canEdit = role !== "readonly" && role !== "guest";
   const [eintraege, setEintraege] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && canEdit) setShowAdd(true); }, [triggerAdd]);
   const [filterTyp, setFilterTyp] = useState(() => localStorage.getItem("kasseFilter") || "alle");
   const [form, setForm] = useState({ name: "", beschreibung: "", betrag: "", typ: "ausgabe", kategorie: "Pflanzen", datum: new Date().toISOString().split("T")[0] });
   const [editEntry, setEditEntry] = useState(null);
@@ -1833,9 +1833,6 @@ function PflanzenkassePage() {
           <option value="einnahme">Einnahmen</option>
           <option value="ausgabe">Ausgaben</option>
         </select>
-        <div style={{ marginLeft: "auto" }}>
-          {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
-        </div>
       </div>
 
       {loading ? (
@@ -2103,12 +2100,13 @@ function ArchivPage() {
 }
 
 // ── Bestellungen Page ────────────────────────────────────────────────────────
-function BestellungenPage() {
+function BestellungenPage({ triggerAdd = 0 }) {
   const role = useRole();
   const canEdit = role !== "readonly" && role !== "guest";
   const [bestellungen, setBestellungen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && canEdit) setShowAdd(true); }, [triggerAdd]);
   const [saving, setSaving] = useState(false);
   const [erhalten, setErhalten] = useState(null); // id being processed
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -2169,9 +2167,7 @@ function BestellungenPage() {
         <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{bestellungen.length} offene Bestellung{bestellungen.length !== 1 ? "en" : ""}</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
-        {canEdit && <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Bestellung</button>}
-      </div>
+
 
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
@@ -2293,13 +2289,14 @@ function BestellungenPage() {
 const ABLEGER_TYPEN = ["Alocasia", "Anthurium", "Begonie", "Hoya", "Monstera", "Philodendron", "Scindapsus", "Epipremnum", "Weitere Pflanzen", "Wetsticks & Anzuchtboxen"];
 const ABLEGER_STANDORTE = ["Bad-Gitter", "Growbox 1", "Growbox 2", "Pflanzentrolli 1", "Pflanzentrolli 2", "Pflanzentrolli 3", "WZ - großes Regal", "WZ - TV Regal"];
 
-function AblegerPage() {
+function AblegerPage({ triggerAdd = 0 }) {
   const role = useRole();
   const canEdit = role !== "readonly" && role !== "guest";
   const [ableger, setAbleger] = useState([]);
   const [pflanzen, setPflanzen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && canEdit) { setForm(emptyForm); setShowAdd(true); } }, [triggerAdd]);
   const [editEntry, setEditEntry] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
   const [detailEntry, setDetailEntry] = useState(null);
@@ -2496,10 +2493,7 @@ function AblegerPage() {
           <option value="typ">Typ</option>
           <option value="standort">Standort</option>
         </select>
-        {canEdit && <>
-          <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} style={{ background: selectMode ? "#bc5d58" : GLASS, border: `1px solid ${selectMode ? "#bc5d58" : GLASS_BORDER}`, color: selectMode ? "#fff" : TEXT_MID, padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", whiteSpace: "nowrap" }}>{selectMode ? "Abbrechen" : "Mehrfachauswahl"}</button>
-          <button onClick={() => { setForm(emptyForm); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto", whiteSpace: "nowrap" }}>+ Ableger</button>
-        </>}
+        {canEdit && <button onClick={() => { setSelectMode(!selectMode); setSelected([]); }} style={{ background: selectMode ? "#bc5d58" : GLASS, border: `1px solid ${selectMode ? "#bc5d58" : GLASS_BORDER}`, color: selectMode ? "#fff" : TEXT_MID, padding: "7px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", whiteSpace: "nowrap" }}>{selectMode ? "Abbrechen" : "Mehrfachauswahl"}</button>}
       </div>
 
       {loading ? (
@@ -2644,7 +2638,7 @@ function AblegerPage() {
 
 
 // ── Notizbuch Page ────────────────────────────────────────────────────────────
-function NotizbuchPage() {
+function NotizbuchPage({ triggerAdd = 0 }) {
   const role = useRole();
   const canEdit = role !== "readonly" && role !== "guest";
   const [tab, setTab] = useState(() => localStorage.getItem("notizbuchTab") || "notizen");
@@ -2652,6 +2646,7 @@ function NotizbuchPage() {
   const [addNotiz, setAddNotiz] = useState(false);
   const [addThema, setAddThema] = useState(false);
   const [suche, setSuche] = useState("");
+  useEffect(() => { if (triggerAdd && canEdit && !activeThema) { tab === "notizen" ? setAddNotiz(true) : setAddThema(true); } }, [triggerAdd]);
 
   return (
     <div>
@@ -2674,11 +2669,6 @@ function NotizbuchPage() {
             {label}
           </button>
         ))}
-        {canEdit && !activeThema && (
-          <button onClick={() => tab === "notizen" ? setAddNotiz(true) : setAddThema(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 12px", borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto", whiteSpace: "nowrap" }}>
-            {tab === "notizen" ? "+ Notiz" : "+ Thema"}
-          </button>
-        )}
       </div>
 
       {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} triggerAdd={addNotiz} onAddHandled={() => setAddNotiz(false)} suche={suche} />}
@@ -3054,7 +3044,6 @@ function ThemaDetail({ thema, canEdit, onBack }) {
         {thema.beschreibung && <p style={{ margin: "4px 0 10px 0", fontSize: "13px", color: TEXT_MID, fontFamily: FONT, lineHeight: "1.5" }}>{thema.beschreibung}</p>}
         <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: thema.beschreibung ? 0 : "10px" }}>
           <button onClick={onBack} style={{ background: GLASS, border: `1px solid ${GLASS_BORDER}`, borderRadius: "8px", padding: "7px 14px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, color: TEXT_MID }}>← Zurück</button>
-          {canEdit && <button onClick={() => { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Eintrag</button>}
         </div>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "20px" }} />
@@ -3121,13 +3110,14 @@ function ThemaDetail({ thema, canEdit, onBack }) {
 
 
 // ── Wishlist Page ─────────────────────────────────────────────────────────────
-function WishlistPage() {
+function WishlistPage({ triggerAdd = 0 }) {
   const role = useRole();
   const canEdit = role !== "readonly" && role !== "guest";
   const [kategorie, setKategorie] = useState("wishlist");
   const [eintraege, setEintraege] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && canEdit) { setForm({ name: "", beschreibung: "", kategorie: "wishlist", foto_url: "" }); setShowAdd(true); } }, [triggerAdd]);
   const [detailEntry, setDetailEntry] = useState(null);
   const [editEntry, setEditEntry] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
@@ -3219,7 +3209,6 @@ function WishlistPage() {
             {label} ({eintraege.filter(e => e.kategorie === val).length})
           </button>
         ))}
-        {canEdit && <button onClick={() => { setForm({ ...emptyForm, kategorie: kategorie }); setShowAdd(true); }} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 18px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600", marginLeft: "auto", whiteSpace: "nowrap" }}>+ Eintrag</button>}
       </div>
 
       {loading ? (
@@ -3368,15 +3357,15 @@ const SHAREABLE_PAGES = [
 ];
 
 // ── Aktuelle Anzeigen Page ───────────────────────────────────────────────────
-function AktuelleAnzeigenPage() {
+function AktuelleAnzeigenPage({ triggerAdd = 0 }) {
   const role = useRole();
   const canEdit = role !== "guest" && role !== "readonly";
-
   const [anzeigen, setAnzeigen] = useState([]);
   const [ablegerList, setAblegerList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [detail, setDetail] = useState(null); // opened anzeige
+  const [detail, setDetail] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
+  useEffect(() => { if (triggerAdd && canEdit) setShowAdd(true); }, [triggerAdd]);
   const [showEdit, setShowEdit] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -3556,9 +3545,7 @@ function AktuelleAnzeigenPage() {
         <p style={{ margin: 0, fontSize: "12px", color: TEXT_LIGHT, fontFamily: FONT }}>{anzeigen.filter(a => !a.verkauft).length} Anzeige{anzeigen.filter(a => !a.verkauft).length !== 1 ? "n" : ""}{canEdit && <> · <span style={{ color: TEXT_DARK, fontWeight: "600" }}>Summe: {anzeigen.reduce((s, a) => s + (parseFloat(a.preis) || 0) * (parseInt(a.anzahl) || 1), 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span></>}</p>
       </div>
       <div style={{ height: "1px", background: BG_DARK, marginBottom: "14px" }} />
-      {canEdit && <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "18px" }}>
-        <button onClick={() => setShowAdd(true)} style={{ background: ACCENT, border: "none", color: "#fff", padding: "8px 16px", borderRadius: "8px", cursor: "pointer", fontSize: "13px", fontFamily: FONT, fontWeight: "600" }}>+ Anzeige</button>
-      </div>}
+
 
       {loading ? (
         <div style={{ padding: "60px", textAlign: "center", color: TEXT_LIGHT, fontFamily: FONT }}>Laden …</div>
@@ -4300,6 +4287,9 @@ function AppInner({ onLogout }) {
   const [quickAdd, setQuickAdd] = useState(false);
   const openQuickAdd = () => setQuickAdd(true);
   const closeQuickAdd = () => setQuickAdd(false);
+  const [fabTrigger, setFabTrigger] = useState(0);
+  const triggerPageFab = () => setFabTrigger(n => n + 1);
+  const FAB_PAGES = ["unsere-pflanzen","todo","postfach","pflanzenkasse","bestellungen","ableger","notizbuch","wishlist","anzeigen"];
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
@@ -4438,27 +4428,49 @@ function AppInner({ onLogout }) {
             <span style={{ fontSize: "11px", color: TEXT_MID, fontFamily: FONT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pageTitle}</span>
           </header>
           <main className="gl-main" style={{ flex: 1, overflowY: "auto", padding: "36px 48px", background: "linear-gradient(145deg, #e8e7dc 0%, #EBEBE6 40%, #e2e1d8 100%)" }}>
-            {activePage === "anzeigen" ? <AktuelleAnzeigenPage /> : activePage === "unsere-pflanzen" ? <PflanzenPage /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "bluetenbilder" ? <BluetenbilderPage /> : activePage === "todo" ? <TodoPage /> : activePage === "postfach" ? <PostfachPage /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage /> : activePage === "ableger" ? <AblegerPage /> : activePage === "notizbuch" ? <NotizbuchPage /> : activePage === "wishlist" ? <WishlistPage /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
+            {activePage === "anzeigen" ? <AktuelleAnzeigenPage triggerAdd={fabTrigger} /> : activePage === "unsere-pflanzen" ? <PflanzenPage triggerAdd={fabTrigger} /> : activePage === "fotoalbum" ? <FotoalbumPage /> : activePage === "bluetenbilder" ? <BluetenbilderPage /> : activePage === "todo" ? <TodoPage triggerAdd={fabTrigger} /> : activePage === "postfach" ? <PostfachPage triggerAdd={fabTrigger} /> : activePage === "gastzugang" ? <GastzugangPage /> : activePage === "pflanzenkasse" ? <PflanzenkassePage triggerAdd={fabTrigger} /> : activePage === "archiv" ? <ArchivPage /> : activePage === "bestellungen" ? <BestellungenPage triggerAdd={fabTrigger} /> : activePage === "ableger" ? <AblegerPage triggerAdd={fabTrigger} /> : activePage === "notizbuch" ? <NotizbuchPage triggerAdd={fabTrigger} /> : activePage === "wishlist" ? <WishlistPage triggerAdd={fabTrigger} /> : <GenericPage page={pages[activePage] || { title: "–", desc: "", empty: "Noch keine Inhalte." }} />}
           </main>
         </div>
       </div>
-      {/* Mobile floating + button */}
-      {role !== "guest" && role !== "readonly" && <button onClick={openQuickAdd} style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, width: "56px", height: "56px", borderRadius: "50%", background: ACCENT, border: "none", color: "#fff", fontSize: "30px", cursor: "pointer", boxShadow: "0 4px 24px rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>+</button>}
+      {/* FAB Stack – bottom right */}
+      {role !== "guest" && role !== "readonly" && (
+        <div style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+          {/* QuickAdd FAB – Notizbuch-Icon in beige */}
+          <button onClick={openQuickAdd} title="Mitteilung oder To-Do" style={{ width: "50px", height: "50px", borderRadius: "50%", background: BTN, border: "none", cursor: "pointer", boxShadow: "0 4px 18px rgba(0,0,0,0.20)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="14" height="16" rx="2.5" stroke="#EBEBE6" strokeWidth="1.6" fill="none"/>
+              <line x1="6.5" y1="16" x2="9.5" y2="16" stroke="#EBEBE6" strokeWidth="1.4" strokeLinecap="round"/>
+              <path d="M12.5 13.5 L19.5 6.5" stroke="#EBEBE6" strokeWidth="1.6" strokeLinecap="round"/>
+              <path d="M17.5 4.5 L21.5 8.5" stroke="#EBEBE6" strokeWidth="1.6" strokeLinecap="round"/>
+              <path d="M19.5 6.5 L21.5 8.5 L20 10 L18 8 Z" fill="#EBEBE6" stroke="#EBEBE6" strokeWidth="0.5" strokeLinejoin="round"/>
+              <path d="M12.5 13.5 L12 16 L14.5 15.5 Z" fill="#EBEBE6"/>
+            </svg>
+          </button>
+          {/* Context FAB – beiges + für Seiten-Aktion */}
+          {FAB_PAGES.includes(activePage) && (
+            <button onClick={triggerPageFab} title="Hinzufügen" style={{ width: "58px", height: "58px", borderRadius: "50%", background: "#EBEBE6", border: "none", cursor: "pointer", boxShadow: "0 4px 24px rgba(0,0,0,0.22)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="14" y1="6" x2="14" y2="22" stroke="#5c6c56" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="6" y1="14" x2="22" y2="14" stroke="#5c6c56" strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
 
-      {/* QuickAdd Modal */}
       {quickAdd && (
         <div onClick={closeQuickAdd} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 600, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "20px" }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#fff", borderRadius: "14px", padding: "22px", width: "100%", maxWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", marginBottom: "20px" }}>
             <h3 style={{ margin: "0 0 16px 0", fontSize: "16px", fontWeight: "700", color: TEXT_DARK, fontFamily: FONT }}>Schnell hinzufügen</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <button onClick={() => { setQuickAdd(false); setActiveMenu("updates"); setActivePage("postfach"); sessionStorage.setItem("activePage", "postfach"); sessionStorage.setItem("activeMenu", "updates"); history.replaceState(null, "", "#postfach"); setTimeout(() => { const btn = document.querySelector("[data-quickadd-postfach]"); if (btn) btn.click(); }, 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
+              <button onClick={() => { closeQuickAdd(); setActiveMenu("updates"); setActivePage("postfach"); sessionStorage.setItem("activePage", "postfach"); sessionStorage.setItem("activeMenu", "updates"); history.replaceState(null, "", "#postfach"); setTimeout(() => setFabTrigger(n => n + 1), 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "32px", fontWeight: "700", color: "#5c6c56" }}>»</span>
                 <div>
                   <div style={{ fontWeight: "600" }}>Nachricht</div>
                   <div style={{ fontSize: "11px", color: TEXT_LIGHT, marginTop: "2px" }}>Neue Nachricht ins Postfach</div>
                 </div>
               </button>
-              <button onClick={() => { setQuickAdd(false); setActivePage("todo"); sessionStorage.setItem("activePage", "todo"); history.replaceState(null, "", "#todo"); setTimeout(() => { const btn = document.querySelector("[data-quickadd-todo]"); if (btn) btn.click(); }, 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
+              <button onClick={() => { closeQuickAdd(); setActivePage("todo"); sessionStorage.setItem("activePage", "todo"); history.replaceState(null, "", "#todo"); setTimeout(() => setFabTrigger(n => n + 1), 300); }} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: `1px solid ${GLASS_BORDER}`, background: GLASS, cursor: "pointer", textAlign: "left", fontFamily: FONT, fontSize: "14px", color: TEXT_DARK, display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontSize: "32px", fontWeight: "700", color: "#5c6c56" }}>»</span>
                 <div>
                   <div style={{ fontWeight: "600" }}>To Do Aufgabe</div>
