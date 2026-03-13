@@ -2656,7 +2656,7 @@ function NotizbuchPage({ triggerAdd = 0 }) {
   const [addNotiz, setAddNotiz] = useState(false);
   const [addThema, setAddThema] = useState(false);
   const [suche, setSuche] = useState("");
-  useFabTrigger(triggerAdd, () => { if (canEdit && !activeThema) { tab === "notizen" ? setAddNotiz(true) : setAddThema(true); } });
+  useFabTrigger(triggerAdd, () => { if (canEdit) { if (activeThema) { setAddThema(true); } else { tab === "notizen" ? setAddNotiz(true) : setAddThema(true); } } });
 
   return (
     <div>
@@ -2683,7 +2683,7 @@ function NotizbuchPage({ triggerAdd = 0 }) {
 
       {tab === "notizen" && <AllgemeineNotizen canEdit={canEdit} triggerAdd={addNotiz} onAddHandled={() => setAddNotiz(false)} suche={suche} />}
       {tab === "themen" && !activeThema && <ThemenListe canEdit={canEdit} onOpen={t => { setActiveThema(t); localStorage.setItem("notizbuchThema", JSON.stringify(t)); localStorage.setItem("notizbuchTab", "themen"); }} triggerAdd={addThema} onAddHandled={() => setAddThema(false)} suche={suche} />}
-      {tab === "themen" && activeThema && <ThemaDetail thema={activeThema} canEdit={canEdit} onBack={() => { setActiveThema(null); localStorage.removeItem("notizbuchThema"); }} />}
+      {tab === "themen" && activeThema && <ThemaDetail thema={activeThema} canEdit={canEdit} triggerAdd={addThema} onAddHandled={() => setAddThema(false)} onBack={() => { setActiveThema(null); localStorage.removeItem("notizbuchThema"); }} />}
     </div>
   );
 }
@@ -2993,10 +2993,11 @@ function ThemenListe({ canEdit, onOpen, triggerAdd, onAddHandled, suche }) {
   );
 }
 
-function ThemaDetail({ thema, canEdit, onBack }) {
+function ThemaDetail({ thema, canEdit, onBack, triggerAdd = 0, onAddHandled = () => {} }) {
   const [eintraege, setEintraege] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  useFabTrigger(triggerAdd, () => { if (canEdit) { setText(""); setDatum(new Date().toISOString().split("T")[0]); setShowAdd(true); onAddHandled(); } });
   const [editEntry, setEditEntry] = useState(null);
   const [text, setText] = useState("");
   const [datum, setDatum] = useState(new Date().toISOString().split("T")[0]);
