@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from "react";
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from "react";
 import { createClient } from "@supabase/supabase-js";
 import seitenLogo from "./Seitenlogo.png";
 
@@ -4298,7 +4298,7 @@ function AppInner({ onLogout }) {
   const openQuickAdd = () => setQuickAdd(true);
   const closeQuickAdd = () => setQuickAdd(false);
   const [fabTrigger, setFabTrigger] = useState(0);
-  const triggerPageFab = () => { setFabTrigger(n => n + 1); setTimeout(() => setFabTrigger(0), 50); };
+  const triggerPageFab = () => { setFabTrigger(n => n + 1); };
   const FAB_PAGES = ["unsere-pflanzen","todo","postfach","pflanzenkasse","bestellungen","ableger","notizbuch","wishlist","anzeigen"];
   // Reset trigger on every page change so newly mounted pages don't fire the add-modal on load
   useEffect(() => { setFabTrigger(0); }, [activePage]);
