@@ -4290,6 +4290,8 @@ function AppInner({ onLogout }) {
   const [fabTrigger, setFabTrigger] = useState(0);
   const triggerPageFab = () => setFabTrigger(n => n + 1);
   const FAB_PAGES = ["unsere-pflanzen","todo","postfach","pflanzenkasse","bestellungen","ableger","notizbuch","wishlist","anzeigen"];
+  // Reset trigger on every page change so newly mounted pages don't fire the add-modal on load
+  useEffect(() => { setFabTrigger(0); }, [activePage]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
 
