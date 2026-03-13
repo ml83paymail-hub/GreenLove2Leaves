@@ -4449,13 +4449,22 @@ function AppInner({ onLogout }) {
         <div style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
           {/* QuickAdd FAB – Notizbuch-Icon in beige */}
           <button onClick={openQuickAdd} title="Mitteilung oder To-Do" style={{ width: "50px", height: "50px", borderRadius: "50%", background: BTN, border: "none", cursor: "pointer", boxShadow: "0 4px 18px rgba(0,0,0,0.20)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="3" y="3" width="14" height="16" rx="2.5" stroke="#EBEBE6" strokeWidth="1.6" fill="none"/>
-              <line x1="6.5" y1="16" x2="9.5" y2="16" stroke="#EBEBE6" strokeWidth="1.4" strokeLinecap="round"/>
-              <path d="M12.5 13.5 L19.5 6.5" stroke="#EBEBE6" strokeWidth="1.6" strokeLinecap="round"/>
-              <path d="M17.5 4.5 L21.5 8.5" stroke="#EBEBE6" strokeWidth="1.6" strokeLinecap="round"/>
-              <path d="M19.5 6.5 L21.5 8.5 L20 10 L18 8 Z" fill="#EBEBE6" stroke="#EBEBE6" strokeWidth="0.5" strokeLinejoin="round"/>
-              <path d="M12.5 13.5 L12 16 L14.5 15.5 Z" fill="#EBEBE6"/>
+            <svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Pencil body */}
+              <g transform="rotate(-45, 50, 50)">
+                {/* Eraser cap top */}
+                <rect x="38" y="5" width="24" height="10" rx="5" stroke="#EBEBE6" strokeWidth="3.5" fill="none"/>
+                {/* Eraser band */}
+                <rect x="38" y="15" width="24" height="7" stroke="#EBEBE6" strokeWidth="3.5" fill="none"/>
+                {/* Main body */}
+                <rect x="38" y="22" width="24" height="48" stroke="#EBEBE6" strokeWidth="3.5" fill="none"/>
+                {/* Center line on body */}
+                <line x1="50" y1="22" x2="50" y2="70" stroke="#EBEBE6" strokeWidth="2"/>
+                {/* Wooden tip section */}
+                <path d="M38 70 L50 92 L62 70 Z" stroke="#EBEBE6" strokeWidth="3.5" fill="none" strokeLinejoin="round"/>
+                {/* Graphite tip */}
+                <path d="M44 80 L50 92 L56 80 Z" fill="#EBEBE6"/>
+              </g>
             </svg>
           </button>
           {/* Context FAB – beiges + für Seiten-Aktion */}
