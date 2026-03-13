@@ -32,9 +32,9 @@ function clearSession() {
 // Context for role
 const RoleContext = createContext("guest");
 const useRole = () => useContext(RoleContext);
-// Fires callback only when triggerAdd rises to a new non-zero value
+// Fires callback only when triggerAdd rises to a new non-zero value AFTER mount
 const useFabTrigger = (triggerAdd, callback) => {
-  const lastActed = useRef(0);
+  const lastActed = useRef(triggerAdd); // start with mount-value → never fires on mount
   useEffect(() => {
     if (triggerAdd > 0 && triggerAdd !== lastActed.current) {
       lastActed.current = triggerAdd;
