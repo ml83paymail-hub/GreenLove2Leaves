@@ -4451,7 +4451,7 @@ function AppInner({ onLogout }) {
           <button onClick={openQuickAdd} title="Mitteilung oder To-Do" style={{ width: "50px", height: "50px", borderRadius: "50%", background: BTN, border: "none", cursor: "pointer", boxShadow: "0 4px 18px rgba(0,0,0,0.20)", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
             <svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Pencil body */}
-              <g transform="rotate(-45, 50, 50)">
+              <g transform="rotate(45, 50, 50)">
                 {/* Eraser cap top */}
                 <rect x="38" y="5" width="24" height="10" rx="5" stroke="#EBEBE6" strokeWidth="3.5" fill="none"/>
                 {/* Eraser band */}
